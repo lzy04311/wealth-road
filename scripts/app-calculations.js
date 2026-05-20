@@ -92,18 +92,18 @@ function assetSnapshotSummary(month) {
 function accountName(id) { var a = state.accounts.find(function (item) { return item.id === id; }); return a ? a.name : "已删除账户"; }
 function accountRole(account) {
   var roleMap = {
-    "生存专项拨款": { emoji: "🍚", desc: "吃饭、交通、日常刚需", color: "#E8956A", tip: "优先守住刚需开支节奏" },
-    "自我升级基金": { emoji: "🌱", desc: "身体、技能、书籍和工具", color: "#6BAF7B", tip: "把投入变成长期复利" },
-    "纳纳你是我的神": { emoji: "🚀", desc: "长期投资主仓，只投不短炒", color: "#7E6CAD", tip: "主仓重纪律，不追涨杀跌" },
-    "流动资金（子弹）": { emoji: "🛡️", desc: "短债、现金、可调度资金", color: "#5B9DB3", tip: "保持流动性，随时可调度" },
-    "与大A斗智斗勇专项基金": { emoji: "🎲", desc: "兴趣仓，永远不能膨胀", color: "#D4817C", tip: "仓位可玩，但上限要硬" },
-    "保命钱": { emoji: "💰", desc: "应急金、租房、安全垫", color: "#D4AA48", tip: "先稳住底盘，再谈进攻" },
-    "败家额度": { emoji: "☕", desc: "小确幸预算，花完就停", color: "#D4818B", tip: "放松可以，边界更重要" }
+    "生存专项拨款": { emoji: "🍚", desc: "吃饭、交通、日常刚需", color: "#B9B8B2", tip: "优先守住刚需开支节奏" },
+    "自我升级基金": { emoji: "🌱", desc: "身体、技能、书籍和工具", color: "#A99A78", tip: "把投入变成长期复利" },
+    "纳纳你是我的神": { emoji: "🚀", desc: "长期投资主仓，只投不短炒", color: "#6E7378", tip: "主仓重纪律，不追涨杀跌" },
+    "流动资金（子弹）": { emoji: "🛡️", desc: "短债、现金、可调度资金", color: "#9AA7AA", tip: "保持流动性，随时可调度" },
+    "与大A斗智斗勇专项基金": { emoji: "🎲", desc: "兴趣仓，永远不能膨胀", color: "#9A8F7A", tip: "仓位可玩，但上限要硬" },
+    "保命钱": { emoji: "💰", desc: "应急金、租房、安全垫", color: "#D8B45F", tip: "先稳住底盘，再谈进攻" },
+    "败家额度": { emoji: "☕", desc: "小确幸预算，花完就停", color: "#B85B50", tip: "放松可以，边界更重要" }
   };
   return roleMap[account.name] || { emoji: "📦", desc: "自定义资金模块", color: "#B8976E", tip: "按你的策略持续优化" };
 }
 function accountVisual(account) {
-  var byType = { "长期投资": "#B8976E", "短期储蓄": "#6BAF7B", "应急金": "#D4AA48", "生活消费": "#E8956A", "自我投资": "#6BAF7B", "自由支配": "#D4818B", "其他": "#5B9DB3" };
+  var byType = { "长期投资": "#B8976E", "短期储蓄": "#9AA7AA", "应急金": "#D8B45F", "生活消费": "#B9B8B2", "自我投资": "#A99A78", "自由支配": "#B85B50", "其他": "#7A776F" };
   var role = accountRole(account);
   return { color: role.color || byType[account.type] || byType["其他"], emoji: role.emoji };
 }

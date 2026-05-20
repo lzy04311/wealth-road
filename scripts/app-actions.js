@@ -117,6 +117,9 @@ function handleHealthDetailClick(event) {
   modal.setAttribute("aria-hidden", "false");
   return true;
 }
+function setDashboardHomeMode(viewName) {
+  document.body.classList.toggle("dashboard-home-mode", viewName === "dashboard");
+}
 function handleViewSwitchClick(event) {
   var tab = event.target.closest(".tab");
   if (tab) {
@@ -124,6 +127,7 @@ function handleViewSwitchClick(event) {
     document.querySelectorAll(".view").forEach(function (x) { x.classList.remove("active"); });
     tab.classList.add("active");
     byId(tab.dataset.view).classList.add("active");
+    setDashboardHomeMode(tab.dataset.view);
     return true;
   }
   var openViewBtn = event.target.closest("[data-action=\"open-view\"]");
@@ -135,6 +139,7 @@ function handleViewSwitchClick(event) {
   var targetTab = document.querySelector(".tab[data-view=\"" + targetView + "\"]");
   if (targetTab) targetTab.classList.add("active");
   byId(targetView).classList.add("active");
+  setDashboardHomeMode(targetView);
   return true;
 }
 function handleFormAndModalClick(event) {
@@ -219,6 +224,6 @@ function importData() {
   };
   reader.readAsText(file, "UTF-8");
 }
-function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").value = today(); byId(p + "Month").value = currentMonth(); }); syncSelects(); handleSubmit(); bindQuickModalSubmit(); bindClicks(); renderAll(); }
+function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").value = today(); byId(p + "Month").value = currentMonth(); }); syncSelects(); handleSubmit(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); }
 init();
 

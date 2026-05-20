@@ -92,62 +92,41 @@
 
     <main>
       <section id="dashboard" class="view active">
-        <section id="dashboardCockpit" class="dashboard-canvas" aria-label="首页驾驶舱">
-          <aside class="dashboard-left">
-            <article class="cockpit-card cockpit-main dashboard-asset-card">
-              <div class="cockpit-kicker">资产</div>
-              <div class="cockpit-main-asset" id="mainAssetValue">¥0.00</div>
-              <div id="mainSystemStatus" class="cockpit-status">系统正在同步你的资金节奏</div>
-              <div id="mainAssetTrack" class="main-asset-track"></div>
-              <div id="mainHealthPanel" class="main-health-panel"></div>
-            </article>
-          </aside>
-          <section class="dashboard-middle">
-            <div class="dashboard-line-panel" id="dashboardTrendChart"></div>
-          </section>
-          <div class="dashboard-right">
-            <div class="asset-pie-card dashboard-pie-panel">
-              <div class="dashboard-pie-head">
-                <span id="dashboardPieTitle">预算分配</span>
-                <div class="dashboard-pie-switch" aria-label="首页饼图切换">
-                  <button class="active" type="button" data-action="set-dashboard-pie" data-pie-mode="budget">预算</button>
-                  <button type="button" data-action="set-dashboard-pie" data-pie-mode="asset">资产</button>
-                </div>
-              </div>
-              <h2>本月预算如何安放</h2>
-              <div id="budgetPie" class="asset-pie labeled-pie"></div>
-              <div id="budgetLegend" class="asset-legend"></div>
+        <section id="dashboardCockpit" class="dashboard-compass-page" aria-label="财富罗盘首页">
+          <section class="wealth-compass" aria-label="财字中枢">
+            <div class="dashboard-home-actions" aria-label="首页快捷操作">
+              <button class="dashboard-home-action" type="button" data-quick-action="income" aria-label="记录收入">收</button>
+              <button class="dashboard-home-action" type="button" data-quick-action="investment" aria-label="记录投资">投</button>
+              <button class="dashboard-home-action" type="button" data-quick-action="expense" aria-label="记录支出">出</button>
+              <button class="dashboard-home-action" type="button" data-action="open-view" data-view="data" aria-label="备份">备</button>
             </div>
-          </div>
-          <div class="dashboard-lower">
-            <article class="cockpit-card cockpit-mini dashboard-uniform-card dashboard-reserved-card">
-              <div class="cockpit-title">本月预测卡</div>
-              <div class="cockpit-list compact">
-                <div><span>预计月底支出</span><strong id="forecastExpense">¥0.00</strong></div>
-                <div><span>预计月底结余</span><strong id="forecastSurplus">¥0.00</strong></div>
-                <div><span>剩余日均可花</span><strong id="forecastDailySpend">¥0.00</strong></div>
-                <div><span>支出速度</span><strong id="forecastPace">待计划</strong></div>
-              </div>
-            </article>
-            <article class="cockpit-card cockpit-mini dashboard-uniform-card">
-              <div class="cockpit-title">现金流卡</div>
-              <div class="cockpit-list compact">
-                <div><span>已入账</span><strong id="flowActual">¥0.00</strong></div>
-                <div><span>已消费</span><strong id="flowExpense">¥0.00</strong></div>
-                <div><span>已投资</span><strong id="flowInvestment">¥0.00</strong></div>
-                <div><span>真实结余</span><strong id="flowSurplus">¥0.00</strong></div>
-              </div>
-            </article>
-            <article class="cockpit-card cockpit-mini dashboard-uniform-card">
-              <div class="cockpit-title">预算卡</div>
-              <div class="cockpit-list compact">
-                <div><span>本月总预算</span><strong id="budgetTotalValue">待填写计划收入</strong></div>
-                <div><span>已用预算</span><strong id="budgetExpenseValue">¥0.00</strong></div>
-                <div><span>使用比例</span><strong id="budgetUsedRate">--</strong></div>
-                <div><span>预算状态</span><strong id="budgetStatus">待计划</strong></div>
-              </div>
-            </article>
-          </div>
+            <div class="compass-core" aria-label="财富中枢">
+              <span class="core-kicker">财富中枢</span>
+              <strong>财</strong>
+              <span id="compassCoreStatus">正在同步资金状态</span>
+            </div>
+            <div id="wealthCompassNodes" class="compass-node-layer" aria-label="模块入口">
+              <button class="compass-node node-flow is-core" type="button" data-action="open-view" data-view="flow">
+                <span class="node-dot"></span><span class="node-name">流水</span><span class="node-desc">钱如何流动</span><strong>flow</strong>
+              </button>
+              <button class="compass-node node-invest is-core" type="button" data-action="open-view" data-view="investments">
+                <span class="node-dot"></span><span class="node-name">投资</span><span class="node-desc">钱如何进入未来</span><strong>investments</strong>
+              </button>
+              <button class="compass-node node-assets is-core" type="button" data-action="open-view" data-view="assets">
+                <span class="node-dot"></span><span class="node-name">资产</span><span class="node-desc">我真正拥有什么</span><strong>assets</strong>
+              </button>
+              <button class="compass-node node-accounts is-aux" type="button" data-action="open-view" data-view="accounts">
+                <span class="node-dot"></span><span class="node-name">分配</span><span class="node-desc">钱应该归位哪里</span><strong>accounts</strong>
+              </button>
+              <button class="compass-node node-goals is-aux" type="button" data-action="open-view" data-view="goals">
+                <span class="node-dot"></span><span class="node-name">目标</span><span class="node-desc">钱要通向哪里</span><strong>goals</strong>
+              </button>
+              <button class="compass-node node-data is-aux" type="button" data-action="open-view" data-view="data">
+                <span class="node-dot"></span><span class="node-name">备份</span><span class="node-desc">数据安全出口</span><strong>data</strong>
+              </button>
+            </div>
+          </section>
+          <section id="dashboardStateSummary" class="dashboard-state-summary" aria-label="当前资金状态摘要"></section>
         </section>
       </section>
 

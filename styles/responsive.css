@@ -1,6 +1,16 @@
 ﻿@media (max-width: 900px) {
   .app { width: min(100% - 24px, 1180px); }
   .dashboard-canvas { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "left" "middle" "right" "lower"; }
+  .dashboard-compass-page { min-height: auto; grid-template-rows: auto auto; }
+  .wealth-compass { min-height: auto; padding: 24px; display: grid; gap: 16px; overflow: visible; }
+  .wealth-compass::before,
+  .wealth-compass::after { display: none; }
+  .compass-core { position: relative; left: auto; top: auto; transform: none; width: 150px; height: 150px; margin: 0 auto; }
+  .compass-core strong { font-size: 4rem; }
+  .compass-node-layer { position: relative; inset: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+  .compass-node { position: relative; left: auto; top: auto; width: 100%; transform: none; min-height: 88px; }
+  .compass-node:hover { transform: translateY(-2px); }
+  .dashboard-state-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-asset-card { min-height: auto; }
   .dashboard-line-panel { height: auto; min-height: 300px; }
   .dashboard-lower { grid-template-columns: 1fr; }
@@ -23,6 +33,15 @@
 }
 @media (max-width: 560px) {
   .app { width: min(100% - 18px, 1180px); padding-top: 12px; }
+  .wealth-compass { padding: 18px; border-radius: 24px; }
+  .compass-core { width: 132px; height: 132px; }
+  .compass-core strong { font-size: 3.48rem; }
+  .compass-core span:last-child { font-size: .68rem; }
+  .compass-node-layer { gap: 8px; }
+  .compass-node { min-height: 96px; padding: 10px; border-radius: 16px; }
+  .node-desc { white-space: normal; }
+  .dashboard-state-summary { grid-template-columns: 1fr; gap: 10px; }
+  .state-card { min-height: 96px; }
   .dashboard-lower .dashboard-uniform-card { min-height: auto; height: auto; }
   .monthly-report-grid { grid-template-columns: 1fr; }
   .monthly-report-head { flex-direction: column; align-items: flex-start; }
