@@ -1,0 +1,523 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>财富自由之路</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="today-widget">
+        <div class="today-date-picker">
+          <span id="todayEmoji" class="today-emoji">🙂</span>
+          <strong id="todayDate">--</strong>
+          <input type="date" id="dashboardDate" aria-label="选择日期">
+          <input type="month" id="currentMonth" aria-hidden="true" tabindex="-1" hidden>
+          <span id="currentMonthText" hidden>----</span>
+        </div>
+      </div>
+      <div class="brand-title">
+        <h1>财富自由之路</h1>
+      </div>
+      <div class="month-picker">
+        <div class="header-quick-actions" aria-label="快捷记录">
+          <button class="header-quick-btn" type="button" data-quick-action="income" aria-label="记录收入">收</button>
+          <button class="header-quick-btn" type="button" data-quick-action="investment" aria-label="记录投资">投</button>
+          <button class="header-quick-btn" type="button" data-quick-action="expense" aria-label="记录支出">出</button>
+        </div>
+        <div class="save-status" id="saveStatusText">已存</div>
+        <button class="btn small ghost top-backup-btn" type="button" data-action="open-view" data-view="data" aria-label="备份">备</button>
+      </div>
+    </header>
+
+    <div id="quickModal" class="quick-modal" aria-hidden="true">
+      <div class="quick-modal-mask" data-quick-close="mask"></div>
+      <div class="quick-modal-panel" role="dialog" aria-modal="true" aria-labelledby="quickModalTitle">
+        <button class="quick-modal-close" type="button" data-quick-close="btn" aria-label="关闭">×</button>
+        <h3 id="quickModalTitle">快捷记录</h3>
+        <form id="quickFormIncome" class="quick-form" data-quick-form="income">
+          <div class="form-grid">
+            <div class="field"><label>日期</label><input type="date" id="quickIncomeDate" required></div>
+            <div class="field"><label>月份</label><input type="month" id="quickIncomeMonth" required></div>
+            <div class="field"><label>收入来源</label><select id="quickIncomeSource" required></select></div>
+            <div class="field"><label>金额</label><input type="number" id="quickIncomeAmount" min="0.01" step="0.01" required></div>
+            <div class="field wide"><label>备注</label><input type="text" id="quickIncomeNote" placeholder="可选"></div>
+          </div>
+          <div class="actions"><button class="btn quick-save quick-save-income" type="submit">保存收入</button></div>
+        </form>
+        <form id="quickFormExpense" class="quick-form" data-quick-form="expense">
+          <div class="form-grid">
+            <div class="field"><label>日期</label><input type="date" id="quickExpenseDate" required></div>
+            <div class="field"><label>月份</label><input type="month" id="quickExpenseMonth" required></div>
+            <div class="field"><label>账户</label><select id="quickExpenseAccount" required></select></div>
+            <div class="field"><label>类别</label><input type="text" id="quickExpenseCategory" required></div>
+            <div class="field"><label>金额</label><input type="number" id="quickExpenseAmount" min="0.01" step="0.01" required></div>
+            <div class="field wide"><label>备注</label><input type="text" id="quickExpenseNote" placeholder="可选"></div>
+          </div>
+          <div class="actions"><button class="btn quick-save quick-save-expense" type="submit">保存花销</button></div>
+        </form>
+        <form id="quickFormInvestment" class="quick-form" data-quick-form="investment">
+          <div class="form-grid">
+            <div class="field"><label>日期</label><input type="date" id="quickInvestmentDate" required></div>
+            <div class="field"><label>月份</label><input type="month" id="quickInvestmentMonth" required></div>
+            <div class="field"><label>账户</label><select id="quickInvestmentAccount" required></select></div>
+            <div class="field"><label>类型</label><select id="quickInvestmentType" required></select></div>
+            <div class="field"><label>金额</label><input type="number" id="quickInvestmentAmount" min="0.01" step="0.01" required></div>
+            <div class="field"><label>产品名称</label><input type="text" id="quickInvestmentProduct" placeholder="可选"></div>
+            <div class="field wide"><label>备注</label><input type="text" id="quickInvestmentNote" placeholder="可选"></div>
+          </div>
+          <div class="actions"><button class="btn quick-save quick-save-investment" type="submit">保存投资</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div id="healthModal" class="quick-modal" aria-hidden="true">
+      <div class="quick-modal-mask" data-quick-close="mask"></div>
+      <div class="quick-modal-panel" role="dialog" aria-modal="true">
+        <button class="quick-modal-close" type="button" data-quick-close="btn" aria-label="关闭">×</button>
+        <div id="healthModalBody"></div>
+      </div>
+    </div>
+
+    <nav class="tabs" aria-label="功能导航">
+      <button class="tab active" data-view="dashboard">总览</button>
+      <button class="tab" data-view="flow">流水</button>
+      <button class="tab" data-view="investments">投资</button>
+      <button class="tab" data-view="assets">资产</button>
+      <button class="tab" data-view="accounts">分配</button>
+      <button class="tab" data-view="goals">目标</button>
+    </nav>
+
+    <main>
+      <section id="dashboard" class="view active">
+        <section id="dashboardCockpit" class="dashboard-canvas" aria-label="首页驾驶舱">
+          <aside class="dashboard-left">
+            <article class="cockpit-card cockpit-main dashboard-asset-card">
+              <div class="cockpit-kicker">资产</div>
+              <div class="cockpit-main-asset" id="mainAssetValue">¥0.00</div>
+              <div id="mainSystemStatus" class="cockpit-status">系统正在同步你的资金节奏</div>
+              <div id="mainAssetTrack" class="main-asset-track"></div>
+              <div id="mainHealthPanel" class="main-health-panel"></div>
+            </article>
+          </aside>
+          <section class="dashboard-middle">
+            <div class="dashboard-line-panel" id="dashboardTrendChart"></div>
+          </section>
+          <div class="dashboard-right">
+            <div class="asset-pie-card dashboard-pie-panel">
+              <div class="dashboard-pie-head">
+                <span id="dashboardPieTitle">预算分配</span>
+                <div class="dashboard-pie-switch" aria-label="首页饼图切换">
+                  <button class="active" type="button" data-action="set-dashboard-pie" data-pie-mode="budget">预算</button>
+                  <button type="button" data-action="set-dashboard-pie" data-pie-mode="asset">资产</button>
+                </div>
+              </div>
+              <h2>本月预算如何安放</h2>
+              <div id="budgetPie" class="asset-pie labeled-pie"></div>
+              <div id="budgetLegend" class="asset-legend"></div>
+            </div>
+          </div>
+          <div class="dashboard-lower">
+            <article class="cockpit-card cockpit-mini dashboard-uniform-card dashboard-reserved-card">
+              <div class="cockpit-title">本月预测卡</div>
+              <div class="cockpit-list compact">
+                <div><span>预计月底支出</span><strong id="forecastExpense">¥0.00</strong></div>
+                <div><span>预计月底结余</span><strong id="forecastSurplus">¥0.00</strong></div>
+                <div><span>剩余日均可花</span><strong id="forecastDailySpend">¥0.00</strong></div>
+                <div><span>支出速度</span><strong id="forecastPace">待计划</strong></div>
+              </div>
+            </article>
+            <article class="cockpit-card cockpit-mini dashboard-uniform-card">
+              <div class="cockpit-title">现金流卡</div>
+              <div class="cockpit-list compact">
+                <div><span>已入账</span><strong id="flowActual">¥0.00</strong></div>
+                <div><span>已消费</span><strong id="flowExpense">¥0.00</strong></div>
+                <div><span>已投资</span><strong id="flowInvestment">¥0.00</strong></div>
+                <div><span>真实结余</span><strong id="flowSurplus">¥0.00</strong></div>
+              </div>
+            </article>
+            <article class="cockpit-card cockpit-mini dashboard-uniform-card">
+              <div class="cockpit-title">预算卡</div>
+              <div class="cockpit-list compact">
+                <div><span>本月总预算</span><strong id="budgetTotalValue">待填写计划收入</strong></div>
+                <div><span>已用预算</span><strong id="budgetExpenseValue">¥0.00</strong></div>
+                <div><span>使用比例</span><strong id="budgetUsedRate">--</strong></div>
+                <div><span>预算状态</span><strong id="budgetStatus">待计划</strong></div>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section id="assets" class="view">
+        <div class="page-toolbar asset-page-head">
+          <div>
+            <p>管理现金、投资、实物、订阅和软件资产</p>
+          </div>
+          <div class="asset-toolbar-actions">
+            <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
+          </div>
+        </div>
+        <div id="assetsOverview" class="assets-overview-main"></div>
+        <section class="asset-inventory-section">
+          <div class="section-title compact">
+            <div>
+              <h2>资产清单</h2>
+              <p id="assetInventorySummary"></p>
+            </div>
+          </div>
+          <div id="assetKindTabs" class="asset-kind-tabs"></div>
+          <div class="card collapsible-form" id="assetItemFormCard">
+            <div class="section-title compact"><div><h2 id="assetItemFormTitle">新增资产</h2><p>现金、设备、订阅、软件和贵重物品都可以放进这里</p></div></div>
+            <form id="assetItemForm">
+              <input type="hidden" id="assetItemId">
+              <div class="form-grid">
+                <div class="field"><label>资产类型</label><select id="assetItemKind" required></select></div>
+                <div class="field"><label>名称</label><input type="text" id="assetItemName" required placeholder="例如 MacBook、ChatGPT、现金"></div>
+                <div class="field"><label>状态</label><select id="assetItemStatus" required></select></div>
+                <div class="field"><label>当前估值/余额</label><input type="number" id="assetItemCurrentValue" min="0" step="0.01"></div>
+                <div class="field"><label>购买价/本金</label><input type="number" id="assetItemPurchasePrice" min="0" step="0.01"></div>
+                <div class="field"><label>月成本</label><input type="number" id="assetItemMonthlyCost" min="0" step="0.01" placeholder="订阅或维护成本"></div>
+                <div class="field"><label>续费/到期日</label><input type="date" id="assetItemRenewalDate"></div>
+                <div class="field"><label>归属/位置</label><input type="text" id="assetItemOwner" placeholder="现金位置、设备归属等"></div>
+                <div class="field wide"><label>备注</label><input type="text" id="assetItemNote" placeholder="使用频率、保修、转卖计划等"></div>
+              </div>
+              <div class="actions"><button class="btn primary" type="submit">保存资产</button><button class="btn ghost" type="button" id="cancelAssetItemEdit">取消编辑</button></div>
+            </form>
+          </div>
+          <div id="assetItemList" class="asset-item-grid"></div>
+        </section>
+      </section>
+
+      <section id="flow" class="view">
+        <!-- Top bar: horizontal summary -->
+        <section class="flow-topbar">
+          <div class="flow-topbar-hero">
+            <span>本月结余</span>
+            <strong id="flowOvSurplus">¥0.00</strong>
+            <span id="flowOvSurplusSub"></span>
+          </div>
+          <div class="flow-topbar-stats">
+            <div class="flow-stat"><span>本月收入</span><strong id="flowOvIncome">¥0.00</strong></div>
+            <div class="flow-stat"><span>本月支出</span><strong id="flowOvExpense">¥0.00</strong></div>
+            <div class="flow-stat"><span>本月投资</span><strong id="flowOvInvestment">¥0.00</strong></div>
+            <div class="flow-stat"><span>工资到账</span><strong id="flowOvSalary">--</strong></div>
+            <div class="flow-stat"><span>资金状态</span><strong id="flowOvStatus">--</strong></div>
+          </div>
+        </section>
+
+        <!-- Middle: asymmetric two-column -->
+        <div class="flow-main">
+          <!-- Left: records -->
+          <section class="flow-main-left">
+            <div class="flow-records-head">
+              <div class="flow-records-tabs">
+                <button class="flow-tab active" data-flow-tab="income">收入</button>
+                <button class="flow-tab" data-flow-tab="expense">支出</button>
+                <button class="flow-tab" data-flow-tab="investment">投资</button>
+              </div>
+              <button class="btn primary small" id="flowAddRecord">＋ 添加</button>
+            </div>
+            <div class="flow-records-body">
+              <div class="flow-record-panel active" data-flow-panel="income">
+                <div class="card income-year-card" id="incomeYearChart"></div>
+                <div class="section-title compact"><div><h2>收入记录</h2><p id="incomeSummary"></p></div></div>
+                <div class="card-grid" id="incomeList"></div>
+                <div class="module-summary" id="incomeModuleSummary"></div>
+              </div>
+              <div class="flow-record-panel" data-flow-panel="expense">
+                <div class="view-switch" id="expenseViewSwitch">
+                  <button class="btn small ghost active" type="button" data-action="set-expense-view" data-view-mode="list">列表</button>
+                  <button class="btn small ghost" type="button" data-action="set-expense-view" data-view-mode="calendar">月历</button>
+                </div>
+                <div class="section-title compact"><div><h2>支出记录</h2><p id="expenseSummary"></p></div></div>
+                <div id="expenseListWrap"><div class="card-grid" id="expenseList"></div></div>
+                <div id="expenseCalendarWrap" class="expense-calendar-wrap"></div>
+                <div class="module-summary" id="expenseModuleSummary"></div>
+              </div>
+              <div class="flow-record-panel" data-flow-panel="investment">
+                <div class="section-title compact"><div><h2>投资/储蓄记录</h2><p id="investmentSummary"></p></div></div>
+                <div class="card-grid" id="investmentList"></div>
+                <div class="module-summary" id="investmentModuleSummary"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Right: controls + quick info -->
+          <aside class="flow-main-right">
+            <div class="flow-controls">
+              <div class="flow-controls-field">
+                <label>计划收入</label>
+                <input type="number" id="plannedIncome" min="0" step="0.01" placeholder="填写本月计划收入">
+              </div>
+              <div class="flow-controls-field">
+                <label>发薪日</label>
+                <input type="number" id="plannedPayday" min="1" max="31" step="1" value="15">
+              </div>
+              <input type="month" id="planMonth" disabled hidden>
+                <button class="btn primary small" type="button" id="saveMonthlyPlan">保存</button>
+            </div>
+            <div id="flowControlsHint" class="flow-controls-hint"></div>
+            <div class="flow-right-stats" id="flowRightStats"></div>
+          </aside>
+        </div>
+
+        <!-- Bottom: collapsible review -->
+        <section class="flow-review" id="flowReviewSection">
+          <button class="flow-review-toggle" type="button" data-action="toggle-flow-review">
+            <span class="flow-review-toggle-left">
+              <strong>本月复盘</strong>
+              <span id="flowReviewSummary">收入 ¥0 · 支出 ¥0 · 结余 ¥0</span>
+            </span>
+            <span class="flow-review-toggle-arrow"></span>
+          </button>
+          <div class="flow-review-body">
+            <div id="monthlyReport" class="monthly-report card">
+              <div class="monthly-report-head">
+                <div>
+                  <div class="section-kicker">月度资金报告</div>
+                  <h2 id="monthlyReportTitle">---- -- 月度资金报告</h2>
+                </div>
+                <span id="monthlyReportStatus" class="status-pill">持续观察</span>
+              </div>
+              <div class="monthly-report-grid">
+                <div><span>本月实际收入</span><strong id="mrIncome">¥0.00</strong></div>
+                <div><span>本月支出</span><strong id="mrExpense">¥0.00</strong></div>
+                <div><span>本月投入/储蓄</span><strong id="mrInvestment">¥0.00</strong></div>
+                <div><span>本月结余</span><strong id="mrSurplus">¥0.00</strong></div>
+                <div><span>月末总资产</span><strong id="mrAsset">¥0.00</strong></div>
+                <div><span>工资到账状态</span><strong id="mrSalary">等待填写计划收入</strong></div>
+                <div><span>系统状态判断</span><strong id="mrSystem">持续观察</strong></div>
+              </div>
+              <div id="mrSummary" class="monthly-report-summary">本月数据还不完整，继续记录后再判断</div>
+              <div class="monthly-mini-grid">
+                <article class="card monthly-mini-card">
+                  <h3>收入执行</h3>
+                  <p id="mrIncomeExec">计划收入：待填写计划收入｜实际收入：¥0.00｜到账比例：--</p>
+                </article>
+                <article class="card monthly-mini-card">
+                  <h3>预算执行</h3>
+                  <p id="mrBudgetExec">总预算：待填写计划收入｜总支出：¥0.00｜预算结余：待填写计划收入</p>
+                </article>
+                <article class="card monthly-mini-card">
+                  <h3>资产动作</h3>
+                  <p id="mrAssetExec">本月投入/储蓄：¥0.00｜资产账户数量：0｜目标推进数量：0</p>
+                </article>
+              </div>
+            </div>
+            <div class="grid stats" id="monthlyStats"></div>
+            <div class="section-title"><div><h2>账户月度明细</h2><p>按当前月份自动汇总预算、实际使用和资产变化</p></div></div>
+            <div class="table-wrap"><table><thead><tr><th>账户</th><th>类型</th><th>预算比例</th><th>按收入计算的预算金额</th><th>实际使用</th><th>结余</th><th>投资/储蓄净额</th><th>当前金额</th></tr></thead><tbody id="monthlyTable"></tbody></table></div>
+          </div>
+        </section>
+
+        <div class="card collapsible-form" id="incomeFormCard">
+          <div class="section-title compact"><div><h2 id="incomeFormTitle">新增收入</h2><p>日期会自动生成月份，也可以手动改月份</p></div></div>
+          <form id="incomeForm">
+            <input type="hidden" id="incomeId">
+            <div class="form-grid">
+              <div class="field"><label>日期</label><input type="date" id="incomeDate" required></div>
+              <div class="field"><label>月份</label><input type="month" id="incomeMonth" required></div>
+              <div class="field"><label>收入来源</label><select id="incomeSource" required></select></div>
+              <div class="field"><label>金额</label><input type="number" id="incomeAmount" min="0.01" step="0.01" required></div>
+              <div class="field wide"><label>备注</label><input type="text" id="incomeNote" placeholder="可选"></div>
+            </div>
+            <div class="actions"><button class="btn primary" type="submit">保存收入</button><button class="btn ghost" type="button" id="cancelIncomeEdit">取消编辑</button></div>
+          </form>
+        </div>
+        <div class="card collapsible-form" id="expenseFormCard">
+          <div class="section-title compact"><div><h2 id="expenseFormTitle">新增支出</h2><p>支出会自动汇总到对应账户</p></div></div>
+          <form id="expenseForm">
+            <input type="hidden" id="expenseId">
+            <div class="form-grid">
+              <div class="field"><label>日期</label><input type="date" id="expenseDate" required></div>
+              <div class="field"><label>月份</label><input type="month" id="expenseMonth" required></div>
+              <div class="field"><label>账户</label><select id="expenseAccount" required></select></div>
+              <div class="field"><label>类别</label><input type="text" id="expenseCategory" placeholder="餐饮、交通等" required></div>
+              <div class="field"><label>金额</label><input type="number" id="expenseAmount" min="0.01" step="0.01" required></div>
+              <div class="field wide"><label>备注</label><input type="text" id="expenseNote" placeholder="可选"></div>
+            </div>
+            <div class="actions"><button class="btn primary" type="submit">保存支出</button><button class="btn ghost" type="button" id="cancelExpenseEdit">取消编辑</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section id="investments" class="view">
+        <!-- Layer 1: Cockpit -->
+        <section class="invest-topbar">
+          <div class="invest-topbar-hero">
+            <span>投资总市值</span>
+            <strong id="investCockpitValue">¥0.00</strong>
+            <div class="invest-topbar-meta">
+              <span>累计本金 <strong id="investCockpitPrincipal">¥0.00</strong></span>
+              <span>浮动盈亏 <strong id="investCockpitPnl">¥0.00</strong></span>
+              <span>总收益率 <strong id="investCockpitRoi">--</strong></span>
+            </div>
+          </div>
+          <div class="invest-topbar-stats">
+            <div class="invest-stat"><span>本月净投入</span><strong id="investStatNetIn">¥0.00</strong></div>
+            <div class="invest-stat"><span>本月净值变化</span><strong id="investStatMonthChange">--</strong></div>
+            <div class="invest-stat"><span>资产账户</span><strong id="investStatAccountCount">0</strong></div>
+            <div class="invest-stat"><span>最近更新</span><strong id="investStatLastUpdate">--</strong></div>
+          </div>
+        </section>
+
+        <!-- Layer 2+3: Portfolio + Actions -->
+        <div class="invest-main">
+          <section class="invest-main-left">
+            <div class="section-title compact"><div><h2>持仓账户</h2><p id="investPortfolioSummary"></p></div></div>
+            <div class="invest-portfolio-grid" id="investPortfolioGrid"></div>
+          </section>
+          <aside class="invest-main-right">
+            <div class="invest-actions">
+              <span id="investActionsHint">定期更新净值，追踪投资真实表现</span>
+              <div class="invest-actions-btns">
+                <button class="btn primary small" type="button" data-open-form="snapshot">更新净值</button>
+                <button class="btn ghost small" type="button" data-action="open-snapshot-records">更新记录</button>
+              </div>
+            </div>
+            <div class="invest-right-stats" id="investRightStats"></div>
+          </aside>
+        </div>
+
+        <!-- Layer 4: Records -->
+        <section class="invest-records">
+          <div class="invest-records-head">
+            <h2>投资/储蓄流水</h2>
+            <button class="btn primary small" type="button" data-open-form="investment">＋ 添加记录</button>
+          </div>
+          <div class="module-summary" id="investmentModuleSummary"></div>
+          <div class="card collapsible-form" id="investmentFormCard">
+            <div class="section-title compact"><div><h2 id="investmentFormTitle">新增投资/储蓄</h2><p>投资、储蓄、转入增加余额；转出减少余额</p></div></div>
+            <form id="investmentForm">
+              <input type="hidden" id="investmentId">
+              <div class="form-grid">
+                <div class="field"><label>日期</label><input type="date" id="investmentDate" required></div>
+                <div class="field"><label>月份</label><input type="month" id="investmentMonth" required></div>
+                <div class="field"><label>账户</label><select id="investmentAccount" required></select></div>
+                <div class="field"><label>类型</label><select id="investmentType" required></select></div>
+                <div class="field"><label>金额</label><input type="number" id="investmentAmount" min="0.01" step="0.01" required></div>
+                <div class="field"><label>产品名称</label><input type="text" id="investmentProduct" placeholder="可选"></div>
+                <div class="field wide"><label>备注</label><input type="text" id="investmentNote" placeholder="可选"></div>
+              </div>
+              <div class="actions"><button class="btn primary" type="submit">保存记录</button><button class="btn ghost" type="button" id="cancelInvestmentEdit">取消编辑</button></div>
+            </form>
+          </div>
+          <div class="section-title compact"><div><h2>本月记录</h2><p id="investmentSummary"></p></div></div>
+          <div class="card-grid" id="investmentList"></div>
+        </section>
+
+        <div id="snapshotModal" class="quick-modal" aria-hidden="true">
+          <div class="quick-modal-mask" data-snapshot-close="mask"></div>
+          <div class="quick-modal-panel snapshot-modal-panel" role="dialog" aria-modal="true" aria-labelledby="snapshotFormTitle">
+            <button class="quick-modal-close" type="button" data-snapshot-close="btn" aria-label="关闭">×</button>
+            <div class="card collapsible-form" id="snapshotFormCard">
+              <div class="section-title compact"><div><h2 id="snapshotFormTitle">净值更新</h2><p>记录某个资产账户在某天的真实市值和本金</p></div></div>
+              <form id="snapshotForm">
+                <input type="hidden" id="snapshotId">
+                <div class="form-grid">
+                  <div class="field"><label>日期</label><input type="date" id="snapshotDate" required></div>
+                  <div class="field"><label>月份</label><input type="month" id="snapshotMonth" required></div>
+                  <div class="field"><label>账户</label><select id="snapshotAccount" required></select></div>
+                  <div class="field"><label>当前市值</label><input type="number" id="snapshotMarketValue" min="0" step="0.01" required></div>
+                  <div class="field"><label>累计本金</label><input type="number" id="snapshotPrincipal" min="0" step="0.01" required></div>
+                  <div class="field wide"><label>备注</label><input type="text" id="snapshotNote" placeholder="可选"></div>
+                </div>
+                <div class="actions"><button class="btn primary" type="submit">保存更新</button><button class="btn ghost" type="button" id="cancelSnapshotEdit">取消</button></div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div id="snapshotRecordsModal" class="quick-modal" aria-hidden="true">
+          <div class="quick-modal-mask" data-snapshot-records-close="mask"></div>
+          <div class="quick-modal-panel snapshot-records-panel" role="dialog" aria-modal="true" aria-labelledby="snapshotRecordsTitle">
+            <button class="quick-modal-close" type="button" data-snapshot-records-close="btn" aria-label="关闭">×</button>
+            <div class="section-title compact">
+              <div>
+                <h2 id="snapshotRecordsTitle">净值更新记录</h2>
+                <p id="snapshotSummary"></p>
+              </div>
+            </div>
+            <div class="card-grid" id="snapshotList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="accounts" class="view">
+        <div class="page-toolbar">
+          <div>
+            <h2>资金分配</h2>
+            <p>查看各账户的预算比例、当前余额、目标和状态</p>
+            <div class="module-summary" id="accountModuleSummary"></div>
+          </div>
+          <button class="btn primary small" type="button" data-open-form="account">账户设置</button>
+        </div>
+        <div class="card collapsible-form" id="accountFormCard">
+          <div class="section-title compact"><div><h2 id="accountFormTitle">新增账户</h2><p>预算、资产、目标都在这里配置</p></div></div>
+          <form id="accountForm">
+            <input type="hidden" id="accountId">
+            <div class="form-grid">
+              <div class="field"><label>账户名称</label><input type="text" id="accountName" required></div>
+              <div class="field"><label>账户类型</label><select id="accountType" required></select></div>
+              <div class="field"><label>预算比例 %</label><input type="number" id="accountBudgetPercent" min="0" step="0.1"></div>
+              <div class="field"><label>目标金额</label><input type="number" id="accountTarget" min="0" step="0.01" placeholder="可选"></div>
+              <label class="check-field"><input type="checkbox" id="accountFixed"> 每月固定比例</label>
+              <label class="check-field"><input type="checkbox" id="accountExpense"> 计入支出</label>
+              <label class="check-field"><input type="checkbox" id="accountAsset"> 计入资产</label>
+              <div class="field wide"><label>备注</label><input type="text" id="accountNote" placeholder="可选"></div>
+            </div>
+            <div class="actions"><button class="btn primary" type="submit">保存账户</button><button class="btn ghost" type="button" id="cancelAccountEdit">取消编辑</button></div>
+          </form>
+        </div>
+        <div id="budgetPercentSummary" class="notice"></div>
+        <div class="account-grid dashboard-account-overview" id="accountOverview"></div>
+      </section>
+
+      <section id="goals" class="view">
+        <div class="section-title compact"><div><h2>目标进度</h2><p>给账户设置目标金额后，这里会显示完成百分比和差额</p></div></div>
+        <div class="account-grid" id="goalList"></div>
+      </section>
+
+      <section id="rules" class="view hidden-view">
+        <div class="card"><div class="section-title compact"><div><h2>规则说明</h2><p>这里是你自己的资金使用规则，会自动保存</p></div></div><textarea id="rulesText"></textarea><div class="actions"><button class="btn primary" id="saveRules">保存规则</button></div></div>
+      </section>
+
+      <section id="data" class="view">
+        <div class="card data-center-head">
+          <h2>本地数据安全中心</h2>
+          <p class="subtitle">数据保存在当前浏览器 localStorage 中建议每周导出一次 JSON 备份导入会覆盖当前本地数据，请确认文件无误</p>
+          <div class="notice data-save-note">最近保存时间：<strong id="dataLastSavedText">--</strong></div>
+        </div>
+        <div class="data-actions">
+          <div class="card data-card">
+            <h2>导出数据</h2>
+            <p class="subtitle">导出完整 JSON，可用于备份或换电脑</p>
+            <button class="btn primary" id="exportData">导出数据为 JSON</button>
+          </div>
+          <div class="card data-card import-card">
+            <h2>导入备份</h2>
+            <p class="subtitle">选择之前导出的 JSON 文件，将覆盖当前浏览器中的本地数据</p>
+            <div class="notice import-warning">导入前系统会先自动导出当前数据作为备份</div>
+            <input type="file" id="importFile" accept="application/json,.json">
+            <div class="actions"><button class="btn primary" id="importData">导入 JSON 数据</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>通用个人资金管理网页 App · 本地版</footer>
+  </div>
+  <script src="scripts/app-state.js"></script>
+  <script src="scripts/app-calculations.js"></script>
+  <script src="scripts/app-render-core.js"></script>
+  <script src="scripts/app-render-dashboard.js"></script>
+  <script src="scripts/app-render-assets.js"></script>
+  <script src="scripts/app-render-records.js"></script>
+  <script src="scripts/app-render-investments.js"></script>
+  <script src="scripts/app-render-monthly.js"></script>
+  <script src="scripts/app-render-flow.js"></script>
+  <script src="scripts/app-actions.js"></script>
+</body>
+</html>
