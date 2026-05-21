@@ -192,6 +192,7 @@
   grid-template-columns: minmax(350px, .9fr) minmax(520px, 1.2fr) minmax(350px, .9fr);
   gap: clamp(8px, 1vw, 16px);
   align-items: stretch;
+  overflow: visible;
 }
 
 .dashboard-panel {
@@ -383,13 +384,25 @@
   display: grid;
   place-items: center;
   position: relative;
+  z-index: 2;
+  overflow: visible;
+}
+
+.dashboard-asset-card,
+.dashboard-right-cards {
+  position: relative;
+  z-index: 3;
+}
+
+.dashboard-center-panel::before,
+.dashboard-center-panel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
 }
 
 .dashboard-center-panel::before {
-  content: "";
-  position: absolute;
   inset: 6% 0;
-  pointer-events: none;
   background:
     radial-gradient(ellipse at 50% 50%, rgba(201,166,107,.10), transparent 22rem),
     linear-gradient(28deg, transparent 0 39%, rgba(201,166,107,.115) 39.15% 39.45%, transparent 39.7%),
@@ -397,11 +410,28 @@
   opacity: .64;
 }
 
+.dashboard-center-panel::after {
+  z-index: 0;
+  left: 50%;
+  top: 50%;
+  width: min(92%, 650px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, transparent 0 41%, rgba(201,166,107,.070) 41.2% 41.6%, transparent 42%),
+    radial-gradient(circle, transparent 0 48%, rgba(201,166,107,.050) 48.2% 48.55%, transparent 49%),
+    radial-gradient(circle, transparent 0 57%, rgba(201,166,107,.036) 57.15% 57.45%, transparent 57.9%);
+  opacity: .82;
+}
+
 .dashboard-center-orbit {
   position: relative;
+  z-index: 1;
   width: min(100%, 690px);
   min-height: 510px;
   border-radius: 36px;
+  overflow: visible;
   background:
     radial-gradient(circle at 50% 50%, rgba(255,253,248,.58) 0 8.2rem, rgba(201,166,107,.052) 9rem 17.5rem, transparent 18rem),
     radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.28), transparent 23rem);
@@ -426,7 +456,6 @@
   border: 1px solid rgba(201,166,107,.12);
   box-shadow:
     0 0 0 18px rgba(201,166,107,.010),
-    0 0 0 54px rgba(255,255,255,.055),
     0 0 32px rgba(201,166,107,.045);
 }
 
@@ -658,12 +687,12 @@
   text-overflow: ellipsis;
 }
 
-.node-flow { --x: 50%; --y: 13%; --link-r: 90deg; --link-w: 58px; }
-.node-invest { --x: 76%; --y: 31%; --link-r: 150deg; --link-w: 82px; }
-.node-assets { --x: 76%; --y: 69%; --link-r: -150deg; --link-w: 82px; }
-.node-accounts { --x: 50%; --y: 87%; --link-r: -90deg; --link-w: 58px; }
-.node-goals { --x: 24%; --y: 69%; --link-r: -30deg; --link-w: 82px; }
-.node-data { --x: 24%; --y: 31%; --link-r: 30deg; --link-w: 82px; }
+.node-flow { --x: 50%; --y: 7%; --link-r: 90deg; --link-w: 84px; }
+.node-invest { --x: 83%; --y: 27%; --link-r: 150deg; --link-w: 108px; }
+.node-assets { --x: 83%; --y: 73%; --link-r: -150deg; --link-w: 108px; }
+.node-accounts { --x: 50%; --y: 93%; --link-r: -90deg; --link-w: 84px; }
+.node-goals { --x: 17%; --y: 73%; --link-r: -30deg; --link-w: 108px; }
+.node-data { --x: 17%; --y: 27%; --link-r: 30deg; --link-w: 108px; }
 
 .dashboard-right-cards {
   min-width: 0;
@@ -1122,6 +1151,209 @@
     padding-top: 6px;
     border-left: 0;
     border-top: 1px solid rgba(201,166,107,.14);
+  }
+}
+
+@media (min-width: 1181px) and (max-height: 1000px) {
+  .dashboard-cockpit-page {
+    grid-template-rows: 62px minmax(0, 1fr) 58px 50px;
+    gap: 5px;
+    padding: 4px 5px 5px;
+  }
+
+  .dashboard-topbar {
+    min-height: 0;
+    grid-template-columns: minmax(220px, .7fr) minmax(560px, 1.65fr) auto;
+    gap: 12px;
+  }
+
+  .dashboard-brand-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 1.55rem;
+  }
+
+  .dashboard-brand h2 {
+    font-size: 1.22rem;
+  }
+
+  .dashboard-brand p {
+    font-size: .72rem;
+    margin-top: 0;
+  }
+
+  .dashboard-status-bar {
+    gap: 9px;
+  }
+
+  .dashboard-status-pill {
+    min-height: 36px;
+    padding: 5px 12px;
+  }
+
+  .dashboard-status-pill strong {
+    font-size: .78rem;
+  }
+
+  .dashboard-status-pill small {
+    font-size: .64rem;
+  }
+
+  .dashboard-home-action {
+    width: 39px;
+    height: 39px;
+    min-height: 39px;
+    font-size: 1rem;
+  }
+
+  .dashboard-main-grid {
+    min-height: 0;
+    grid-template-columns: minmax(330px, .84fr) minmax(600px, 1.32fr) minmax(330px, .84fr);
+    gap: 9px;
+    overflow: visible;
+  }
+
+  .dashboard-asset-card {
+    padding: 16px 18px;
+    gap: 8px;
+  }
+
+  .dashboard-total-asset {
+    font-size: clamp(2.25rem, 4vw, 3.55rem);
+  }
+
+  .dashboard-change-row {
+    padding-bottom: 7px;
+    font-size: .8rem;
+  }
+
+  .dashboard-asset-metrics {
+    gap: 5px;
+    padding-bottom: 5px;
+  }
+
+  .dashboard-asset-metrics div {
+    padding: 6px 9px;
+  }
+
+  .dashboard-asset-metrics strong {
+    font-size: 1rem;
+  }
+
+  .dashboard-mini-chart-block {
+    gap: 4px;
+    padding: 7px 10px 4px;
+  }
+
+  .dashboard-center-orbit {
+    min-height: 500px;
+  }
+
+  .compass-core {
+    width: clamp(250px, 26vw, 320px);
+    height: clamp(250px, 26vw, 320px);
+  }
+
+  .compass-core strong {
+    font-size: clamp(7rem, 9.8vw, 9.5rem);
+  }
+
+  .compass-node {
+    width: 130px;
+    min-height: 64px;
+    padding: 8px 11px;
+  }
+
+  .dashboard-right-cards {
+    gap: 9px;
+    overflow: visible;
+  }
+
+  .dashboard-side-card {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .dashboard-structure {
+    grid-template-columns: 110px 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-donut {
+    width: 104px;
+  }
+
+  .dashboard-donut::after {
+    inset: 29px;
+  }
+
+  .dashboard-bottom-strip {
+    min-height: 0;
+    padding: 5px 12px;
+    border-radius: 18px;
+  }
+
+  .dashboard-strip-item {
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 5px;
+    padding: 0 9px;
+  }
+
+  .dashboard-strip-item i {
+    width: 20px;
+    height: 20px;
+  }
+
+  .dashboard-strip-item small {
+    font-size: .63rem;
+  }
+
+  .dashboard-strip-item strong {
+    font-size: .80rem;
+  }
+
+  .dashboard-bottom-nav {
+    min-height: 0;
+    padding: 4px 12px;
+    border-radius: 18px;
+    grid-template-columns: minmax(520px, 1fr) minmax(660px, 1fr);
+  }
+
+  .dashboard-status-item {
+    grid-template-columns: 19px minmax(0, 1fr);
+    gap: 6px;
+    padding: 1px 10px;
+  }
+
+  .dashboard-status-item i {
+    width: 19px;
+    height: 19px;
+  }
+
+  .dashboard-status-item span {
+    font-size: .68rem;
+  }
+
+  .dashboard-status-item strong {
+    font-size: .61rem;
+  }
+
+  .dashboard-bottom-nav-actions {
+    gap: 5px;
+    padding-left: 10px;
+  }
+
+  .dashboard-bottom-nav button {
+    min-height: 34px;
+  }
+
+  .dashboard-bottom-nav span {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dashboard-bottom-nav strong {
+    font-size: .72rem;
   }
 }
 
