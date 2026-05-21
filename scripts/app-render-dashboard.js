@@ -30,12 +30,17 @@ function renderDashboardStatusBar(month, backupText) {
   var el = byId("dashboardStatusBar");
   if (!el) return;
   el.innerHTML = [
-    { label: "今日", value: today(), sub: monthText(month) },
+    { label: "今日", value: today(), sub: dashboardWeekdayText() },
     { label: "同步状态", value: backupText, sub: lastSavedAt ? savedTimeText(lastSavedAt).slice(11, 19) : "本地存储" },
     { label: "市场状态", value: "占位观察", sub: "暂不接入行情" }
   ].map(function (item) {
     return "<div class=\"dashboard-status-pill\"><span>" + esc(item.label) + "</span><strong>" + esc(item.value) + "</strong><small>" + esc(item.sub) + "</small></div>";
   }).join("");
+}
+
+function dashboardWeekdayText() {
+  var names = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+  return names[new Date().getDay()];
 }
 
 function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate) {

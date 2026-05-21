@@ -1,4 +1,5 @@
 .dashboard-cockpit-page {
+  --dashboard-core-lift: 50px;
   position: relative;
   height: 100%;
   min-height: 0;
@@ -105,7 +106,9 @@
   display: grid;
   grid-template-columns: repeat(3, max-content);
   justify-content: center;
+  justify-items: center;
   gap: 8px;
+  transform: translateX(-100px);
 }
 
 .dashboard-status-pill,
@@ -123,19 +126,18 @@
 
 .dashboard-status-pill {
   min-height: 30px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas: "label value" "label sub";
+  display: inline-flex;
   align-items: center;
-  column-gap: 6px;
-  padding: 3px 9px;
+  justify-content: center;
+  gap: 9px;
+  padding: 6px 14px;
   border-radius: var(--radius-pill);
   width: fit-content;
-  max-width: 250px;
+  max-width: none;
+  white-space: nowrap;
 }
 
 .dashboard-status-pill span {
-  grid-area: label;
   color: var(--primary-dark);
   font-size: .66rem;
   font-weight: 760;
@@ -143,23 +145,17 @@
 }
 
 .dashboard-status-pill strong {
-  grid-area: value;
   color: var(--text);
   font-size: .74rem;
   font-weight: 760;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .dashboard-status-pill small {
-  grid-area: sub;
   color: var(--muted);
   font-size: .6rem;
   font-weight: 620;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .dashboard-home-actions {
@@ -246,6 +242,10 @@
 
 .dashboard-asset-card {
   min-width: 0;
+  margin-left: 30px;
+  align-self: start;
+  height: calc(100% - var(--dashboard-core-lift));
+  box-sizing: border-box;
   padding: 20px 22px;
   display: grid;
   gap: 12px;
@@ -469,6 +469,7 @@
   z-index: 1;
   width: min(100%, 690px);
   min-height: 510px;
+  transform: translateY(calc(var(--dashboard-core-lift) * -1));
   border-radius: 36px;
   overflow: visible;
   background:
@@ -873,6 +874,10 @@
 
 .dashboard-right-cards {
   min-width: 0;
+  margin-right: 30px;
+  align-self: start;
+  height: calc(100% - var(--dashboard-core-lift));
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
@@ -1070,6 +1075,7 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
   min-height: 90px;
+  margin-inline: 30px;
   padding: 12px 18px;
   border-radius: 24px;
   background:
@@ -1140,6 +1146,7 @@
   grid-template-columns: minmax(560px, 1.08fr) minmax(700px, 1fr);
   gap: 0;
   align-items: center;
+  margin-inline: 30px;
   padding: 6px 16px;
   border-radius: 24px;
   background:
@@ -1292,6 +1299,11 @@
 
   .dashboard-status-bar {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    transform: none;
+  }
+
+  .dashboard-status-pill {
+    width: 100%;
   }
 
   .dashboard-home-actions {
@@ -1549,6 +1561,19 @@
     overflow: visible;
   }
 
+  .dashboard-main-grid,
+  .dashboard-bottom-strip,
+  .dashboard-bottom-nav {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .dashboard-asset-card,
+  .dashboard-right-cards {
+    margin-inline: 0;
+    height: auto;
+  }
+
   .dashboard-status-bar,
   .dashboard-right-cards,
   .dashboard-bottom-strip,
@@ -1583,6 +1608,7 @@
 
   .dashboard-center-orbit {
     min-height: auto;
+    transform: none;
     display: grid;
     gap: 12px;
   }
