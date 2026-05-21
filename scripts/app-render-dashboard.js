@@ -14,15 +14,16 @@ function renderDashboard() {
   var savingRate = s.income > 0 ? Math.max(0, (s.income - s.expense) / s.income * 100) : null;
   var roiText = assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   var backupText = lastSavedAt ? "已保存" : "本地可用";
-  var coreJudgement = s.surplus >= 0 ? "资金节奏稳定，结余正在沉淀" : "现金流承压，先收紧支出";
-  if (health.className === "warning") coreJudgement = "资金节奏需留意，优先校准预算";
-  if (health.className === "negative") coreJudgement = "风险正在抬升，先守住现金流";
+  var coreJudgement = s.surplus >= 0 ? "资金节奏稳定" : "现金流承压";
+  if (health.className === "warning") coreJudgement = "优先校准预算";
+  if (health.className === "negative") coreJudgement = "先守住现金流";
 
   renderDashboardStatusBar(month, backupText);
   renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate);
   renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts, reachedTargets, roiText, backupText, coreJudgement);
   renderDashboardRightCards(month, s, assetSnap, health, forecast, assetAccounts, targetAccounts, reachedTargets, targetProgress, backupText);
   renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, targetAccounts, targetProgress);
+  renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupText);
 }
 
 function renderDashboardStatusBar(month, backupText) {
@@ -40,14 +41,17 @@ function renderDashboardStatusBar(month, backupText) {
 function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate) {
   setDashboardText("dashboardAssetHealth", "资产健康度 " + health.score + "分");
   setDashboardText("dashboardTotalAsset", money(totalAsset));
-  var changeText = assetSnap.monthChange == null ? "净值快照不足，继续记录后显示月内变化" : "本月净值变化 " + money(assetSnap.monthChange);
-  var changeClass = assetSnap.monthChange == null ? "warning" : (assetSnap.monthChange >= 0 ? "positive" : "negative");
-  byId("dashboardAssetChange").innerHTML = "<span>较本月首条快照</span><strong class=\"" + changeClass + "\">" + esc(changeText) + "</strong>";
+  var previousAsset = assetSnapshotSummary(dashboardPrevMonth(month)).totalAsset || monthlySummary(dashboardPrevMonth(month)).asset || 0;
+  var monthDelta = previousAsset > 0 ? totalAsset - previousAsset : null;
+  var recentChange = dashboardRecentAssetChange();
+  var changeText = monthDelta == null ? "上月基线不足，继续记录后显示变化" : (monthDelta >= 0 ? "+" : "") + money(monthDelta);
+  var changeClass = monthDelta == null ? "warning" : (monthDelta >= 0 ? "positive" : "negative");
+  byId("dashboardAssetChange").innerHTML = "<span>较上月</span><strong class=\"" + changeClass + "\">" + esc(changeText) + "</strong>";
   byId("dashboardAssetMetrics").innerHTML = [
     dashboardMetric("本月结余", money(s.surplus), s.surplus >= 0 ? "positive" : "negative", "现金流"),
     dashboardMetric("可用资金", money(Math.max(0, s.income - s.expense)), "", "收入减支出"),
-    dashboardMetric("投资收益", money(assetSnap.pnl), assetSnap.pnl >= 0 ? "positive" : "negative", assetSnap.roi == null ? "待更新" : assetSnap.roi.toFixed(2) + "%"),
-    dashboardMetric("储蓄率", savingRate == null ? "--" : savingRate.toFixed(1) + "%", "positive", "本月")
+    dashboardMetric("投资增长", assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), "累计收益 " + money(assetSnap.pnl)),
+    dashboardMetric("昨日收益", recentChange == null ? "待快照" : (recentChange >= 0 ? "+" : "") + money(recentChange), recentChange == null ? "warning" : (recentChange >= 0 ? "positive" : "negative"), "近两次快照")
   ].join("");
   renderDashboardAssetTrend(month);
 }
@@ -70,6 +74,7 @@ function renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts
 function renderDashboardRightCards(month, s, assetSnap, health, forecast, assetAccounts, targetAccounts, reachedTargets, targetProgress, backupText) {
   var cards = [];
   cards.push("<article class=\"dashboard-side-card dashboard-panel\"><h3>资产结构</h3>" + dashboardAssetStructure(month, assetAccounts) + "<button type=\"button\" class=\"dashboard-link\" data-action=\"open-view\" data-view=\"assets\">查看详情</button></article>");
+  cards.push(dashboardSideCard("本月洞察", dashboardInsightValue(s, forecast), dashboardInsightText(s, forecast), dashboardInsightClass(s, forecast), "dashboard-insight-line", ""));
   cards.push(dashboardSideCard("风险评估", health.risk, health.advice, health.className, "dashboard-risk-bar", forecast.budgetStatus));
   cards.push(dashboardSideCard("目标进度", targetAccounts.length ? reachedTargets.length + "/" + targetAccounts.length + " 进行中" : "待设置目标", "阶段性目标推进", targetAccounts.length ? "positive" : "warning", "dashboard-progress-ring", targetProgress.toFixed(0) + "%"));
   cards.push(dashboardSideCard("备份与安全", backupText, lastSavedAt ? "上次保存 " + savedTimeText(lastSavedAt).slice(11, 19) : "使用浏览器本地存储", "positive", "dashboard-check-mark", "✓"));
@@ -80,13 +85,30 @@ function renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, tar
   var strip = byId("dashboardBottomStrip");
   if (!strip) return;
   var topExpense = state.expenses.filter(function (item) { return item.month === currentMonth(); }).slice().sort(function (a, b) { return b.amount - a.amount; })[0];
+  var topExpenseText = topExpense ? topExpense.category + " " + money(topExpense.amount) : "暂无支出";
+  var assetText = assetAccounts.length ? assetAccounts.slice(0, 3).map(function (account) { return dashboardShortName(account.name); }).join(" / ") : "待更新资产";
+  var sentence = s.surplus < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "让复利安静地工作。" : "让资金回到该去的位置。");
   strip.innerHTML = [
-    dashboardStripItem("现金流", s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus)), "收入 " + money(s.income) + "｜支出 " + money(s.expense), s.surplus >= 0 ? "positive" : "negative"),
-    dashboardStripItem("收支结构", topExpense ? topExpense.category : "暂无支出", "本月支出 " + money(s.expense), ""),
-    dashboardStripItem("投资回报", money(assetSnap.pnl), assetSnap.roi == null ? "收益率待更新" : "收益率 " + assetSnap.roi.toFixed(2) + "%", assetSnap.pnl >= 0 ? "positive" : "negative"),
-    dashboardStripItem("资产配置", assetAccounts.length + " 个资产账户", "预算比例 " + totalBudgetPercent().toFixed(1) + "%", ""),
-    dashboardStripItem("储蓄目标", targetAccounts.length ? targetProgress.toFixed(0) + "%" : "待设置", "储蓄率 " + (savingRate == null ? "--" : savingRate.toFixed(1) + "%"), targetAccounts.length ? "positive" : "warning"),
-    dashboardStripItem("本月一句话", "稳住现金流", "让资金回到该去的位置。", "")
+    dashboardStripItem("现金流总览", s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus)), "收入 " + money(s.income) + "｜支出 " + money(s.expense), s.surplus >= 0 ? "positive" : "negative", "cash"),
+    dashboardStripItem("收支结构", topExpenseText, "本月支出 " + money(s.expense), "", "balance"),
+    dashboardStripItem("投资回报", money(assetSnap.pnl), assetSnap.roi == null ? "收益率待更新" : "收益率 " + assetSnap.roi.toFixed(2) + "%", assetSnap.pnl >= 0 ? "positive" : "negative", "invest"),
+    dashboardStripItem("资产配置概览", assetText, assetAccounts.length + " 个资产账户", "", "asset"),
+    dashboardStripItem("储蓄与目标", targetAccounts.length ? targetProgress.toFixed(0) + "%" : "待设置", "储蓄率 " + (savingRate == null ? "--" : savingRate.toFixed(1) + "%"), targetAccounts.length ? "positive" : "warning", "goal"),
+    dashboardStripItem("本月一句话", "稳住节奏", sentence, "", "quote")
+  ].join("");
+}
+
+function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupText) {
+  var el = byId("dashboardBottomStatus");
+  if (!el) return;
+  var expenseStatus = s.overBudget ? "支出待收紧" : "支出结构优化";
+  var savingStatus = savingRate == null ? "储蓄率待记录" : "储蓄率 " + savingRate.toFixed(1) + "%";
+  var investStatus = assetSnap.roi == null ? "投资待快照" : (assetSnap.roi >= 0 ? "投资收益回升" : "投资收益承压");
+  el.innerHTML = [
+    dashboardStatusItem("云端同步正常", backupText, "positive"),
+    dashboardStatusItem(expenseStatus, forecast.budgetStatus || "持续观察", s.overBudget ? "warning" : "positive"),
+    dashboardStatusItem("储蓄率提升", savingStatus, savingRate == null ? "warning" : "positive"),
+    dashboardStatusItem(investStatus, assetSnap.roi == null ? "等待数据" : assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"))
   ].join("");
 }
 
@@ -95,11 +117,58 @@ function dashboardMetric(label, value, className, hint) {
 }
 
 function dashboardSideCard(title, value, desc, className, visualClass, visualText) {
-  return "<article class=\"dashboard-side-card dashboard-panel\"><h3>" + esc(title) + "</h3><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><p>" + esc(desc) + "</p><div class=\"" + esc(visualClass || "") + "\"><span>" + esc(visualText || "") + "</span></div></article>";
+  return "<article class=\"dashboard-side-card dashboard-panel\"><h3><i></i>" + esc(title) + "</h3><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><p>" + esc(desc) + "</p><div class=\"" + esc(visualClass || "") + "\"><span>" + esc(visualText || "") + "</span></div></article>";
 }
 
-function dashboardStripItem(title, value, desc, className) {
-  return "<article class=\"dashboard-strip-item\"><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><small>" + esc(desc) + "</small></article>";
+function dashboardStripItem(title, value, desc, className, icon) {
+  return "<article class=\"dashboard-strip-item\"><i>" + esc(dashboardStripIcon(icon)) + "</i><div><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><small>" + esc(desc) + "</small></div></article>";
+}
+
+function dashboardStatusItem(title, value, className) {
+  return "<article class=\"dashboard-status-item\"><i class=\"" + esc(className || "") + "\"></i><div><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong></div></article>";
+}
+
+function dashboardStripIcon(icon) {
+  var map = { cash: "⌁", balance: "▣", invest: "↗", asset: "◌", goal: "◎", quote: "“" };
+  return map[icon] || "•";
+}
+
+function dashboardPrevMonth(month) {
+  var year = parseInt(String(month).slice(0, 4), 10);
+  var mon = parseInt(String(month).slice(5, 7), 10);
+  var d = new Date(year, mon - 2, 1);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+
+function dashboardRecentAssetChange() {
+  var byDate = {};
+  state.snapshots.forEach(function (item) {
+    if (!item.date) return;
+    byDate[item.date] = (byDate[item.date] || 0) + numberValue(item.marketValue);
+  });
+  var dates = Object.keys(byDate).sort();
+  if (dates.length < 2) return null;
+  return numberValue(byDate[dates[dates.length - 1]] - byDate[dates[dates.length - 2]]);
+}
+
+function dashboardInsightValue(s, forecast) {
+  if (!s.hasPlannedIncome) return "待计划";
+  if (s.overBudget) return "已超支";
+  if (s.surplus < 0) return "现金流为负";
+  return forecast.budgetUsedRate == null ? "持续观察" : forecast.budgetUsedRate.toFixed(0) + "%";
+}
+
+function dashboardInsightText(s, forecast) {
+  if (!s.hasPlannedIncome) return "先填写计划收入，预算判断才会完整。";
+  if (s.overBudget) return "本月支出越过预算线，先收紧非必要支出。";
+  if (s.surplus < 0) return "投入和支出合计偏高，需要看现金节奏。";
+  return "预算使用处于" + forecast.budgetStatus + "，继续保持记录节奏。";
+}
+
+function dashboardInsightClass(s, forecast) {
+  if (!s.hasPlannedIncome) return "warning";
+  if (s.overBudget || s.surplus < 0) return "negative";
+  return forecast.budgetClassName || "positive";
 }
 
 function dashboardCompassNode(item) {
@@ -156,9 +225,14 @@ function renderDashboardAssetTrend(month) {
   function px(index) { return pad + (w - pad * 2) * (rows.length === 1 ? 0 : index / (rows.length - 1)); }
   function py(value) { return h - pad - ((value - min) / range) * (h - pad * 2); }
   var points = rows.map(function (row, index) { return px(index).toFixed(1) + "," + py(row.value).toFixed(1); }).join(" ");
+  var area = pad + "," + (h - pad) + " " + points + " " + (w - pad) + "," + (h - pad);
+  var grid = [0.25, 0.5, 0.75].map(function (rate) {
+    var yLine = pad + (h - pad * 2) * rate;
+    return "<line x1=\"" + pad + "\" y1=\"" + yLine.toFixed(1) + "\" x2=\"" + (w - pad) + "\" y2=\"" + yLine.toFixed(1) + "\"></line>";
+  }).join("");
   var labels = rows.map(function (row, index) { return "<text x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 2) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
-  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"3\"></circle>"; }).join("");
-  el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
+  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"2.2\"></circle>"; }).join("");
+  el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g><polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
 }
 
 function setDashboardText(id, value) {

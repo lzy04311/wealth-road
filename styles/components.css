@@ -1,6 +1,6 @@
 .grid { display: grid; gap: 12px; }
 .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.card, .account-card, .record-card, .table-wrap { background: rgba(255,254,250,.82); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: transform .2s ease, box-shadow .2s ease; backdrop-filter: blur(14px) saturate(1.08); }
+.card, .account-card, .record-card, .table-wrap { background: var(--paper-glass-strong); border: 1px solid var(--champagne-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: transform .2s ease, box-shadow .2s ease; backdrop-filter: blur(14px) saturate(1.04); }
 .card:hover, .account-card:hover, .record-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .card { padding: 14px 16px; }
 .stat { min-height: 126px; padding: 16px; }
@@ -17,7 +17,7 @@
 .cockpit-card {
   border-radius: var(--radius-lg);
   padding: 16px;
-  background: linear-gradient(145deg, rgba(255,254,250,.90), rgba(248,246,241,.74));
+  background: linear-gradient(145deg, rgba(255,253,248,.86), rgba(248,241,229,.64));
   transition: transform .2s ease, box-shadow .2s ease;
   cursor: default;
 }
@@ -30,15 +30,15 @@
   padding: 14px 16px;
   text-align: center;
   background:
-    linear-gradient(160deg, rgba(255,255,253,.98) 0%, rgba(250,250,248,.92) 56%, rgba(238,238,235,.76) 100%),
-    radial-gradient(circle at 18% 10%, rgba(255,255,255,.72), transparent 9rem);
+    linear-gradient(160deg, rgba(255,253,248,.94) 0%, rgba(250,244,232,.82) 100%),
+    radial-gradient(circle at 18% 10%, rgba(255,255,255,.66), transparent 9rem);
   box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.8);
-  border: 1px solid rgba(220,218,213,.74);
+  border: 1px solid var(--champagne-line);
 }
 .cockpit-mini {
   padding: 12px 16px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(145deg, rgba(255,254,250,.92), rgba(248,246,241,.76));
+  background: linear-gradient(145deg, rgba(255,253,248,.86), rgba(248,241,229,.62));
 }
 .cockpit-list.compact { margin-top: 12px; gap: 8px; }
 .cockpit-list.compact div { padding: 8px 0; }
@@ -71,9 +71,9 @@
 }
 .cockpit-main-metrics div {
   padding: 8px;
-  border: 1px solid rgba(220,218,213,.74);
+  border: 1px solid var(--champagne-line);
   border-radius: var(--radius-sm);
-  background: linear-gradient(145deg, rgba(255,255,253,.78), rgba(248,248,246,.60));
+  background: linear-gradient(145deg, rgba(255,253,248,.76), rgba(250,244,232,.52));
 }
 .cockpit-main-metrics span {
   display: block;
@@ -92,8 +92,8 @@
   margin-top: 8px;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(220,218,213,.72);
-  background: rgba(255,255,253,.62);
+  border: 1px solid var(--champagne-line);
+  background: rgba(255,253,248,.62);
   color: var(--muted);
   font-size: .86rem;
   font-weight: 600;
@@ -108,8 +108,8 @@
   display: block;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(220,218,213,.78);
-  background: rgba(255,255,253,.74);
+  border: 1px solid var(--champagne-line);
+  background: rgba(255,253,248,.68);
   color: var(--muted);
   font-size: .82rem;
   font-weight: 600;

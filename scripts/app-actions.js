@@ -119,6 +119,9 @@ function handleHealthDetailClick(event) {
 }
 function setDashboardHomeMode(viewName) {
   document.body.classList.toggle("dashboard-home-mode", viewName === "dashboard");
+  document.querySelectorAll(".dashboard-bottom-nav [data-view]").forEach(function (btn) {
+    btn.classList.toggle("active", btn.dataset.view === viewName);
+  });
 }
 function handleViewSwitchClick(event) {
   var tab = event.target.closest(".tab");
