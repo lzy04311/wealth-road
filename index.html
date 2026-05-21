@@ -92,41 +92,57 @@
 
     <main>
       <section id="dashboard" class="view active">
-        <section id="dashboardCockpit" class="dashboard-compass-page" aria-label="财富罗盘首页">
-          <section class="wealth-compass" aria-label="财字中枢">
+        <section id="dashboardCockpit" class="dashboard-cockpit-page" aria-label="财富中枢驾驶舱">
+          <header class="dashboard-topbar">
+            <div class="dashboard-brand">
+              <div class="dashboard-brand-mark">财</div>
+              <div>
+                <h2>财富中枢</h2>
+                <p>财富自由之路</p>
+              </div>
+            </div>
+            <div id="dashboardStatusBar" class="dashboard-status-bar"></div>
             <div class="dashboard-home-actions" aria-label="首页快捷操作">
               <button class="dashboard-home-action" type="button" data-quick-action="income" aria-label="记录收入">收</button>
               <button class="dashboard-home-action" type="button" data-quick-action="investment" aria-label="记录投资">投</button>
               <button class="dashboard-home-action" type="button" data-quick-action="expense" aria-label="记录支出">出</button>
               <button class="dashboard-home-action" type="button" data-action="open-view" data-view="data" aria-label="备份">备</button>
             </div>
-            <div class="compass-core" aria-label="财富中枢">
-              <span class="core-kicker">财富中枢</span>
-              <strong>财</strong>
-              <span id="compassCoreStatus">正在同步资金状态</span>
-            </div>
-            <div id="wealthCompassNodes" class="compass-node-layer" aria-label="模块入口">
-              <button class="compass-node node-flow is-core" type="button" data-action="open-view" data-view="flow">
-                <span class="node-dot"></span><span class="node-name">流水</span><span class="node-desc">钱如何流动</span><strong>flow</strong>
-              </button>
-              <button class="compass-node node-invest is-core" type="button" data-action="open-view" data-view="investments">
-                <span class="node-dot"></span><span class="node-name">投资</span><span class="node-desc">钱如何进入未来</span><strong>investments</strong>
-              </button>
-              <button class="compass-node node-assets is-core" type="button" data-action="open-view" data-view="assets">
-                <span class="node-dot"></span><span class="node-name">资产</span><span class="node-desc">我真正拥有什么</span><strong>assets</strong>
-              </button>
-              <button class="compass-node node-accounts is-aux" type="button" data-action="open-view" data-view="accounts">
-                <span class="node-dot"></span><span class="node-name">分配</span><span class="node-desc">钱应该归位哪里</span><strong>accounts</strong>
-              </button>
-              <button class="compass-node node-goals is-aux" type="button" data-action="open-view" data-view="goals">
-                <span class="node-dot"></span><span class="node-name">目标</span><span class="node-desc">钱要通向哪里</span><strong>goals</strong>
-              </button>
-              <button class="compass-node node-data is-aux" type="button" data-action="open-view" data-view="data">
-                <span class="node-dot"></span><span class="node-name">备份</span><span class="node-desc">数据安全出口</span><strong>data</strong>
-              </button>
-            </div>
-          </section>
-          <section id="dashboardStateSummary" class="dashboard-state-summary" aria-label="当前资金状态摘要"></section>
+          </header>
+
+          <div class="dashboard-main-grid">
+            <section class="dashboard-asset-card dashboard-panel" aria-label="总资产">
+              <div class="dashboard-panel-head">
+                <h3>总资产</h3>
+                <span id="dashboardAssetHealth" class="dashboard-pill">资产健康度 --</span>
+              </div>
+              <strong id="dashboardTotalAsset" class="dashboard-total-asset">¥0.00</strong>
+              <div id="dashboardAssetChange" class="dashboard-change-row"></div>
+              <div id="dashboardAssetMetrics" class="dashboard-asset-metrics"></div>
+              <div class="dashboard-mini-chart-block">
+                <div class="dashboard-mini-chart-title">
+                  <span>资产趋势（近6个月）</span>
+                  <small>总资产（元）</small>
+                </div>
+                <div id="dashboardAssetTrend" class="dashboard-mini-chart"></div>
+              </div>
+            </section>
+
+            <section class="dashboard-center-panel" aria-label="财字中枢">
+              <div class="dashboard-center-orbit">
+                <div class="compass-core" aria-label="财富中枢">
+                  <span class="core-kicker">财富中枢</span>
+                  <strong>财</strong>
+                  <span id="compassCoreStatus">正在同步资金状态</span>
+                </div>
+                <div id="wealthCompassNodes" class="compass-node-layer" aria-label="模块入口"></div>
+              </div>
+            </section>
+
+            <aside id="dashboardRightCards" class="dashboard-right-cards" aria-label="右侧状态卡"></aside>
+          </div>
+
+          <section id="dashboardBottomStrip" class="dashboard-bottom-strip dashboard-panel" aria-label="本月数据带"></section>
         </section>
       </section>
 
