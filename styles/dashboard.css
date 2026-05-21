@@ -103,8 +103,9 @@
 .dashboard-status-bar {
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, max-content);
+  justify-content: center;
+  gap: 8px;
 }
 
 .dashboard-status-pill,
@@ -121,29 +122,31 @@
 }
 
 .dashboard-status-pill {
-  min-height: 44px;
+  min-height: 30px;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-areas: "label value" "label sub";
   align-items: center;
-  column-gap: 8px;
-  padding: 7px 13px;
+  column-gap: 6px;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
+  width: fit-content;
+  max-width: 250px;
 }
 
 .dashboard-status-pill span {
   grid-area: label;
   color: var(--primary-dark);
-  font-size: .74rem;
-  font-weight: 800;
+  font-size: .66rem;
+  font-weight: 760;
   white-space: nowrap;
 }
 
 .dashboard-status-pill strong {
   grid-area: value;
   color: var(--text);
-  font-size: .84rem;
-  font-weight: 800;
+  font-size: .74rem;
+  font-weight: 760;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -152,8 +155,8 @@
 .dashboard-status-pill small {
   grid-area: sub;
   color: var(--muted);
-  font-size: .7rem;
-  font-weight: 650;
+  font-size: .6rem;
+  font-weight: 620;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -771,6 +774,7 @@
   position: absolute;
   inset: 0;
   z-index: 4;
+  transform: translateY(-16px);
 }
 
 .compass-node {
@@ -860,12 +864,12 @@
   text-overflow: ellipsis;
 }
 
-.node-flow { --x: 50%; --y: 8%; --link-r: 90deg; --link-w: 78px; }
-.node-invest { --x: 82%; --y: 28%; --link-r: 150deg; --link-w: 104px; }
-.node-assets { --x: 82%; --y: 72%; --link-r: -150deg; --link-w: 104px; }
-.node-accounts { --x: 50%; --y: 92%; --link-r: -90deg; --link-w: 78px; }
-.node-goals { --x: 18%; --y: 72%; --link-r: -30deg; --link-w: 104px; }
-.node-data { --x: 18%; --y: 28%; --link-r: 30deg; --link-w: 104px; }
+.node-data { --x: 20%; --y: 24%; --link-r: 30deg; --link-w: 104px; }
+.node-flow { --x: 14%; --y: 50%; --link-r: 0deg; --link-w: 114px; }
+.node-goals { --x: 20%; --y: 76%; --link-r: -30deg; --link-w: 104px; }
+.node-invest { --x: 80%; --y: 24%; --link-r: 150deg; --link-w: 104px; }
+.node-assets { --x: 86%; --y: 50%; --link-r: 180deg; --link-w: 114px; }
+.node-accounts { --x: 80%; --y: 76%; --link-r: -150deg; --link-w: 104px; }
 
 .dashboard-right-cards {
   min-width: 0;
