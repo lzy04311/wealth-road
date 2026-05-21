@@ -130,11 +130,77 @@
 
             <section class="dashboard-center-panel" aria-label="财字中枢">
               <div class="dashboard-center-orbit">
+                <svg class="wealth-core-visual wealth-core-back" viewBox="0 0 720 520" aria-hidden="true" focusable="false">
+                  <defs>
+                    <radialGradient id="wealthHeroGlow" cx="50%" cy="50%" r="58%">
+                      <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".68" />
+                      <stop offset="42%" stop-color="#F8E8C9" stop-opacity=".24" />
+                      <stop offset="76%" stop-color="#C9A66B" stop-opacity=".08" />
+                      <stop offset="100%" stop-color="#C9A66B" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="wealthSphere" cx="38%" cy="28%" r="70%">
+                      <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".92" />
+                      <stop offset="28%" stop-color="#FFFDF8" stop-opacity=".64" />
+                      <stop offset="56%" stop-color="#F4E6C9" stop-opacity=".32" />
+                      <stop offset="82%" stop-color="#C9A66B" stop-opacity=".13" />
+                      <stop offset="100%" stop-color="#8E6A32" stop-opacity=".05" />
+                    </radialGradient>
+                    <linearGradient id="wealthArcGold" x1="12%" y1="18%" x2="88%" y2="82%">
+                      <stop offset="0%" stop-color="#FFF4D8" stop-opacity=".03" />
+                      <stop offset="42%" stop-color="#D5B16F" stop-opacity=".48" />
+                      <stop offset="68%" stop-color="#B98D4E" stop-opacity=".22" />
+                      <stop offset="100%" stop-color="#8E6A32" stop-opacity=".04" />
+                    </linearGradient>
+                    <linearGradient id="wealthGlassArc" x1="24%" y1="8%" x2="76%" y2="78%">
+                      <stop offset="0%" stop-color="#FFFFFF" stop-opacity=".78" />
+                      <stop offset="54%" stop-color="#FFFFFF" stop-opacity=".18" />
+                      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+                    </linearGradient>
+                    <filter id="wealthSoftBlur" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="5" />
+                    </filter>
+                    <filter id="wealthPearlGlow" x="-80%" y="-80%" width="260%" height="260%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  <ellipse class="wealth-core-field" cx="360" cy="266" rx="300" ry="218" />
+                  <ellipse class="wealth-track track-a" cx="360" cy="262" rx="278" ry="158" />
+                  <path class="wealth-flow flow-back-a" d="M92 302c112-112 318-196 526-44" />
+                  <path class="wealth-flow flow-back-b" d="M148 162c130 70 272 40 418 150" />
+                  <circle class="wealth-sphere" cx="360" cy="260" r="164" />
+                  <circle class="wealth-sphere-inner" cx="360" cy="260" r="132" />
+                  <path class="wealth-sphere-shade" d="M232 318c58 94 202 106 264 16-62 44-158 54-264-16Z" />
+                  <path class="wealth-highlight main" d="M226 222c46-88 152-132 250-94" />
+                  <path class="wealth-highlight second" d="M250 178c76-48 166-58 250-26" />
+                  <path class="wealth-highlight small" d="M284 132c44-26 104-30 152-16" />
+                  <ellipse class="wealth-track track-b" cx="360" cy="260" rx="236" ry="126" />
+                  <ellipse class="wealth-track track-c" cx="360" cy="260" rx="188" ry="96" />
+                  <g class="wealth-particles">
+                    <circle cx="254" cy="188" r="1.7" />
+                    <circle cx="480" cy="156" r="1.5" />
+                    <circle cx="530" cy="292" r="1.8" />
+                    <circle cx="292" cy="372" r="1.4" />
+                    <circle cx="408" cy="398" r="1.2" />
+                  </g>
+                </svg>
                 <div class="compass-core" aria-label="财富中枢">
                   <span class="core-kicker">财富中枢</span>
                   <strong>财</strong>
                   <span id="compassCoreStatus">正在同步资金状态</span>
                 </div>
+                <svg class="wealth-core-visual wealth-core-front" viewBox="0 0 720 520" aria-hidden="true" focusable="false">
+                  <path class="wealth-flow flow-front-a" d="M116 374c132-86 294-74 488-188" />
+                  <path class="wealth-flow flow-front-b" d="M192 404c94-42 270-36 396-126" />
+                  <ellipse class="wealth-track track-front" cx="360" cy="262" rx="254" ry="146" />
+                  <circle class="wealth-pearl pearl-a" cx="214" cy="196" r="5" />
+                  <circle class="wealth-pearl pearl-b" cx="550" cy="176" r="4" />
+                  <circle class="wealth-pearl pearl-c" cx="596" cy="304" r="5" />
+                  <circle class="wealth-pearl pearl-d" cx="282" cy="398" r="4" />
+                </svg>
                 <div id="wealthCompassNodes" class="compass-node-layer" aria-label="模块入口"></div>
               </div>
             </section>
