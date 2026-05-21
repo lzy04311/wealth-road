@@ -8,7 +8,18 @@ function monthlyInvestment(accountId, month) { return sum(state.investments, fun
 function accountBalance(account, month) { var expense = sum(state.expenses, function (item) { return item.accountId === account.id && item.month <= month ? item.amount : 0; }); var investment = sum(state.investments, function (item) { if (item.accountId !== account.id || item.month > month) return 0; return item.type === "转出" ? -item.amount : item.amount; }); return Math.max(0, investment - expense); }
 function totalBudgetPercent() { return sum(state.accounts, function (item) { return item.budgetPercent || 0; }); }
 function budgetPercentMessage() { var total = Math.round(totalBudgetPercent() * 10) / 10; if (total === 100) return { text: "预算比例合计 100%，比例刚好分配完", className: "positive" }; if (total < 100) return { text: "预算比例合计 " + total.toFixed(1) + "% ，还有 " + (100 - total).toFixed(1) + "% 未分配", className: "positive" }; return { text: "预算比例合计 " + total.toFixed(1) + "% ，比例超出 " + (total - 100).toFixed(1) + "% ，需要调整", className: "negative" }; }
-function monthlySummary(month) { var income = monthlyIncome(month), plan = monthlyPlan(month), budget = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return accountBudgetAmount(item, month); }) : 0; var expense = sum(state.expenses, function (item) { var account = state.accounts.find(function (acc) { return acc.id === item.accountId; }); return item.month === month && (!account || account.includeExpense) ? item.amount : 0; }); var invest = sum(state.investments, function (item) { return item.month === month ? (item.type === "转出" ? -item.amount : item.amount) : 0; }); var assetNet = sum(state.accounts, function (account) { return account.includeAsset ? accountBalance(account, month) : 0; }); var snap = assetSnapshotSummary(month); return { income: income, plannedIncome: plan.plannedIncome, hasPlannedIncome: plan.hasPlannedIncome, payday: plan.payday, budget: budget, expense: expense, surplus: income - expense - invest, budgetBalance: plan.hasPlannedIncome ? budget - expense : 0, investment: invest, asset: assetNet, assetNet: assetNet, assetMarketValue: snap.totalAsset, overBudget: plan.hasPlannedIncome && expense > budget && budget > 0 }; }
+function monthlySummary(month) {
+  var income = monthlyIncome(month), plan = monthlyPlan(month), budget = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return accountBudgetAmount(item, month); }) : 0;
+  var accountIncludeExpenseMap = {};
+  state.accounts.forEach(function (account) { accountIncludeExpenseMap[account.id] = !!account.includeExpense; });
+  var expense = sum(state.expenses, function (item) {
+    return item.month === month && (accountIncludeExpenseMap[item.accountId] !== false) ? item.amount : 0;
+  });
+  var invest = sum(state.investments, function (item) { return item.month === month ? (item.type === "转出" ? -item.amount : item.amount) : 0; });
+  var assetNet = sum(state.accounts, function (account) { return account.includeAsset ? accountBalance(account, month) : 0; });
+  var snap = assetSnapshotSummary(month);
+  return { income: income, plannedIncome: plan.plannedIncome, hasPlannedIncome: plan.hasPlannedIncome, payday: plan.payday, budget: budget, expense: expense, surplus: income - expense - invest, budgetBalance: plan.hasPlannedIncome ? budget - expense : 0, investment: invest, asset: assetNet, assetNet: assetNet, assetMarketValue: snap.totalAsset, overBudget: plan.hasPlannedIncome && expense > budget && budget > 0 };
+}
 function financialHealth(month) {
   var s = monthlySummary(month), snap = assetSnapshotSummary(month), todayDate = new Date().getDate();
   var score = 72;

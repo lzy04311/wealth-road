@@ -2,6 +2,7 @@
 
 var flowActiveTab = "income";
 var flowReviewExpanded = false;
+var FLOW_TABS = { income: true, expense: true, investment: true };
 
 function renderFlowOverview() {
   var month = currentMonth(), s = monthlySummary(month);
@@ -74,6 +75,7 @@ function syncFlowTabPanels() {
 }
 
 function switchFlowTab(tabName) {
+  if (!FLOW_TABS[tabName]) return;
   flowActiveTab = tabName;
   syncFlowTabPanels();
 }

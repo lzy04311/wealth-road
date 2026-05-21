@@ -88,6 +88,13 @@ function bindQuickModalSubmit() {
   });
 }
 function upsert(list, item) {
+  if (list === state.incomes) item = normalizeIncome(item);
+  else if (list === state.expenses) item = normalizeExpense(item, {});
+  else if (list === state.investments) item = normalizeInvestment(item, {});
+  else if (list === state.snapshots) item = normalizeSnapshot(item, {});
+  else if (list === state.accounts) item = normalizeAccount(item, {});
+  else if (list === state.assetItems) item = normalizeAssetItem(item);
+
   var index = list.findIndex(function (row) { return row.id === item.id; });
   var previous = index >= 0 ? list[index] : null;
   if (index >= 0) list[index] = item; else list.push(item);

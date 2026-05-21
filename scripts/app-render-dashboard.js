@@ -231,7 +231,7 @@ function renderDashboardAssetTrend(month) {
     return "<line x1=\"" + pad + "\" y1=\"" + yLine.toFixed(1) + "\" x2=\"" + (w - pad) + "\" y2=\"" + yLine.toFixed(1) + "\"></line>";
   }).join("");
   var labels = rows.map(function (row, index) { return "<text x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 2) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
-  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"2.2\"></circle>"; }).join("");
+  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.8\"></circle>"; }).join("");
   el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g><polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
 }
 
