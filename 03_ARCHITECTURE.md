@@ -1,110 +1,169 @@
-# ARCHITECTURE
+# Architecture
 
-## 1) 系统定位
+本文件记录当前项目结构和模块职责。若与 `docs/ENGINEERING_STATUS.md`、`docs/DATA_MODEL.md`、`docs/DESIGN_SYSTEM.md` 冲突，以 `docs/` 下的新文档为准。
 
-这是一个本地优先的私人财富志应用，只服务我个人的资金管理、资产观察、现金流判断和生活边界感。
+## 1. 系统定位
 
-它不是通用 SaaS 产品，不是标准记账 App，不是人生管理器，也不是知识库。
+财富志是本地优先的私人资金管理网页应用，服务个人现金流、投资、资产、分配和目标管理。
 
-核心目标不是“功能完整”，而是：
-- 帮我理解钱现在处于什么状态
-- 帮我判断哪些钱能动、哪些钱不能动
-- 帮我看清现金流、资产、投资、分配之间的关系
-- 帮我降低财务决策摩擦
-- 保留我的个人语言、审美和使用习惯
+它不是通用 SaaS，不是标准记账 App，也不是后台管理系统。
 
----
+## 2. 核心页面
 
-## 2) 当前核心模块
+- Dashboard / 总览：整体资金驾驶舱，展示当前状态、趋势、风险和关键判断。
+- Flow / 流水：收入、支出、投资动作和月度现金流复盘。
+- Investments / 投资：投资和储蓄记录、持仓状态、净值和收益变化。
+- Assets / 资产：资产账户、净值快照和资产清单。
+- Accounts / 分配：资金账户、预算比例、目标和账户边界。
+- Goals / 目标：阶段性目标进度。
+- Data / 数据：导入、导出和备份。
 
-- 总览（dashboard）：整体资金驾驶舱，展示当前状态、趋势、风险和核心判断。
-- 流水（flow）：整合收入、支出、月度现金流和月账复盘。
-- 投资（investments）：记录投资/储蓄动作，管理净值更新、持仓状态和收益变化。
-- 资产（assets）：展示我真正拥有什么，包括资产清单、资产分类、总资产和结果观察。
-- 分配（accounts）：管理资金账户、预算比例、分配边界、目标金额和账户状态。
-- 目标（goals）：展示阶段性目标进度，不新增独立资金流水模型。
-- 数据（data）：负责导入、导出、备份、清空等本地数据管理。
+## 3. 当前文件结构
 
----
+### HTML
 
-## 2.1) 当前文件结构
+- `index.html`
+  - 页面结构、视图容器、表单 DOM、脚本加载顺序。
+  - 不承载业务计算。
 
-- `index.html`: 页面结构与表单容器，不承载业务计算。
-- `app.js`: 兼容说明文件，实际运行代码已拆到 `scripts/`。
-- `scripts/app-state.js`: 常量、基础工具、本地状态加载、数据标准化与保存。
-- `scripts/app-calculations.js`: 月度汇总、账户余额、资产快照、预算状态等纯计算逻辑。
-- `scripts/app-render.js`: 渲染层兼容说明文件，实际渲染代码已拆到 `scripts/app-render-*.js`。
-- `scripts/app-render-core.js`: 通用渲染工具、卡片/空状态/饼图/首页图表基础渲染。
-- `scripts/app-render-dashboard.js`: 首页总览驾驶舱渲染。
-- `scripts/app-render-records.js`: 流水页中的收入、支出、计划收入表单与分配页账户区渲染。
-- `scripts/app-render-investments.js`: 投资页渲染（投资驾驶舱、持仓卡片、投资记录列表）。
-- `scripts/app-render-flow.js`: 流水页顶部概览、Tab 切换与复盘折叠联动渲染。
-- `scripts/app-render-assets.js`: 资产总览、资产曲线与快照列表渲染。
-- `scripts/app-render-monthly.js`: 月账、目标和统一 `renderAll` 渲染入口。
-- `scripts/app-actions.js`: 表单提交、快捷录入、点击事件、导入导出与启动入口。
-- `styles.css`: 样式入口，只负责按顺序引入 `styles/` 下的样式模块。
-- `styles/base.css`: 基础变量、页面壳、Header、导航与视图切换。
-- `styles/components.css`: 通用卡片、弹窗、按钮、饼图、账户卡等组件样式。
-- `styles/dashboard.css`: 首页总览驾驶舱布局。
-- `styles/pages.css`: 资产、流水、投资、分配、目标、备份等页面样式。
-- `styles/responsive.css`: 响应式与首页账户角色卡适配。
+### State / Storage Layer
 
----
+- `scripts/app-state.js`
+  - 全局 state 变量。
+  - 常量、枚举、基础工具函数。
+  - 默认 state、默认账户、normalize 系列函数。
 
-## 3) 数据结构说明
+- `scripts/app-validators.js`
+  - `validateImportData`
+  - `validateStateShape`
+  - `validateSchemaVersion`
+  - 导入摘要与 `prepareImportedState`
 
-系统状态对象 `state` 当前包含以下字段：
+- `scripts/app-migrations.js`
+  - `CURRENT_SCHEMA_VERSION` 对应的迁移管线。
+  - 当前支持 v1 -> v2。
+  - 不认识的未来版本必须拒绝。
 
-- `accounts`: 账户配置（名称、类型、预算比例、是否计入支出/资产、目标金额等）
-- `incomes`: 收入记录（实际到账）
-- `expenses`: 支出记录（消费流水）
-- `investments`: 投入记录（投资/储蓄/转入/转出）
-- `monthlyPlans`: 月度计划（计划收入、预计发薪日）
-- `snapshots`: 资产快照（真实市值、本金）
-- `rules`: 规则文本（用户自定义）
+- `scripts/app-storage.js`
+  - `STORAGE_KEY`
+  - recovery key
+  - `loadState`
+  - `save`
+  - localStorage 损坏数据保护。
 
-说明：
-- 存储键为固定 `localStorage` key：`general_money_manager_v1`
-- 旧数据通过 `normalizeState` 做兼容
+### Calculations
 
----
+- `scripts/app-calculations.js`
+  - 月度收入、支出、预算、余额。
+  - 资产快照汇总。
+  - 财务健康分、预测、账户状态。
 
-## 4) 各模块职责边界
+### Render Layer
 
-- 总览：只做整体驾驶舱，不堆满明细，不展示所有账户配置卡。
-- 流水：回答“这个月的钱如何进来、如何出去、当前现金流如何”。
-- 投资：回答“投出去的钱现在怎么样”，包括投资动作、净值更新、持仓状态、收益率和本月变化。投资页负责动作与净值更新，资产页负责结果展示与资产盘点。
-- 资产：回答“我真正拥有什么”，主要做结果展示和资产盘点，不承担频繁净值更新入口。
-- 分配：回答“钱应该如何归位”，管理七个资金账户、预算比例、余额、目标和边界。
-- 目标：回答“钱要通向哪里”，只展示目标进度。
+- `scripts/app-render-core.js`
+  - 通用渲染工具、选项渲染、饼图、趋势图基础渲染。
 
----
+- `scripts/app-render-dashboard.js`
+  - Dashboard 首页驾驶舱渲染。
 
-## 5) 不允许随意做的事
+- `scripts/app-render-flow.js`
+  - Flow 页面顶部概览、tab 和复盘区域渲染。
 
-- 不随意改 `localStorage` key。
-- 不随意改字段名（尤其是核心数据字段）。
-- 不随意删除旧数据或破坏兼容逻辑。
-- 不引入外部库，除非用户明确同意。
-- 不做自动抓取真实账户/券商/基金数据（未授权前）。
-- 不把人生管理、知识库、任务管理塞进本系统。
+- `scripts/app-render-investments.js`
+  - Investments 页面渲染。
 
----
+- `scripts/app-render-assets.js`
+  - Assets 页面、资产清单、净值记录渲染。
 
-## 6) 后续功能优先级
+- `scripts/app-render-records.js`
+  - 收入、支出、账户区域相关渲染。
 
-- **P0**：修 bug、保护数据、备份可靠性
-- **P1**：资产快照、资产统计、月度报告增强
-- **P2**：基金持仓、手动净值、收益曲线
-- **P3**：自动净值获取
-- **P4**：云同步、登录、多端同步
+- `scripts/app-render-monthly.js`
+  - 月报、目标和统一 `renderAll` 入口。
 
----
+- `scripts/app-render.js`
+  - 兼容说明文件，正常任务不要优先修改。
 
-## 7) AI 修改代码规则
+### Actions Layer
 
-- 小步修改，避免大重构。
-- 修改前先说明影响范围（文件与模块）。
-- 默认只输出必要代码片段，不整文件重写。
-- 每次修改后提供测试清单。
-- 不重写整个项目，除非用户明确要求。
+- `scripts/app-actions-data.js`
+  - `downloadStateBackup`
+  - `exportData`
+  - `importData`
+
+- `scripts/app-actions-crud.js`
+  - `upsert`
+  - `removeRecord`
+  - `editRecord`
+
+- `scripts/app-actions-quick-entry.js`
+  - 快捷录入弹窗打开/关闭。
+  - 快捷收入、支出、投资提交绑定。
+
+- `scripts/app-actions-modals.js`
+  - 净值记录弹窗。
+  - 健康评分说明弹窗。
+
+- `scripts/app-actions-navigation.js`
+  - `setDashboardHomeMode`
+  - `handleViewSwitchClick`
+
+- `scripts/app-actions.js`
+  - form helpers。
+  - form submit binding。
+  - feature toggles。
+  - `bindClicks`。
+  - `init`。
+
+### Styles
+
+- `styles.css`
+  - 样式入口。
+
+- `styles/base.css`
+  - design tokens、基础布局、header、tabs、views、dashboard home mode。
+
+- `styles/components.css`
+  - 通用 cards/stats。
+  - 当前仍包含部分 legacy cockpit components，后续需二次验证。
+
+- `styles/dashboard.css`
+  - Dashboard 首页视觉和座舱布局。
+
+- `styles/pages.css`
+  - Assets、Accounts、Forms、Buttons、Records、Data、Flow、Monthly 等页面样式。
+
+- `styles/responsive.css`
+  - 响应式规则。
+  - 当前已标记旧 dashboard responsive selector 风险。
+
+## 4. 数据结构
+
+数据结构以 `docs/DATA_MODEL.md` 为准。
+
+关键约束：
+
+- 不随意修改 state 字段名。
+- 不随意修改 localStorage 主 key。
+- 导入必须经过 `validateImportData`。
+- `loadState` 和 `importData` 必须经过 `migrateState`。
+- `normalizeState` 只负责补齐和清洗，不负责版本迁移。
+
+## 5. 视觉规则
+
+视觉系统以 `docs/DESIGN_SYSTEM.md` 为准。
+
+当前视觉方向：
+
+- 香槟金金融座舱。
+- 私人财富驾驶舱。
+- 克制、高级、清晰、有工具感。
+- 不回到普通后台，不做科技蓝大屏，不做大面积绿色主视觉。
+
+## 6. 修改原则
+
+- 小步修改。
+- 不重写整个项目。
+- 不跨过当前任务范围顺手重构。
+- 工程改动后运行必要检查。
+- 文档、数据模型、视觉系统冲突时，优先遵守 `docs/` 下的新文档。

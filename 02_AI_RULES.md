@@ -1,3 +1,7 @@
+# Document Priority Notice
+
+本文件为早期项目规则/个人偏好记录。若与 `docs/ENGINEERING_STATUS.md`、`docs/DATA_MODEL.md`、`docs/DESIGN_SYSTEM.md` 冲突，以 `docs/` 下的新文档为准。
+
 # AI_RULES
 
 ## 项目性质
