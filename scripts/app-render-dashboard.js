@@ -78,7 +78,7 @@ function renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts
 
 function renderDashboardRightCards(month, s, assetSnap, health, forecast, assetAccounts, targetAccounts, reachedTargets, targetProgress, backupText) {
   var cards = [];
-  cards.push("<article class=\"dashboard-side-card dashboard-panel\"><h3>资产结构</h3>" + dashboardAssetStructure(month, assetAccounts) + "<button type=\"button\" class=\"dashboard-link\" data-action=\"open-view\" data-view=\"assets\">查看详情</button></article>");
+  cards.push("<article class=\"dashboard-side-card dashboard-panel\"><h3>资产结构</h3>" + dashboardAssetStructure(month, assetAccounts) + "<button type=\"button\" class=\"asset-structure-detail\" data-action=\"open-view\" data-view=\"assets\">查看详情</button></article>");
   cards.push(dashboardInsightCard(s, forecast));
   cards.push(dashboardRiskCard(health, forecast));
   cards.push(dashboardGoalCard(targetAccounts, reachedTargets, targetProgress));
