@@ -350,7 +350,7 @@ function renderDashboardAssetTrend(month) {
   var max = Math.max.apply(null, rows.map(function (row) { return row.value; })) || 1;
   var min = Math.min.apply(null, rows.map(function (row) { return row.value; }));
   var range = max - min || 1;
-  var w = 360, h = 118, pad = 14;
+  var w = 360, h = 100, pad = 12;
   function px(index) { return pad + (w - pad * 2) * (rows.length === 1 ? 0 : index / (rows.length - 1)); }
   function py(value) { return h - pad - ((value - min) / range) * (h - pad * 2); }
   var points = rows.map(function (row, index) { return px(index).toFixed(1) + "," + py(row.value).toFixed(1); }).join(" ");
@@ -360,7 +360,7 @@ function renderDashboardAssetTrend(month) {
     return "<line x1=\"" + pad + "\" y1=\"" + yLine.toFixed(1) + "\" x2=\"" + (w - pad) + "\" y2=\"" + yLine.toFixed(1) + "\"></line>";
   }).join("");
   var labels = rows.map(function (row, index) { return "<text x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 2) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
-  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.8\"></circle>"; }).join("");
+  var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.1\"></circle>"; }).join("");
   var first = rows[0] || { value: 0 };
   var last = rows[rows.length - 1] || { value: 0 };
   var cumulativeReturn = last.value - first.value;
