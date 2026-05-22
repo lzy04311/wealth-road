@@ -1,6 +1,5 @@
 ﻿"use strict";
 
-var STORAGE_KEY = "general_money_manager_v1";
 var CURRENT_SCHEMA_VERSION = 2;
 var incomeSources = ["工资", "奖金", "副业", "其他"];
 var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储蓄", "应急金", "自由支配", "其他"];
@@ -13,7 +12,7 @@ var defaultRules = ["应急金达到目标前，结余优先进入应急金。",
 var MAX_IMPORT_BYTES = 1024 * 1024;
 var MAX_TEXT_LENGTH = 160;
 var MAX_NOTE_LENGTH = 1200;
-var state = loadState();
+var state = null;
 var expenseViewMode = "list";
 var selectedExpenseDate = "";
 var dashboardPieMode = "budget";
@@ -63,7 +62,6 @@ function safeEnum(value, list, fallback) { return list.indexOf(value) >= 0 ? val
 function ensureId(item) { if (!item || typeof item !== "object") return item; item.id = safeId(item.id); return item; }
 function monthEndDate(month) { var y = parseInt(String(month).slice(0, 4), 10), m = parseInt(String(month).slice(5, 7), 10); if (!y || !m) return "9999-12-31"; var d = new Date(y, m, 0); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 
-function loadState() { try { var raw = localStorage.getItem(STORAGE_KEY); if (raw) return normalizeState(JSON.parse(raw)); } catch (err) {} return normalizeState(null); }
 function normalizeState(data) {
   var base = data && typeof data === "object" ? data : {};
   var idMap = {};
@@ -151,15 +149,4 @@ function defaultAccounts() {
     { id: uid(), name: "保命钱", type: "应急金", budgetPercent: defaultBudgetPercents["保命钱"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, note: "" },
     { id: uid(), name: "败家额度", type: "自由支配", budgetPercent: defaultBudgetPercents["败家额度"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" }
   ];
-}
-function save() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    lastSavedAt = new Date();
-    updateSaveStatusUI();
-    return true;
-  } catch (err) {
-    alert("保存失败：浏览器本地存储空间可能已满，请先导出备份。");
-    return false;
-  }
 }

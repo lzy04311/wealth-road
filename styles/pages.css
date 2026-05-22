@@ -1,3 +1,4 @@
+/* ========== Assets Page ========== */
 .asset-page-head {
   margin-bottom: 18px;
   display: flex;
@@ -344,6 +345,7 @@
 .section-title h2 { font-size: 1.18rem; font-weight: 700; }
 .section-title p { margin: 5px 0 0; font-size: .88rem; }
 .section-kicker { color: var(--primary); font-size: .82rem; font-weight: 700; letter-spacing: .04em; }
+/* ========== Pie / Chart Legacy Area ========== */
 .asset-pie-card .section-kicker,
 .asset-pie-card h2,
 .asset-pie-card p { text-align: center; }
@@ -379,6 +381,7 @@
   font-size: 10px;
   font-weight: 600;
 }
+/* ========== Accounts Page ========== */
 .account-grid, .card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
 .account-card { position: relative; overflow: hidden; padding: 18px; border-radius: var(--radius-lg); background: var(--surface); }
 .account-card::before { content: ""; position: absolute; inset: 0 0 auto; height: 6px; background: var(--account-color, var(--primary)); opacity: .85; }
@@ -529,6 +532,8 @@
 .collapsible-form { display: none; margin-bottom: 18px; }
 .collapsible-form.open { display: block; animation: softOpen .18s ease-out; }
 @keyframes softOpen { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+/* ========== Forms ========== */
+/* TODO: 后续迁移到 components.css。 */
 .form-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field.wide { grid-column: 1 / -1; }
@@ -538,6 +543,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 textarea { min-height: 150px; resize: vertical; }
 .check-field { display: flex; gap: 8px; align-items: center; min-height: 46px; color: var(--text); }
 .check-field input { width: 18px; min-height: 18px; accent-color: var(--primary); }
+/* ========== Buttons ========== */
+/* TODO: 后续迁移到 components.css。 */
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .btn { min-height: 40px; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 8px 16px; background: var(--surface-soft); color: var(--text); font-weight: 600; transition: background .15s, box-shadow .15s, transform .15s; }
 .btn:hover { box-shadow: var(--shadow-xs); }
@@ -547,6 +554,7 @@ textarea { min-height: 150px; resize: vertical; }
 .btn.danger { background: transparent; color: var(--danger); }
 .btn.danger:hover { background: rgba(184,91,80,.10); box-shadow: 0 4px 12px rgba(184,91,80,.14); }
 .btn.small { min-height: 32px; padding: 4px 12px; font-size: .82rem; }
+/* ========== Records ========== */
 .record-card { display: flex; flex-direction: column; min-height: 180px; padding: 16px; border-radius: var(--radius-lg); }
 .expense-calendar-wrap { margin-top: 8px; }
 .calendar-card {
@@ -633,6 +641,7 @@ th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: l
 th { background: var(--soft-gold); color: var(--primary-dark); font-size: .78rem; }
 td { background: rgba(255,254,250,.82); }
 tr:hover td { background: var(--surface-soft); }
+/* ========== Data / Backup Page ========== */
 .data-actions { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; align-items: stretch; }
 .data-card { display: flex; flex-direction: column; gap: 12px; }
 .data-card h2 { margin-bottom: 0; }
@@ -645,6 +654,7 @@ tr:hover td { background: var(--surface-soft); }
 .import-warning { margin: 0; border-color: var(--accent); background: var(--soft-gold); color: var(--primary-dark); font-weight: 600; }
 .data-tip { margin-top: 16px; line-height: 1.6; }
 footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .82rem; }
+/* ========== Flow / Monthly Page ========== */
 #goals .progress { height: 16px; }
 .monthly-report {
   margin-bottom: 16px;

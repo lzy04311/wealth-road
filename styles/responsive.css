@@ -1,7 +1,12 @@
-﻿@media (max-width: 900px) {
+﻿/* ========== Global Responsive ========== */
+@media (max-width: 900px) {
   .app { width: min(100% - 24px, 1180px); }
+  /* ========== Legacy Dashboard Responsive Candidates ========== */
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-canvas { grid-template-columns: 1fr; grid-template-rows: auto; grid-template-areas: "left" "middle" "right" "lower"; }
+  /* ========== Dashboard Responsive ========== */
   .dashboard-compass-page { min-height: auto; grid-template-rows: auto auto; }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .wealth-compass { min-height: auto; padding: 24px; display: grid; gap: 16px; overflow: visible; }
   .wealth-compass::before,
   .wealth-compass::after { display: none; }
@@ -10,10 +15,13 @@
   .compass-node-layer { position: relative; inset: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
   .compass-node { position: relative; left: auto; top: auto; width: 100%; transform: none; min-height: 88px; }
   .compass-node:hover { transform: translateY(-2px); }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-state-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-asset-card { min-height: auto; }
   .dashboard-line-panel { height: auto; min-height: 300px; }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-lower { grid-template-columns: 1fr; }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-lower .dashboard-uniform-card { min-height: auto; height: auto; }
   .monthly-report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .monthly-mini-grid { grid-template-columns: 1fr; }
@@ -33,6 +41,8 @@
 }
 @media (max-width: 560px) {
   .app { width: min(100% - 18px, 1180px); padding-top: 12px; }
+  /* ========== Legacy Dashboard Responsive Candidates ========== */
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .wealth-compass { padding: 18px; border-radius: 24px; }
   .compass-core { width: 132px; height: 132px; }
   .compass-core strong { font-size: 3.48rem; }
@@ -40,8 +50,10 @@
   .compass-node-layer { gap: 8px; }
   .compass-node { min-height: 96px; padding: 10px; border-radius: 16px; }
   .node-desc { white-space: normal; }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-state-summary { grid-template-columns: 1fr; gap: 10px; }
   .state-card { min-height: 96px; }
+  /* TODO: 疑似旧 dashboard 结构残留，删除前必须核对 DOM 和截图回归。 */
   .dashboard-lower .dashboard-uniform-card { min-height: auto; height: auto; }
   .monthly-report-grid { grid-template-columns: 1fr; }
   .monthly-report-head { flex-direction: column; align-items: flex-start; }
@@ -71,6 +83,7 @@
   .actions .btn { flex: 1 1 auto; }
 }
 
+/* ========== Accounts / Role Cards Responsive ========== */
 /* 首页账户角色卡（仅 accountOverview 使用） */
 #accountOverview { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
 .role-account-card {
@@ -248,6 +261,7 @@
   font-weight: 700;
 }
 
+/* ========== Accounts / Role Cards Responsive ========== */
 @media (max-width: 900px) {
   #accountOverview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -264,4 +278,3 @@
     padding-top: 0;
   }
 }
-

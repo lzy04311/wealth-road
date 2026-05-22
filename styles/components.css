@@ -4,6 +4,7 @@
   --font-number: "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 }
 
+/* ========== Generic Cards / Stats ========== */
 .grid { display: grid; gap: 12px; }
 .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .card, .account-card, .record-card, .table-wrap { background: var(--paper-glass-strong); border: 1px solid var(--champagne-line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); transition: transform .2s ease, box-shadow .2s ease; backdrop-filter: blur(14px) saturate(1.04); }
@@ -20,6 +21,8 @@
 .positive { color: var(--success) !important; }
 .negative { color: var(--danger) !important; }
 .warning { color: var(--warning) !important; }
+/* ========== Legacy Cockpit Components ========== */
+/* TODO: 疑似 dashboard 专属或旧 cockpit 残留，后续二次验证后迁移或删除。 */
 .cockpit-card {
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -31,6 +34,7 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
+/* TODO: 疑似 dashboard 专属或旧 cockpit 残留，后续二次验证后迁移或删除。 */
 .cockpit-main {
   min-height: 0;
   padding: 14px 16px;
@@ -58,6 +62,7 @@
   letter-spacing: .01em;
   text-align: center;
 }
+/* TODO: 疑似 dashboard 专属或旧 cockpit 残留，后续二次验证后迁移或删除。 */
 .cockpit-main-asset {
   margin-top: 4px;
   font-family: var(--font-number, "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif);
@@ -117,6 +122,8 @@
   line-height: 1.45;
   text-align: center;
 }
+/* ========== Action Tips / Deprecated Candidates ========== */
+/* TODO: 疑似 dashboard 专属或旧 cockpit 残留，后续二次验证后迁移或删除。 */
 .main-action-tips {
   margin-top: 8px;
   display: grid;
