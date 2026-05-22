@@ -612,22 +612,15 @@
 }
 
 .wealth-sphere {
-  fill: url(#wealthSphere);
-  stroke: rgba(248,226,180,.24);
-  stroke-width: .72;
-  filter: none;
+  display: none;
 }
 
 .wealth-sphere-inner {
-  fill: none;
-  stroke: rgba(255,255,255,.16);
-  stroke-width: .56;
-  opacity: .18;
+  display: none;
 }
 
 .wealth-sphere-shade {
-  fill: rgba(151,105,43,.040);
-  filter: blur(2.2px);
+  display: none;
 }
 
 .wealth-highlight {
@@ -763,14 +756,16 @@
   align-content: center;
   gap: 5px;
   border-radius: 999px;
-  border: 1px solid rgba(235,210,164,.16);
+  border: 1px solid rgba(235,210,164,.10);
   background:
-    radial-gradient(ellipse at 40% 22%, rgba(255,255,255,.84) 0%, rgba(255,255,255,.52) 24%, rgba(255,252,244,.30) 44%, rgba(247,235,212,.16) 66%, rgba(235,201,139,.08) 100%),
-    radial-gradient(ellipse at 68% 78%, rgba(160,108,40,.030) 0%, rgba(160,108,40,.015) 36%, rgba(160,108,40,0) 74%);
+    radial-gradient(ellipse at 34% 16%, rgba(255,255,255,.86) 0%, rgba(255,255,255,.54) 24%, rgba(255,253,247,.18) 42%, rgba(255,253,247,0) 62%),
+    radial-gradient(ellipse at 60% 76%, rgba(171,123,54,.05) 0%, rgba(171,123,54,.02) 30%, rgba(171,123,54,0) 64%),
+    radial-gradient(ellipse at 50% 52%, rgba(255,250,239,.68) 0%, rgba(248,237,213,.36) 52%, rgba(233,202,145,.14) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.68),
-    inset 14px 14px 34px rgba(255,255,255,.22),
-    inset -18px -22px 38px rgba(145,94,31,.040);
+    inset 0 1px 0 rgba(255,255,255,.64),
+    inset 14px 14px 30px rgba(255,255,255,.22),
+    inset -10px -14px 22px rgba(145,94,31,.03),
+    inset 0 0 18px rgba(255,250,236,.14);
   transition: box-shadow .18s ease, transform .18s ease;
   animation: wealthCoreBreath 9.5s ease-in-out infinite;
 }
@@ -785,23 +780,17 @@
 }
 
 .compass-core::before {
-  inset: 7%;
-  border: 1px solid rgba(238,212,164,.10);
-  background:
-    radial-gradient(ellipse at 40% 20%, rgba(255,255,255,.26) 0%, rgba(255,255,255,.10) 36%, rgba(255,255,255,0) 74%);
-  box-shadow: inset 0 0 12px rgba(255,255,255,.10);
+  display: none;
 }
 
 .compass-core::after {
-  inset: 13% 18% auto;
-  height: 27%;
-  border-radius: 999px 999px 45% 45%;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.11)),
-    linear-gradient(100deg, transparent 0 38%, rgba(255,236,190,.24) 47%, transparent 58%);
-  filter: blur(.2px);
-  opacity: .50;
-  animation: compassGlassBreath 8s ease-in-out infinite;
+  inset: 10% 16% auto;
+  height: 30%;
+  border-radius: 999px 999px 48% 48%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.52) 0%, rgba(255,255,255,.24) 46%, rgba(255,255,255,0) 100%);
+  opacity: .42;
+  filter: blur(.25px);
+  animation: compassGlassBreath 10s ease-in-out infinite;
 }
 
 .compass-core:hover {
