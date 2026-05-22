@@ -581,9 +581,7 @@
   transform: translateY(calc(var(--dashboard-core-lift) * -1));
   border-radius: 36px;
   overflow: visible;
-  background:
-    radial-gradient(circle at 50% 47%, rgba(255,255,255,.78) 0 6.4rem, rgba(255,252,244,.52) 8rem, rgba(218,181,109,.090) 12rem 15.8rem, transparent 16.4rem),
-    radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.30), transparent 19.5rem);
+  background: none;
 }
 
 .wealth-core-visual {
@@ -610,24 +608,21 @@
 .wealth-core-field {
   fill: url(#wealthHeroGlow);
   filter: url(#wealthSoftBlur);
-  opacity: .86;
+  opacity: 0;
 }
 
 .wealth-sphere {
   fill: url(#wealthSphere);
-  stroke: rgba(248,226,180,.56);
-  stroke-width: 1.02;
-  filter:
-    drop-shadow(0 14px 24px rgba(139,94,35,.068))
-    drop-shadow(0 0 50px rgba(238,206,151,.30))
-    drop-shadow(0 0 88px rgba(255,244,214,.28));
+  stroke: rgba(248,226,180,.24);
+  stroke-width: .72;
+  filter: none;
 }
 
 .wealth-sphere-inner {
   fill: none;
-  stroke: rgba(255,255,255,.84);
-  stroke-width: .92;
-  opacity: .92;
+  stroke: rgba(255,255,255,.16);
+  stroke-width: .56;
+  opacity: .18;
 }
 
 .wealth-sphere-shade {
@@ -640,18 +635,16 @@
   stroke: url(#wealthGlassArc);
   stroke-width: 5.2;
   stroke-linecap: round;
-  opacity: .95;
+  opacity: 0;
   filter: blur(.06px);
 }
 
 .wealth-highlight.second {
-  stroke-width: 2.4;
-  opacity: .66;
+  display: none;
 }
 
 .wealth-highlight.small {
-  stroke-width: 1.35;
-  opacity: .48;
+  display: none;
 }
 
 .wealth-track {
@@ -661,37 +654,24 @@
   stroke-dasharray: 180 34 42 24;
   transform-box: fill-box;
   transform-origin: center;
-  animation: wealthTrackDrift 18s linear infinite;
+  animation: none;
+  opacity: 0;
 }
 
 .wealth-track.track-a {
-  transform: rotate(-13deg);
-  opacity: .42;
+  display: none;
 }
 
 .wealth-track.track-b {
-  transform: rotate(10deg);
-  stroke: rgba(238,215,174,.062);
-  stroke-dasharray: 110 28 56 32;
-  opacity: .35;
-  animation-duration: 22s;
+  display: none;
 }
 
 .wealth-track.track-c {
-  transform: rotate(-4deg);
-  stroke: rgba(238,215,174,.052);
-  stroke-dasharray: 64 24 120 34;
-  opacity: .30;
-  animation-duration: 26s;
+  display: none;
 }
 
 .wealth-track.track-front {
-  transform: rotate(-11deg);
-  stroke: rgba(248,226,184,.16);
-  stroke-width: .50;
-  stroke-dasharray: 150 40 54 28;
-  opacity: .46;
-  animation-duration: 20s;
+  display: none;
 }
 
 .wealth-flow {
@@ -700,29 +680,27 @@
   stroke-width: .48;
   stroke-linecap: round;
   stroke-dasharray: 260 42;
-  opacity: .28;
+  opacity: 0;
+  display: none;
 }
 
 .wealth-flow.flow-back-b {
-  stroke-width: .38;
-  opacity: .20;
+  display: none;
 }
 
 .wealth-flow.flow-front-a {
-  stroke-width: .56;
-  opacity: .34;
+  display: none;
 }
 
 .wealth-flow.flow-front-b {
-  stroke-width: .40;
-  opacity: .24;
+  display: none;
 }
 
 .wealth-particles circle {
   fill: rgba(255,226,168,.95);
   filter: url(#wealthPearlGlow);
-  opacity: .90;
-  animation: wealthGlowPulse 7.2s ease-in-out infinite;
+  opacity: 0;
+  animation: none;
 }
 
 .wealth-pearl {
@@ -730,8 +708,8 @@
   stroke: rgba(255,255,255,.94);
   stroke-width: 1.18;
   filter: url(#wealthPearlGlow);
-  opacity: .78;
-  animation: wealthPearlDrift 10s ease-in-out infinite;
+  opacity: 0;
+  animation: none;
 }
 
 .wealth-pearl.pearl-b,
@@ -757,43 +735,19 @@
 }
 
 .dashboard-center-orbit::before {
-  width: min(68%, 470px);
-  aspect-ratio: 1 / 1;
-  border: 1px solid rgba(201,166,107,.07);
-  box-shadow:
-    0 0 0 18px rgba(201,166,107,.006),
-    0 0 24px rgba(201,166,107,.026);
+  display: none;
 }
 
 .dashboard-center-orbit::after {
-  width: min(52%, 360px);
-  aspect-ratio: 1 / 1;
-  border: 1px solid rgba(201,166,107,.06);
-  box-shadow: inset 0 0 28px rgba(255,255,255,.16);
+  display: none;
 }
 
 .compass-node-layer::before {
-  z-index: 0;
-  width: min(44%, 305px);
-  aspect-ratio: 1 / 1;
-  border: 1px solid rgba(201,166,107,.10);
-  box-shadow:
-    0 0 0 12px rgba(201,166,107,.008),
-    inset 0 0 26px rgba(255,255,255,.16);
+  display: none;
 }
 
 .compass-node-layer::after {
-  z-index: 0;
-  width: min(62%, 430px);
-  aspect-ratio: 1 / 1;
-  opacity: .42;
-  background:
-    repeating-conic-gradient(from 4deg, rgba(201,166,107,.20) 0deg .45deg, transparent .45deg 59.5deg, rgba(201,166,107,.16) 59.5deg 60deg),
-    radial-gradient(circle at 50% 2%, rgba(185,141,78,.72) 0 2px, transparent 2.5px),
-    radial-gradient(circle at 98% 50%, rgba(185,141,78,.60) 0 2px, transparent 2.5px),
-    radial-gradient(circle at 2% 50%, rgba(185,141,78,.54) 0 1.8px, transparent 2.3px);
-  -webkit-mask-image: radial-gradient(circle, transparent 0 48.5%, #000 48.8% 50.2%, transparent 50.55%);
-  mask-image: radial-gradient(circle, transparent 0 48.5%, #000 48.8% 50.2%, transparent 50.55%);
+  display: none;
 }
 
 .compass-core {
@@ -809,23 +763,14 @@
   align-content: center;
   gap: 5px;
   border-radius: 999px;
-  border: 1px solid rgba(235,210,164,.30);
+  border: 1px solid rgba(235,210,164,.16);
   background:
-    radial-gradient(circle at 36% 18%, rgba(255,255,255,.95) 0 8%, rgba(255,255,255,.42) 15%, transparent 22%),
-    radial-gradient(circle at 50% 42%, rgba(255,255,255,.56) 0 26%, rgba(255,250,238,.26) 46%, transparent 67%),
-    radial-gradient(circle at 50% 50%, rgba(255,238,194,.22), transparent 59%),
-    radial-gradient(circle at 50% 50%, transparent 0 50%, rgba(255,255,255,.22) 54%, transparent 58%),
-    radial-gradient(circle at 50% 50%, transparent 0 61%, rgba(235,201,139,.13) 71%, rgba(181,125,53,.058) 86%, transparent 100%),
-    radial-gradient(circle at 66% 74%, rgba(145,92,32,.060), transparent 36%),
-    linear-gradient(145deg, rgba(255,253,248,.16), rgba(248,240,225,.060));
+    radial-gradient(ellipse at 40% 22%, rgba(255,255,255,.84) 0%, rgba(255,255,255,.52) 24%, rgba(255,252,244,.30) 44%, rgba(247,235,212,.16) 66%, rgba(235,201,139,.08) 100%),
+    radial-gradient(ellipse at 68% 78%, rgba(160,108,40,.030) 0%, rgba(160,108,40,.015) 36%, rgba(160,108,40,0) 74%);
   box-shadow:
-    0 14px 34px rgba(133,100,52,.038),
-    0 0 34px rgba(230,197,138,.14),
-    0 0 62px rgba(255,246,220,.12),
-    inset 0 1px 0 rgba(255,255,255,.82),
-    inset 18px 18px 42px rgba(255,255,255,.32),
-    inset -22px -26px 46px rgba(145,94,31,.060),
-    inset 0 0 0 1px rgba(255,255,255,.24);
+    inset 0 1px 0 rgba(255,255,255,.68),
+    inset 14px 14px 34px rgba(255,255,255,.22),
+    inset -18px -22px 38px rgba(145,94,31,.040);
   transition: box-shadow .18s ease, transform .18s ease;
   animation: wealthCoreBreath 9.5s ease-in-out infinite;
 }
@@ -841,15 +786,10 @@
 
 .compass-core::before {
   inset: 7%;
-  border: 1px solid rgba(238,212,164,.24);
+  border: 1px solid rgba(238,212,164,.10);
   background:
-    radial-gradient(circle at 50% 50%, transparent 0 49%, rgba(255,255,255,.24) 52%, transparent 55%),
-    radial-gradient(circle at 50% 50%, transparent 0 62%, rgba(238,212,164,.090) 68%, transparent 74%),
-    linear-gradient(132deg, rgba(255,255,255,.52) 0 14%, transparent 20% 68%, rgba(201,166,107,.044) 76% 100%);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.32),
-    inset 0 0 28px rgba(255,255,255,.22),
-    inset 0 0 44px rgba(218,185,123,.060);
+    radial-gradient(ellipse at 40% 20%, rgba(255,255,255,.26) 0%, rgba(255,255,255,.10) 36%, rgba(255,255,255,0) 74%);
+  box-shadow: inset 0 0 12px rgba(255,255,255,.10);
 }
 
 .compass-core::after {
@@ -866,8 +806,6 @@
 
 .compass-core:hover {
   box-shadow:
-    0 18px 44px rgba(133,100,52,.075),
-    0 0 22px rgba(201,166,107,.048),
     inset 0 1px 0 rgba(255,255,255,.9),
     inset -20px -22px 42px rgba(201,166,107,.058);
 }
@@ -988,7 +926,7 @@
   height: 1px;
   transform-origin: left center;
   transform: rotate(var(--link-r, 0deg));
-  background: linear-gradient(90deg, rgba(185,141,78,.18), transparent);
+  background: none;
   pointer-events: none;
   z-index: -1;
 }
