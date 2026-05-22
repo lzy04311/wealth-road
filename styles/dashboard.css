@@ -1,6 +1,9 @@
 .dashboard-cockpit-page {
   --dashboard-core-lift: 50px;
   --dashboard-strip-rise: var(--dashboard-core-lift);
+  --font-serif-zh: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif;
+  --font-sans-zh: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  --font-number: "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif;
   position: relative;
   height: 100%;
   min-height: 0;
@@ -18,6 +21,8 @@
   border: 0;
   box-shadow: none;
   overflow: hidden;
+  font-family: var(--font-sans-zh);
+  line-height: 1.45;
 }
 
 .dashboard-cockpit-page::before,
@@ -83,23 +88,30 @@
     radial-gradient(circle at 32% 24%, rgba(255,255,255,.96), transparent 42%),
     linear-gradient(145deg, rgba(255,253,248,.88), rgba(243,230,206,.58));
   color: var(--primary-dark);
+  font-family: var(--font-serif-zh);
   font-size: 1.75rem;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: .01em;
   box-shadow: inset 0 0 0 3px rgba(255,255,255,.52), 0 8px 20px rgba(133,100,52,.065);
 }
 
 .dashboard-brand h2 {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 850;
+  font-family: var(--font-serif-zh);
+  font-size: clamp(1.5rem, 1.45vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: .01em;
+  line-height: 1.16;
   color: var(--text);
 }
 
 .dashboard-brand p {
   margin: 2px 0 0;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .82rem;
-  font-weight: 600;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .dashboard-status-bar {
@@ -140,22 +152,29 @@
 
 .dashboard-status-pill span {
   color: var(--primary-dark);
+  font-family: var(--font-sans-zh);
   font-size: .66rem;
-  font-weight: 760;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .dashboard-status-pill strong {
   color: var(--text);
+  font-family: var(--font-number);
   font-size: .74rem;
-  font-weight: 760;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   white-space: nowrap;
 }
 
 .dashboard-status-pill small {
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .6rem;
-  font-weight: 620;
+  font-weight: 500;
+  line-height: 1.35;
   white-space: nowrap;
 }
 
@@ -176,8 +195,10 @@
     radial-gradient(circle at 30% 22%, rgba(255,255,255,.9), transparent 48%),
     linear-gradient(145deg, rgba(255,253,248,.82), rgba(243,230,206,.48));
   color: var(--primary-dark);
+  font-family: var(--font-serif-zh);
   font-size: 1.12rem;
-  font-weight: 850;
+  font-weight: 700;
+  line-height: 1;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.48), 0 8px 18px rgba(133,100,52,.055);
 }
 
@@ -264,8 +285,10 @@
 .dashboard-side-card h3 {
   margin: 0;
   color: var(--text);
-  font-size: .98rem;
-  font-weight: 760;
+  font-family: var(--font-serif-zh);
+  font-size: clamp(1.08rem, 1.08vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.22;
   letter-spacing: .01em;
 }
 
@@ -278,8 +301,10 @@
   border-radius: 999px;
   background: rgba(255,254,250,.44);
   color: rgba(79,138,98,.92);
+  font-family: var(--font-sans-zh);
   font-size: .72rem;
-  font-weight: 690;
+  font-weight: 500;
+  line-height: 1.35;
   letter-spacing: .01em;
   white-space: nowrap;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.52);
@@ -287,11 +312,13 @@
 
 .dashboard-total-asset {
   color: #74522a;
-  font-size: clamp(2.05rem, 3.95vw, 3.34rem);
+  font-family: var(--font-number);
+  font-size: clamp(3.75rem, 3.75vw, 4.5rem);
   line-height: 1;
-  font-weight: 780;
-  letter-spacing: .01em;
-  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 700;
+  letter-spacing: -.04em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   text-shadow: 0 1px 0 rgba(255,255,255,.56), 0 8px 18px rgba(150,114,66,.10);
   overflow-wrap: anywhere;
 }
@@ -303,15 +330,18 @@
   padding-bottom: 4px;
   border-bottom: 1px solid rgba(201,166,107,.18);
   color: rgba(129,120,102,.88);
+  font-family: var(--font-sans-zh);
   font-size: .8rem;
-  font-weight: 620;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .dashboard-change-row strong {
   color: #2f2921;
+  font-family: var(--font-serif-zh);
   font-size: .94rem;
-  font-weight: 790;
-  letter-spacing: .005em;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .dashboard-asset-metrics {
@@ -340,19 +370,23 @@
 .dashboard-asset-metrics small {
   display: block;
   color: rgba(129,120,102,.86);
+  font-family: var(--font-sans-zh);
   font-size: .62rem;
-  font-weight: 620;
-  letter-spacing: .01em;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0;
 }
 
 .dashboard-asset-metrics strong {
   display: block;
   margin: 1px 0 0;
   color: #2F2921;
-  font-size: .9rem;
-  font-weight: 780;
-  font-variant-numeric: tabular-nums lining-nums;
-  letter-spacing: .004em;
+  font-family: var(--font-number);
+  font-size: clamp(1rem, 1.1vw, 1.28rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -.02em;
   overflow-wrap: anywhere;
 }
 
@@ -378,8 +412,10 @@
   justify-content: space-between;
   gap: 10px;
   color: var(--muted);
+  font-family: var(--font-serif-zh);
   font-size: .78rem;
   font-weight: 700;
+  letter-spacing: 0;
 }
 
 .dashboard-mini-chart svg {
@@ -442,15 +478,21 @@
 
 .dashboard-trend-facts span {
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .58rem;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .dashboard-trend-facts strong {
   margin-top: 1px;
   color: var(--text);
+  font-family: var(--font-number);
   font-size: .66rem;
-  font-weight: 820;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .dashboard-center-panel {
@@ -782,8 +824,10 @@
 .core-kicker {
   position: relative;
   color: var(--muted);
+  font-family: var(--font-serif-zh);
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: .01em;
   display: none;
 }
 
@@ -798,15 +842,15 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: var(--font-serif-zh);
   font-size: clamp(7.4rem, 10.2vw, 9.9rem);
   line-height: 1;
-  font-weight: 850;
-  letter-spacing: 0;
+  font-weight: 700;
+  letter-spacing: -.02em;
   text-shadow:
-    0 1px 0 rgba(255,247,220,.22),
-    0 2px 5px rgba(95,59,18,.08),
-    0 0 14px rgba(224,180,92,.12);
+    0 1px 0 rgba(255,247,220,.30),
+    0 2px 4px rgba(95,59,18,.10),
+    0 0 12px rgba(224,180,92,.14);
 }
 
 .compass-core span:last-child {
@@ -814,8 +858,10 @@
   z-index: 1;
   max-width: 190px;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .84rem;
-  font-weight: 800;
+  font-weight: 500;
+  line-height: 1.45;
   text-align: center;
   display: none;
 }
@@ -911,15 +957,19 @@
 .node-name {
   grid-area: name;
   color: var(--text);
+  font-family: var(--font-serif-zh);
   font-size: .76rem;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .node-desc {
   grid-area: desc;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .61rem;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.38;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -929,8 +979,12 @@
   grid-area: value;
   margin-top: 3px;
   color: #8E6A32;
+  font-family: var(--font-number);
   font-size: .70rem;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1016,16 +1070,22 @@
 
 .dashboard-side-card strong {
   color: var(--text);
+  font-family: var(--font-number);
   font-size: 1.24rem;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   overflow-wrap: anywhere;
 }
 
 .dashboard-side-card p {
   margin: 0;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .82rem;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .dashboard-link {
@@ -1034,7 +1094,8 @@
   border: 0;
   background: transparent;
   color: var(--primary-dark);
-  font-weight: 800;
+  font-family: var(--font-sans-zh);
+  font-weight: 600;
   padding: 0;
 }
 
@@ -1084,8 +1145,10 @@
   gap: 7px;
   align-items: center;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .78rem;
-  font-weight: 700;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .dashboard-structure-list span {
@@ -1095,21 +1158,31 @@
 }
 
 .dashboard-structure-list strong {
+  font-family: var(--font-serif-zh);
   font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .dashboard-structure-list em {
+  font-family: var(--font-number);
   font-style: normal;
   color: var(--text);
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .dashboard-structure-list b {
   color: rgba(91,78,58,.78);
+  font-family: var(--font-number);
   font-size: .68rem;
-  font-weight: 760;
+  font-weight: 700;
+  letter-spacing: -.02em;
   text-align: right;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums lining-nums;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .dashboard-risk-bar,
@@ -1219,9 +1292,12 @@
 
 .dashboard-goal-ring span {
   color: var(--primary-dark);
+  font-family: var(--font-number);
   font-size: .66rem;
-  font-weight: 860;
-  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .dashboard-goal-visual strong,
@@ -1264,8 +1340,10 @@
 
 .dashboard-empty-mini {
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .84rem;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 .dashboard-bottom-strip {
@@ -1318,28 +1396,44 @@
     radial-gradient(circle at 34% 30%, rgba(255,255,255,.74), transparent 48%),
     rgba(255,253,248,.40);
   color: var(--primary-dark);
+  font-family: var(--font-serif-zh);
   font-style: normal;
   font-size: .74rem;
-  font-weight: 850;
+  font-weight: 700;
 }
 
 .dashboard-strip-item span,
 .dashboard-strip-item small {
   display: block;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .72rem;
-  font-weight: 650;
+  font-weight: 500;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.dashboard-strip-item .dashboard-strip-copy > span {
+  color: var(--text);
+  font-family: var(--font-serif-zh);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.22;
 }
 
 .dashboard-strip-item strong {
   display: block;
   margin: 3px 0 2px;
   color: var(--text);
+  font-family: var(--font-number);
   font-size: .98rem;
-  font-weight: 850;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1371,8 +1465,10 @@
 .dashboard-strip-progress p span {
   min-width: 0;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .58rem;
-  font-weight: 690;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .dashboard-strip-donut-wrap {
@@ -1406,9 +1502,10 @@
   align-items: center;
   gap: 4px;
   color: rgba(112,99,78,.78);
+  font-family: var(--font-sans-zh);
   font-size: .56rem;
   line-height: 1.15;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .dashboard-strip-item .dashboard-strip-mini-list i {
@@ -1423,8 +1520,10 @@
 .dashboard-strip-mini-empty {
   margin-top: 3px;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .62rem;
-  font-weight: 700;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .dashboard-strip-sparkline {
@@ -1552,15 +1651,21 @@
 
 .dashboard-status-item span {
   color: var(--text);
+  font-family: var(--font-sans-zh);
   font-size: .70rem;
-  font-weight: 800;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .dashboard-status-item strong {
   margin-top: 1px;
   color: var(--muted);
+  font-family: var(--font-number);
   font-size: .62rem;
   font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .dashboard-bottom-nav-actions {
@@ -1584,8 +1689,10 @@
   border-radius: 999px;
   background: transparent;
   color: var(--muted);
+  font-family: var(--font-sans-zh);
   font-size: .74rem;
-  font-weight: 800;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .dashboard-bottom-nav span {
@@ -1595,12 +1702,16 @@
   place-items: center;
   border-radius: 999px;
   color: var(--primary-dark);
+  font-family: var(--font-serif-zh);
   font-size: .9rem;
+  font-weight: 700;
 }
 
 .dashboard-bottom-nav strong {
+  font-family: var(--font-sans-zh);
   font-size: .78rem;
-  font-weight: 800;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .dashboard-bottom-nav button:hover {
@@ -1703,7 +1814,7 @@
   }
 
   .dashboard-brand h2 {
-    font-size: 1.22rem;
+    font-size: 1.5rem;
   }
 
   .dashboard-brand p {
@@ -1748,7 +1859,7 @@
   }
 
   .dashboard-total-asset {
-    font-size: clamp(2.25rem, 4vw, 3.55rem);
+    font-size: clamp(3.75rem, 3.65vw, 4.25rem);
   }
 
   .dashboard-change-row {
