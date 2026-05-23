@@ -33,6 +33,10 @@ function handleFeatureToggleClick(event) {
   if (flowTab) { switchFlowTab(flowTab.dataset.flowTab); return true; }
   var flowAdd = event.target.closest("#flowAddRecord");
   if (flowAdd) { openQuickEntry(flowActiveTab); return true; }
+  var flowAddTop = event.target.closest("#flowAddRecordTop");
+  if (flowAddTop) { openQuickEntry(flowActiveTab); return true; }
+  var exportDataTop = event.target.closest("#exportDataTop");
+  if (exportDataTop) { exportData(); return true; }
   return false;
 }
 function bindClicks() {

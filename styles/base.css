@@ -143,9 +143,63 @@ h2 { margin: 0; color: var(--text); }
 /* ========== Dashboard Home Mode ========== */
 .dashboard-home-mode .app-header,
 .dashboard-home-mode .tabs { display: none; }
+.module-page-mode .app-header,
+.module-page-mode .tabs { display: none; }
 .tabs::-webkit-scrollbar { height: 0; }
 .tab { flex: 1 1 0; min-height: 40px; border: 0; border-radius: var(--radius-pill); background: rgba(255,254,250,.34); color: var(--muted); padding: 8px 16px; font-weight: 700; text-align: center; white-space: nowrap; transition: background .2s, color .2s, box-shadow .2s; }
 .tab.active { background: linear-gradient(135deg, #2A2824, #494238); color: var(--surface); box-shadow: 0 8px 22px rgba(112,84,42,.16), inset 0 0 0 1px rgba(213,177,111,.38); }
 .tab:hover:not(.active) { background: rgba(243,230,206,.54); color: var(--primary-dark); }
 .view { display: none; }
 .view.active { display: block; }
+
+/* ========== Module Page Shell ========== */
+.module-page-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border: 1px solid var(--champagne-line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(255,253,248,.94), rgba(248,241,229,.82));
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+.module-page-header > div { min-width: 0; }
+.module-page-header span {
+  display: block;
+  color: var(--primary-dark);
+  font-size: .76rem;
+  font-weight: 800;
+}
+.module-page-header h2 {
+  margin-top: 2px;
+  font-size: 1.34rem;
+}
+.module-page-header p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: .86rem;
+}
+.module-back-btn {
+  width: 42px;
+  height: 42px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--champagne-line);
+  border-radius: var(--radius-pill);
+  background: rgba(255,253,248,.78);
+  color: var(--primary-dark);
+  font-size: 1.8rem;
+  line-height: 1;
+  box-shadow: var(--shadow-xs);
+}
+.module-back-btn:hover {
+  background: rgba(243,230,206,.74);
+  color: var(--text);
+}
+.dashboard-home-mode .module-page-header { display: none; }

@@ -44,6 +44,17 @@
   .income-year-head h2 { font-size: 1rem; }
   .income-bars { min-width: 720px; }
   .app-header, .page-toolbar { padding: 16px; border-radius: var(--radius-lg); }
+  .module-page-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    padding: 14px;
+  }
+  .module-page-header > .btn {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .module-page-header h2 { font-size: 1.16rem; }
+  .module-page-header p { font-size: .78rem; }
   .page-toolbar { align-items: stretch; flex-direction: column; }
   .month-picker { width: 100%; }
   .month-picker-inner { min-width: 0; }

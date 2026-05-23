@@ -49,7 +49,7 @@ function renderInvestments(ctx) {
       + "</div>"
       + "<div class=\"ip-card-foot\"><span>" + (hasSnapshot ? "最近更新：" + av.snapshotDate : "暂无净值快照") + "</span></div>"
       + "</div>";
-  }).join("") : empty("还没有资产账户。", "在「分配」页把投资账户标记为「计入资产」，这里就会出现持仓卡片。", "", "📊");
+  }).join("") : empty("还没有资产账户。", "在「计划」页把投资账户标记为「计入资产」，这里就会出现持仓卡片。", "", "📊");
 
   // Layer 3: actions hint
   if (lastDates.length) {

@@ -86,7 +86,7 @@
       <button class="tab" data-view="flow">流水</button>
       <button class="tab" data-view="investments">投资</button>
       <button class="tab" data-view="assets">资产</button>
-      <button class="tab" data-view="accounts">分配</button>
+      <button class="tab" data-view="accounts">计划</button>
       <button class="tab" data-view="goals">目标</button>
     </nav>
 
@@ -213,18 +213,27 @@
           <nav class="dashboard-bottom-nav dashboard-panel" aria-label="底部状态与导航">
             <div id="dashboardBottomStatus" class="dashboard-bottom-status" aria-label="底部状态入口"></div>
             <div class="dashboard-bottom-nav-actions" aria-label="页面导航入口">
-              <button type="button" class="active" data-action="open-view" data-view="dashboard"><span>⌂</span><strong>首页</strong></button>
-              <button type="button" data-action="open-view" data-view="assets"><span>◷</span><strong>资产</strong></button>
+              <button type="button" data-action="open-view" data-view="investments"><span>↗</span><strong>投资</strong></button>
               <button type="button" data-action="open-view" data-view="flow"><span>▤</span><strong>流水</strong></button>
-              <button type="button" data-action="open-view" data-view="investments"><span>▥</span><strong>分析</strong></button>
+              <button type="button" data-action="open-view" data-view="assets"><span>◷</span><strong>资产</strong></button>
               <button type="button" data-action="open-view" data-view="goals"><span>◎</span><strong>目标</strong></button>
-              <button type="button" data-action="open-view" data-view="data"><span>⚙</span><strong>设置</strong></button>
+              <button type="button" data-action="open-view" data-view="accounts"><span>◫</span><strong>计划</strong></button>
+              <button type="button" data-action="open-view" data-view="data"><span>⚙</span><strong>备份</strong></button>
             </div>
           </nav>
         </section>
       </section>
 
       <section id="assets" class="view">
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>资产舱</span>
+            <h2>资产库</h2>
+            <p>管理现金、投资、设备、订阅和软件资产</p>
+          </div>
+          <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
+        </header>
         <div class="page-toolbar asset-page-head">
           <div>
             <p>管理现金、投资、实物、订阅和软件资产</p>
@@ -265,6 +274,15 @@
       </section>
 
       <section id="flow" class="view">
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>现金流舱</span>
+            <h2>流水</h2>
+            <p>收入、支出、投资流水和本月预算节奏</p>
+          </div>
+          <button class="btn primary small" type="button" id="flowAddRecordTop">＋ 添加</button>
+        </header>
         <!-- Top bar: horizontal summary -->
         <section class="flow-topbar">
           <div class="flow-topbar-hero">
@@ -418,6 +436,15 @@
       </section>
 
       <section id="investments" class="view">
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>投资舱</span>
+            <h2>投资</h2>
+            <p>持仓账户、净值更新、收益率和投资流水</p>
+          </div>
+          <button class="btn primary small" type="button" data-open-form="snapshot">更新净值</button>
+        </header>
         <!-- Layer 1: Cockpit -->
         <section class="invest-topbar">
           <div class="invest-topbar-hero">
@@ -519,13 +546,22 @@
       </section>
 
       <section id="accounts" class="view">
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>计划舱</span>
+            <h2>资金计划</h2>
+            <p>校准账户角色、预算比例和目标边界</p>
+          </div>
+          <button class="btn primary small" type="button" data-open-form="account">计划设置</button>
+        </header>
         <div class="page-toolbar">
           <div>
-            <h2>资金分配</h2>
+            <h2>资金计划</h2>
             <p>查看各账户的预算比例、当前余额、目标和状态</p>
             <div class="module-summary" id="accountModuleSummary"></div>
           </div>
-          <button class="btn primary small" type="button" data-open-form="account">账户设置</button>
+          <button class="btn primary small" type="button" data-open-form="account">计划设置</button>
         </div>
         <div class="card collapsible-form" id="accountFormCard">
           <div class="section-title compact"><div><h2 id="accountFormTitle">新增账户</h2><p>预算、资产、目标都在这里配置</p></div></div>
@@ -549,7 +585,16 @@
       </section>
 
       <section id="goals" class="view">
-        <div class="section-title compact"><div><h2>目标进度</h2><p>给账户设置目标金额后，这里会显示完成百分比和差额</p></div></div>
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>目标舱</span>
+            <h2>目标</h2>
+            <p>查看阶段目标、完成比例和剩余差额</p>
+          </div>
+          <button class="btn ghost small" type="button" data-action="open-view" data-view="accounts">去计划页</button>
+        </header>
+        <div class="section-title compact"><div><h2>目标</h2><p>给账户设置目标金额后，这里会显示完成百分比和差额</p></div></div>
         <div class="account-grid" id="goalList"></div>
       </section>
 
@@ -558,6 +603,15 @@
       </section>
 
       <section id="data" class="view">
+        <header class="module-page-header">
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <div>
+            <span>安全舱</span>
+            <h2>本地数据安全中心</h2>
+            <p>导入、导出、备份和异常数据处理</p>
+          </div>
+          <button class="btn primary small" type="button" id="exportDataTop">导出备份</button>
+        </header>
         <div class="card data-center-head">
           <h2>本地数据安全中心</h2>
           <p class="subtitle">数据保存在当前浏览器 localStorage 中建议每周导出一次 JSON 备份导入会覆盖当前本地数据，请确认文件无误</p>

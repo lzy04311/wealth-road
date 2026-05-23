@@ -43,7 +43,7 @@
 
 /* ===== Bottom Nav: Base (desktop default) ===== */
 .dashboard-bottom-nav {
-  min-height: 68px !important;
+  min-height: 60px !important;
   height: auto !important;
   overflow: visible !important;
 }

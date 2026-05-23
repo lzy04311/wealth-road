@@ -68,7 +68,7 @@ function dashboardStripInvestModule(assetSnap) {
 function dashboardStripAllocationModule(assetRows, assetAccounts) {
   return "<article class=\"dashboard-strip-item dashboard-strip-allocation\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">资产配置概览</span>"
+    + "<span class=\"dashboard-strip-title\">资产概览</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-allocation-row\">"
     + "<div class=\"dashboard-strip-list\">" + dashboardStripTopList(assetRows.slice(0, 4), assetAccounts.length + " 个资产账户") + "</div>"
@@ -82,7 +82,7 @@ function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumula
   var rateText = savingRate == null ? "--" : savingRate.toFixed(1) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-goal\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">储蓄与目标</span>"
+    + "<span class=\"dashboard-strip-title\">目标</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(monthLabel) + "储蓄率</span><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
     + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(savingProgress.toFixed(1)) + "%\"><b></b></div>"

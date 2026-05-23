@@ -72,7 +72,7 @@ function createContext() {
   var context = {
     console: console,
     document: document,
-    window: { document: document },
+    window: { document: document, scrollTo: function () {} },
     Blob: function () {},
     URL: { createObjectURL: function () { return "blob:mock"; }, revokeObjectURL: function () {} },
     FileReader: function () { this.readAsText = function () {}; },
@@ -177,6 +177,16 @@ test("appConfirm resolves false on dismiss close", function () {
   return Promise.resolve().then(function () {
     assert.strictEqual(result, false);
   });
+});
+
+test("activateView switches between home and module page modes", function () {
+  var context = createContext();
+  context.activateView("flow");
+  assert.strictEqual(context.document.body.classList.contains("module-page-mode"), true);
+  assert.strictEqual(context.document.body.classList.contains("dashboard-home-mode"), false);
+  context.activateView("dashboard");
+  assert.strictEqual(context.document.body.classList.contains("dashboard-home-mode"), true);
+  assert.strictEqual(context.document.body.classList.contains("module-page-mode"), false);
 });
 
 testChain.then(function () {}, function () {});

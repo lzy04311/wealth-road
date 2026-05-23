@@ -66,11 +66,11 @@ function renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts
   setDashboardText("compassCoreStatus", coreJudgement);
   var targetText = targetAccounts.length ? reachedTargets.length + "/" + targetAccounts.length + " 已完成" : "待设置目标";
   var nodes = [
-    { key: "flow", view: "flow", name: "现金流", desc: "本月净流入", value: s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus)), className: s.surplus >= 0 ? "positive" : "negative", level: "core" },
-    { key: "invest", view: "investments", name: "投资收益", desc: "收益率", value: roiText, className: assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), level: "core" },
-    { key: "assets", view: "assets", name: "资产配置", desc: "当前总资产", value: money(totalAsset), className: "", level: "core" },
-    { key: "accounts", view: "accounts", name: "分配", desc: "预算比例", value: totalBudgetPercent().toFixed(1) + "%", className: totalBudgetPercent() > 100 ? "negative" : "positive", level: "aux" },
-    { key: "goals", view: "goals", name: "目标进度", desc: "阶段目标", value: targetText, className: targetAccounts.length ? "positive" : "warning", level: "aux" },
+    { key: "flow", view: "flow", name: "流水", desc: "本月净流入", value: s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus)), className: s.surplus >= 0 ? "positive" : "negative", level: "core" },
+    { key: "invest", view: "investments", name: "投资", desc: "收益率", value: roiText, className: assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), level: "core" },
+    { key: "assets", view: "assets", name: "资产", desc: "当前总资产", value: money(totalAsset), className: "", level: "core" },
+    { key: "accounts", view: "accounts", name: "计划", desc: "预算比例", value: totalBudgetPercent().toFixed(1) + "%", className: totalBudgetPercent() > 100 ? "negative" : "positive", level: "aux" },
+    { key: "goals", view: "goals", name: "目标", desc: "阶段目标", value: targetText, className: targetAccounts.length ? "positive" : "warning", level: "aux" },
     { key: "data", view: "data", name: "备份", desc: "数据安全", value: backupText, className: "positive", level: "aux" }
   ];
   var nodeLayer = byId("wealthCompassNodes");
@@ -142,7 +142,7 @@ function dashboardRiskCard(health, forecast) {
 function dashboardGoalCard(targetAccounts, reachedTargets, targetProgress) {
   var value = targetAccounts.length ? reachedTargets.length + "/" + targetAccounts.length + " 进行中" : "待设置目标";
   var status = targetAccounts.length ? "阶段目标推进中" : "先设置阶段目标";
-  return "<article class=\"dashboard-side-card dashboard-panel dashboard-goal-card\"><h3><i></i>目标进度</h3>"
+  return "<article class=\"dashboard-side-card dashboard-panel dashboard-goal-card\"><h3><i></i>目标</h3>"
     + "<div class=\"dashboard-goal-visual\">"
     + "<div class=\"dashboard-goal-ring\" style=\"--goal-progress:" + esc(String(Math.max(0, Math.min(100, targetProgress)))) + "%\"><span>" + esc(targetProgress.toFixed(0)) + "%</span></div>"
     + "<div><strong class=\"" + (targetAccounts.length ? "positive" : "warning") + "\">" + esc(value) + "</strong><p>" + esc(status) + "</p></div>"
