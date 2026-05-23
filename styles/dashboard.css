@@ -1729,45 +1729,89 @@
   isolation: isolate;
 }
 
-.dashboard-strip-quote .dashboard-strip-copy {
+.dashboard-strip-quote .dashboard-strip-body {
   position: relative;
+}
+
+.dashboard-strip-quote-mark {
+  display: inline;
+  font-family: var(--font-serif-zh);
+  font-size: 20px;
+  font-weight: 400;
+  color: rgba(201,166,107,.28);
+  font-style: normal;
+  line-height: 0;
+  vertical-align: -2px;
+  margin-right: 2px;
+  border: 0;
+  background: none;
+  width: auto;
+  height: auto;
+  border-radius: 0;
 }
 
 .dashboard-strip-quote-art {
   position: absolute;
-  inset: auto 0 -6px 0;
-  height: 22px;
+  right: 4px;
+  bottom: -2px;
+  width: 60px;
+  height: 42px;
   z-index: -1;
-  opacity: .18;
+  opacity: .12;
   background:
-    linear-gradient(145deg, transparent 0 30%, rgba(201,166,107,.11) 31% 40%, transparent 41%),
-    linear-gradient(160deg, transparent 0 48%, rgba(201,166,107,.06) 49% 57%, transparent 58%),
-    radial-gradient(ellipse at 74% 80%, rgba(255,255,255,.48), transparent 58%);
-  filter: blur(.1px);
+    linear-gradient(172deg, transparent 0 60%, rgba(201,166,107,.20) 61% 62%, transparent 63%),
+    linear-gradient(168deg, transparent 0 48%, rgba(201,166,107,.14) 49% 50%, transparent 51%),
+    linear-gradient(176deg, transparent 0 38%, rgba(201,166,107,.10) 39% 40%, transparent 41%);
+  -webkit-mask: linear-gradient(180deg, #000 0%, transparent 100%);
+  mask: linear-gradient(180deg, #000 0%, transparent 100%);
 }
 
-.dashboard-strip-goal .dashboard-strip-value {
-  font-size: 17px;
+.dashboard-strip-goal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+}
+
+.dashboard-strip-goal-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dashboard-strip-goal-head strong {
+  font-size: 22px;
+  line-height: 1;
+  font-family: var(--font-number);
 }
 
 .dashboard-strip-goal .dashboard-strip-progress {
-  width: 82%;
+  width: 84%;
 }
 
 .dashboard-strip-goal .dashboard-strip-progress b {
-  height: 5px;
+  height: 7px;
+  background: linear-gradient(90deg, #C5A166 var(--strip-progress), rgba(201,166,107,.08) 0);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.36);
 }
 
-.dashboard-strip-goal .dashboard-strip-progress p span {
-  font-size: 10px;
+.dashboard-strip-goal-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  width: 84%;
+  font-size: 12px;
 }
 
-.dashboard-strip-quote .dashboard-strip-value {
-  font-size: 20px;
+.dashboard-strip-goal-foot span {
+  color: rgba(104,90,68,.92);
+  font-size: 12px;
+  line-height: 1.25;
 }
 
-.dashboard-strip-quote .dashboard-strip-desc {
-  max-width: 95%;
+.dashboard-strip-goal-foot span:last-child {
+  text-align: right;
 }
 
 /* Bottom Strip Exact Layout Override */
@@ -1964,10 +2008,18 @@
 .dashboard-strip-quote-main {
   font-size: 24px;
   line-height: 1;
+  color: #5C3D14;
+  font-family: var(--font-serif-zh);
+  font-weight: 700;
 }
 
-.dashboard-strip-cash .dashboard-strip-kv,
-.dashboard-strip-goal .dashboard-strip-kv {
+.dashboard-strip-quote .dashboard-strip-desc {
+  max-width: 90%;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.dashboard-strip-cash .dashboard-strip-kv {
   margin-top: 1px;
 }
 

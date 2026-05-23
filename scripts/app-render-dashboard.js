@@ -170,9 +170,9 @@ function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumula
     + "<div class=\"dashboard-strip-block\">"
     + "<span class=\"dashboard-strip-title\">储蓄与目标</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-kv\"><em>" + esc(monthLabel) + "储蓄率</em><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
+    + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(monthLabel) + "储蓄率</span><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
     + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(savingProgress.toFixed(1)) + "%\"><b></b></div>"
-    + "<div class=\"dashboard-strip-foot\">累计储蓄 " + esc(money(cumulativeSaving)) + " / 目标 " + esc(money(targetForView)) + "</div>"
+    + "<div class=\"dashboard-strip-goal-foot\"><span>累计储蓄 " + esc(money(cumulativeSaving)) + "</span><span>目标 " + esc(money(targetForView)) + "</span></div>"
     + "</div>"
     + "</div></article>";
 }
@@ -180,7 +180,7 @@ function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumula
 function dashboardStripQuoteModule(sentence) {
   return "<article class=\"dashboard-strip-item dashboard-strip-quote\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">本月一句话</span>"
+    + "<span class=\"dashboard-strip-title\"><i class=\"dashboard-strip-quote-mark\">“</i>本月一句话</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<strong class=\"dashboard-strip-quote-main\">稳住节奏</strong>"
     + "<small class=\"dashboard-strip-desc\">" + esc(sentence) + "</small>"
