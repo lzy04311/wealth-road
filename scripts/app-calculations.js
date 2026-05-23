@@ -12,13 +12,21 @@ function monthlySummary(month) {
   var income = monthlyIncome(month), plan = monthlyPlan(month), budget = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return accountBudgetAmount(item, month); }) : 0;
   var accountIncludeExpenseMap = {};
   state.accounts.forEach(function (account) { accountIncludeExpenseMap[account.id] = !!account.includeExpense; });
+  var orphanExpenseCount = 0;
+  var orphanExpenseTotal = 0;
   var expense = sum(state.expenses, function (item) {
-    return item.month === month && (accountIncludeExpenseMap[item.accountId] !== false) ? item.amount : 0;
+    if (item.month !== month) return 0;
+    if (!Object.prototype.hasOwnProperty.call(accountIncludeExpenseMap, item.accountId)) {
+      orphanExpenseCount += 1;
+      orphanExpenseTotal += numberValue(item.amount);
+      return 0;
+    }
+    return accountIncludeExpenseMap[item.accountId] === true ? item.amount : 0;
   });
   var invest = sum(state.investments, function (item) { return item.month === month ? (item.type === "转出" ? -item.amount : item.amount) : 0; });
   var assetNet = sum(state.accounts, function (account) { return account.includeAsset ? accountBalance(account, month) : 0; });
   var snap = assetSnapshotSummary(month);
-  return { income: income, plannedIncome: plan.plannedIncome, hasPlannedIncome: plan.hasPlannedIncome, payday: plan.payday, budget: budget, expense: expense, surplus: income - expense - invest, budgetBalance: plan.hasPlannedIncome ? budget - expense : 0, investment: invest, asset: assetNet, assetNet: assetNet, assetMarketValue: snap.totalAsset, overBudget: plan.hasPlannedIncome && expense > budget && budget > 0 };
+  return { income: income, plannedIncome: plan.plannedIncome, hasPlannedIncome: plan.hasPlannedIncome, payday: plan.payday, budget: budget, expense: expense, surplus: income - expense - invest, budgetBalance: plan.hasPlannedIncome ? budget - expense : 0, investment: invest, assetNet: assetNet, assetMarketValue: snap.totalAsset, orphanExpenseCount: orphanExpenseCount, orphanExpenseTotal: numberValue(orphanExpenseTotal), overBudget: plan.hasPlannedIncome && expense > budget && budget > 0 };
 }
 function financialHealth(month) {
   var s = monthlySummary(month), snap = assetSnapshotSummary(month), todayDate = new Date().getDate();

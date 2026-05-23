@@ -198,7 +198,20 @@ test("monthlySummary returns expected totals for fixture state", function () {
   assert.strictEqual(summary.budgetBalance, 900);
   assert.strictEqual(summary.assetNet, 590);
   assert.strictEqual(summary.assetMarketValue, 760);
+  assert.strictEqual(summary.orphanExpenseCount, 0);
+  assert.strictEqual(summary.orphanExpenseTotal, 0);
   assert.strictEqual(summary.overBudget, false);
+});
+
+test("monthlySummary ignores orphan expenses and reports them", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = calculationState();
+  fixture.expenses.push({ id: "orphan-exp", date: "2026-05-06", month: "2026-05", accountId: "missing-account", category: "异常", amount: 88, note: "" });
+  context.state = context.normalizeState(fixture);
+  var summary = context.monthlySummary("2026-05");
+  assert.strictEqual(summary.expense, 100);
+  assert.strictEqual(summary.orphanExpenseCount, 1);
+  assert.strictEqual(summary.orphanExpenseTotal, 88);
 });
 
 test("assetSnapshotSummary returns expected asset values for fixture state", function () {

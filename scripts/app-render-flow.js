@@ -4,8 +4,10 @@ var flowActiveTab = "income";
 var flowReviewExpanded = false;
 var FLOW_TABS = { income: true, expense: true, investment: true };
 
-function renderFlowOverview() {
-  var month = currentMonth(), s = monthlySummary(month);
+function renderFlowOverview(ctx) {
+  var month = currentMonth();
+  var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
+  var s = renderCtx.summary;
   var ratio = s.hasPlannedIncome && s.plannedIncome > 0 ? s.income / s.plannedIncome : null;
   var salaryStatus = !s.hasPlannedIncome ? "等待填写计划收入" : (ratio >= 0.9 ? "工资已到账" : "等待工资到账");
   var systemStatus = !s.hasPlannedIncome ? "计划收入未填写" : (s.overBudget ? "本月有超支" : (s.surplus < 0 ? "现金流为负" : (s.surplus > 0 ? "现金流健康" : "持续观察")));
@@ -59,8 +61,8 @@ function renderFlowOverview() {
   if (reviewSection) reviewSection.classList.toggle("expanded", flowReviewExpanded);
 }
 
-function renderFlow() {
-  renderFlowOverview();
+function renderFlow(ctx) {
+  renderFlowOverview(ctx);
   renderMonthlyPlanForm();
   syncFlowTabPanels();
 }

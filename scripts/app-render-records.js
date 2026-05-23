@@ -129,9 +129,12 @@ function renderAccounts() {
       + "</article>";
   }).join("") : empty("还没有账户。", "先建立几个资金角色，比如生存专项拨款、保命钱、败家额度。", "", "🧱");
 }
-function renderExpenses() {
-  var month = currentMonth(), records = state.expenses.filter(function (item) { return item.month === month; }), total = sum(records, function (item) { return item.amount; }), s = monthlySummary(month);
+function renderExpenses(ctx) {
+  var month = currentMonth(), records = state.expenses.filter(function (item) { return item.month === month; }), total = sum(records, function (item) { return item.amount; });
+  var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
+  var s = renderCtx.summary;
   byId("expenseModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("支出合计", money(total)) + pill("预算状态", s.overBudget ? "已超支" : "正常");
+  if (s.orphanExpenseCount > 0) byId("expenseModuleSummary").innerHTML += "<span class=\"summary-pill warning\">发现 " + s.orphanExpenseCount + " 条孤立支出（" + money(s.orphanExpenseTotal) + "），未计入总支出。</span>";
   byId("expenseSummary").textContent = month + " 共 " + records.length + " 条，合计 " + money(total);
   byId("expenseList").innerHTML = recordList(records, "expense");
 
@@ -149,7 +152,9 @@ function renderExpenses() {
   });
   var year = parseInt(month.slice(0, 4), 10), mon = parseInt(month.slice(5, 7), 10), first = new Date(year, mon - 1, 1), days = new Date(year, mon, 0).getDate();
   var offset = first.getDay(), cells = [];
-  var maxTotal = Object.keys(dateMap).length ? Math.max.apply(null, Object.keys(dateMap).map(function (d) { return dateMap[d].total; })) : 0;
+  var dateKeys = Object.keys(dateMap);
+  var maxTotal = dateKeys.length ? Math.max.apply(null, dateKeys.map(function (d) { return dateMap[d].total; })) : 0;
+  var displayDate = selectedExpenseDate && dateMap[selectedExpenseDate] ? selectedExpenseDate : (dateKeys[0] || "");
   for (var i = 0; i < offset; i++) cells.push("<div class=\"cal-day empty-day\"></div>");
   for (var d = 1; d <= days; d++) {
     var dateStr = year + "-" + String(mon).padStart(2, "0") + "-" + String(d).padStart(2, "0");
@@ -158,14 +163,14 @@ function renderExpenses() {
     var todayFlag = dateStr === today();
     var summaries = dayData ? dayData.items.slice(0, 2).map(function (x) { return esc((x.category || accountName(x.accountId)) + " " + money(x.amount)); }).join("<br>") : "";
     var extra = dayData && dayData.items.length > 2 ? "<div class=\"cal-extra\">+" + (dayData.items.length - 2) + "</div>" : "";
-    cells.push("<button type=\"button\" class=\"cal-day" + (dayData ? " has-expense" : "") + (todayFlag ? " is-today" : "") + (selectedExpenseDate === dateStr ? " is-selected" : "") + "\" data-action=\"open-expense-day\" data-date=\"" + dateStr + "\" style=\"--heat:" + ratio.toFixed(2) + "\"><div class=\"cal-date\">" + d + "</div><div class=\"cal-amount\">" + (dayData ? money(totalDay) : "") + "</div><div class=\"cal-summary\">" + summaries + "</div>" + extra + "</button>");
+    cells.push("<button type=\"button\" class=\"cal-day" + (dayData ? " has-expense" : "") + (todayFlag ? " is-today" : "") + (displayDate === dateStr ? " is-selected" : "") + "\" data-action=\"open-expense-day\" data-date=\"" + dateStr + "\" style=\"--heat:" + ratio.toFixed(2) + "\"><div class=\"cal-date\">" + d + "</div><div class=\"cal-amount\">" + (dayData ? money(totalDay) : "") + "</div><div class=\"cal-summary\">" + summaries + "</div>" + extra + "</button>");
   }
   while (cells.length % 7 !== 0) cells.push("<div class=\"cal-day empty-day\"></div>");
-  if (!selectedExpenseDate || !dateMap[selectedExpenseDate]) selectedExpenseDate = Object.keys(dateMap)[0] || "";
+  var selectedDateForRender = displayDate;
   var detailHtml = "";
-  if (selectedExpenseDate && dateMap[selectedExpenseDate]) {
-    detailHtml = "<div class=\"calendar-detail\"><div class=\"section-title compact\"><div><h2>" + selectedExpenseDate + " 支出明细</h2></div></div><div class=\"card-grid\">"
-      + dateMap[selectedExpenseDate].items.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
+  if (selectedDateForRender && dateMap[selectedDateForRender]) {
+    detailHtml = "<div class=\"calendar-detail\"><div class=\"section-title compact\"><div><h2>" + selectedDateForRender + " 支出明细</h2></div></div><div class=\"card-grid\">"
+      + dateMap[selectedDateForRender].items.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
         return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(accountName(item.accountId)) + "</span><span class=\"badge\">" + esc(item.category) + "</span></div><div class=\"row-amount negative\">-" + money(item.amount) + "</div><div class=\"row-meta\">备注：" + esc(item.note || "无") + "</div><div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"expense\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"expense\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
       }).join("") + "</div></div>";
   } else {

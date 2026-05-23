@@ -8,6 +8,13 @@ function closeQuickModal() {
   activeQuickType = "";
   document.querySelectorAll(".quick-form").forEach(function (form) { form.classList.remove("active"); });
 }
+
+function fillIfEmpty(id, value) {
+  var el = byId(id);
+  if (!el) return;
+  if (!String(el.value || "").trim()) el.value = value;
+}
+
 function openQuickEntry(type) {
   var modal = byId("quickModal");
   if (!modal) return;
@@ -26,14 +33,15 @@ function openQuickEntry(type) {
   byId("quickExpenseAccount").innerHTML = accountOptions(byId("quickExpenseAccount").value, function (acc) { return acc.includeExpense; });
   byId("quickInvestmentAccount").innerHTML = accountOptions(byId("quickInvestmentAccount").value, function (acc) { return acc.includeAsset || !acc.includeExpense; });
 
-  ["quickIncomeDate", "quickExpenseDate", "quickInvestmentDate"].forEach(function (id) { byId(id).value = today(); });
-  ["quickIncomeMonth", "quickExpenseMonth", "quickInvestmentMonth"].forEach(function (id) { byId(id).value = currentMonth(); });
+  ["quickIncomeDate", "quickExpenseDate", "quickInvestmentDate"].forEach(function (id) { fillIfEmpty(id, today()); });
+  ["quickIncomeMonth", "quickExpenseMonth", "quickInvestmentMonth"].forEach(function (id) { fillIfEmpty(id, currentMonth()); });
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   var target = byId(amountMap[type]);
   if (target) target.focus();
 }
+
 function bindQuickModalSubmit() {
   byId("quickFormIncome").addEventListener("submit", function (e) {
     e.preventDefault();

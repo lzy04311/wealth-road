@@ -17,7 +17,7 @@ function handleFormAndModalClick(event) {
   if (addBtn) { var p = addBtn.dataset.openForm; resetForm(p); openForm(p); return true; }
   var quick = event.target.closest("[data-quick-action]");
   if (quick) { openQuickEntry(quick.dataset.quickAction); return true; }
-  if (event.target.closest("[data-quick-close]")) { closeQuickModal(); var hm = byId("healthModal"); if (hm) { hm.classList.remove("open"); hm.setAttribute("aria-hidden","true"); } return true; }
+  if (event.target.closest("[data-quick-close]")) { closeQuickModal(); closeHealthModal("dismiss"); return true; }
   if (event.target.closest("[data-snapshot-close]")) { resetForm("snapshot"); closeForm("snapshot"); return true; }
   if (event.target.closest("[data-snapshot-records-close]")) { closeSnapshotRecords(); return true; }
   return false;
@@ -50,13 +50,17 @@ function bindClicks() {
   ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").addEventListener("change", function () { if (this.value) byId(p + "Month").value = monthOf(this.value); }); byId("cancel" + p.charAt(0).toUpperCase() + p.slice(1) + "Edit").addEventListener("click", function () { resetForm(p); closeForm(p); }); });
   byId("cancelAccountEdit").addEventListener("click", function () { resetForm("account"); closeForm("account"); });
   byId("cancelAssetItemEdit").addEventListener("click", function () { resetForm("assetItem"); closeForm("assetItem"); });
-  byId("saveRules").addEventListener("click", function () { var previous = state.rules; state.rules = cleanText(byId("rulesText").value, 5000); if (save()) { renderAll(); alert("规则已保存"); } else { state.rules = previous; } });
-  byId("saveMonthlyPlan").addEventListener("click", function () { var month = currentMonth(), incomeRaw = byId("plannedIncome").value.trim(), payday = parseInt(byId("plannedPayday").value, 10) || 15, previousPlans = Object.assign({}, state.monthlyPlans || {}); if (!state.monthlyPlans) state.monthlyPlans = {}; state.monthlyPlans[month] = { plannedIncome: incomeRaw === "" ? "" : safeAmount(incomeRaw), payday: Math.min(31, Math.max(1, payday)) }; if (save()) { renderAll(); alert("本月计划已保存"); } else { state.monthlyPlans = previousPlans; } });
+  byId("saveRules").addEventListener("click", function () { var previous = state.rules; state.rules = cleanText(byId("rulesText").value, 5000); if (save()) { renderAll(); notify("规则已保存"); } else { state.rules = previous; } });
+  byId("saveMonthlyPlan").addEventListener("click", function () { var month = currentMonth(), incomeRaw = byId("plannedIncome").value.trim(), payday = parseInt(byId("plannedPayday").value, 10) || 15, previousPlans = Object.assign({}, state.monthlyPlans || {}); if (!state.monthlyPlans) state.monthlyPlans = {}; state.monthlyPlans[month] = { plannedIncome: incomeRaw === "" ? "" : safeAmount(incomeRaw), payday: Math.min(31, Math.max(1, payday)) }; if (save()) { renderAll(); notify("本月计划已保存"); } else { state.monthlyPlans = previousPlans; } });
   byId("exportData").addEventListener("click", exportData); byId("importData").addEventListener("click", importData);
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") { if (activeQuickType) closeQuickModal(); closeForm("snapshot"); closeSnapshotRecords(); var hm = byId("healthModal"); if (hm && hm.classList.contains("open")) { hm.classList.remove("open"); hm.setAttribute("aria-hidden","true"); } }
+    if (event.key === "Escape") { if (activeQuickType) closeQuickModal(); closeForm("snapshot"); closeSnapshotRecords(); closeHealthModal("dismiss"); }
   });
 }
 function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").value = today(); byId(p + "Month").value = currentMonth(); }); syncSelects(); handleSubmit(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); }
-init();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 

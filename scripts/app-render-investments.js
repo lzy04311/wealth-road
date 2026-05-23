@@ -1,13 +1,14 @@
 "use strict";
 
-function renderInvestments() {
+function renderInvestments(ctx) {
   var month = currentMonth();
+  var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var records = state.investments.filter(function (item) { return item.month === month; });
   var net = sum(records, function (item) { return item.type === "转出" ? -item.amount : item.amount; });
   var inTotal = sum(records, function (item) { return item.type === "转出" ? 0 : item.amount; });
 
   // Layer 1: Cockpit
-  var snap = assetSnapshotSummary(month);
+  var snap = renderCtx.snapshot;
   byId("investCockpitValue").textContent = money(snap.totalAsset);
   byId("investCockpitPrincipal").textContent = money(snap.totalPrincipal);
   byId("investCockpitPnl").textContent = money(snap.pnl);

@@ -1,5 +1,7 @@
-﻿function renderMonthly() {
-  var month = currentMonth(), s = monthlySummary(month), ratio = s.hasPlannedIncome && s.plannedIncome > 0 ? s.income / s.plannedIncome : null, snap = assetSnapshotSummary(month);
+function renderMonthly(ctx) {
+  var month = currentMonth();
+  var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
+  var s = renderCtx.summary, ratio = s.hasPlannedIncome && s.plannedIncome > 0 ? s.income / s.plannedIncome : null, snap = renderCtx.snapshot;
   var salaryStatus = !s.hasPlannedIncome ? "等待填写计划收入" : (ratio >= 0.9 ? "工资已到账" : "等待工资到账");
   var systemStatus = !s.hasPlannedIncome ? "计划收入未填写" : (s.overBudget ? "本月有超支" : (s.surplus < 0 ? "现金流为负" : (s.surplus > 0 ? "现金流健康" : "持续观察")));
   var summaryText = !s.hasPlannedIncome
@@ -7,8 +9,6 @@
     : (s.overBudget
       ? "本月花销偏高，建议检查败家额度和生存专项拨款。"
       : (s.surplus < 0 ? "本月现金流为负，需要检查投入节奏和支出结构。" : (s.surplus > 0 ? "这个月系统运行平稳，继续保持。" : "本月数据还不完整，继续记录后再判断。")));
-  var assetAccounts = state.accounts.filter(function (a) { return a.includeAsset; }).length;
-  var goalAdvancing = state.accounts.filter(function (a) { return numberValue(a.target) > 0 && accountBalance(a, month) < numberValue(a.target); }).length;
 
   byId("monthlyReportTitle").textContent = month + " 月度资金报告";
   byId("monthlyReportStatus").textContent = systemStatus;
@@ -35,7 +35,22 @@
   var monthlyCurrentHead = document.querySelector("#flow table thead th:nth-child(8)");
   if (monthlyCurrentHead) monthlyCurrentHead.textContent = "当前金额（投入净额）";
 }
+
 function renderGoals() { var month = currentMonth(), targets = state.accounts.filter(function (a) { return numberValue(a.target) > 0; }); byId("goalList").innerHTML = targets.length ? targets.map(function (account) { var current = accountBalance(account, month), target = numberValue(account.target), pct = Math.min(100, current / target * 100), gap = target - current, visual = accountVisual(account); return accountCard(account, visual, pct, "<div class=\"account-mini-grid\"><div class=\"account-mini\"><span>当前金额</span><strong>" + esc(money(current)) + "</strong></div><div class=\"account-mini\"><span>目标金额</span><strong>" + esc(money(target)) + "</strong></div></div><div class=\"progress\"><span style=\"width:" + pct + "%\"></span></div><div class=\"row-meta " + (gap > 0 ? "warning" : "positive") + "\">" + esc(gap > 0 ? "距离目标还差 " + money(gap) : "已完成，超出 " + money(Math.abs(gap))) + "</div>"); }).join("") : empty("还没有设置储蓄目标。", "可以先给「保命钱」设置一个目标金额，比如 25000。", "", "🎯"); }
-function renderAll() { updateMonthText(); updateSaveStatusUI(); syncSelects(); renderDashboard(); renderAssets(); renderIncome(); renderAccounts(); renderExpenses(); renderInvestments(); renderMonthly(); renderGoals(); renderFlow(); byId("rulesText").value = state.rules; }
 
-
+function renderAll() {
+  updateMonthText();
+  updateSaveStatusUI();
+  syncSelects();
+  renderContextCache = buildRenderContext(currentMonth());
+  renderDashboard(renderContextCache);
+  renderAssets();
+  renderIncome();
+  renderAccounts();
+  renderExpenses(renderContextCache);
+  renderInvestments(renderContextCache);
+  renderMonthly(renderContextCache);
+  renderGoals();
+  renderFlow(renderContextCache);
+  byId("rulesText").value = state.rules;
+}

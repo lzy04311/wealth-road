@@ -1,12 +1,13 @@
 ﻿"use strict";
 
-function renderDashboard() {
+function renderDashboard(ctx) {
   var month = currentMonth();
-  var s = monthlySummary(month);
-  var assetSnap = assetSnapshotSummary(month);
+  var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
+  var s = renderCtx.summary;
+  var assetSnap = renderCtx.snapshot;
   var health = financialHealth(month);
   var forecast = monthlyForecast(month);
-  var totalAsset = assetSnap.totalAsset || s.asset || 0;
+  var totalAsset = assetSnap.totalAsset || s.assetNet || 0;
   var assetAccounts = state.accounts.filter(function (account) { return account.includeAsset; });
   var targetAccounts = state.accounts.filter(function (account) { return numberValue(account.target) > 0; });
   var reachedTargets = targetAccounts.filter(function (account) { return accountBalance(account, month) >= numberValue(account.target); });
@@ -15,8 +16,8 @@ function renderDashboard() {
   var roiText = assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   var backupText = lastSavedAt ? "已保存" : "本地可用";
   var coreJudgement = s.surplus >= 0 ? "资金节奏稳定" : "现金流承压";
-  if (health.className === "warning") coreJudgement = "浼樺厛鏍″噯棰勭畻";
-  if (health.className === "negative") coreJudgement = "鍏堝畧浣忕幇閲戞祦";
+  if (health.className === "warning") coreJudgement = "优先校准预算";
+  if (health.className === "negative") coreJudgement = "先守住现金流";
 
   renderDashboardStatusBar(month, backupText);
   renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate);
@@ -46,7 +47,7 @@ function dashboardWeekdayText() {
 function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate) {
   setDashboardText("dashboardAssetHealth", "资产健康度 " + health.score + "分");
   setDashboardText("dashboardTotalAsset", money(totalAsset));
-  var previousAsset = assetSnapshotSummary(dashboardPrevMonth(month)).totalAsset || monthlySummary(dashboardPrevMonth(month)).asset || 0;
+  var previousAsset = assetSnapshotSummary(dashboardPrevMonth(month)).totalAsset || monthlySummary(dashboardPrevMonth(month)).assetNet || 0;
   var monthDelta = previousAsset > 0 ? totalAsset - previousAsset : null;
   var recentChange = dashboardRecentAssetChange();
   var changeText = monthDelta == null ? "上月基线不足，继续记录后显示变化" : (monthDelta >= 0 ? "+" : "") + money(monthDelta);
@@ -101,9 +102,13 @@ function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupT
   var expenseStatus = s.overBudget ? "支出待收缩" : "支出结构优化";
   var savingStatus = savingRate == null ? "储蓄率待记录" : "储蓄率 " + savingRate.toFixed(1) + "%";
   var investStatus = assetSnap.roi == null ? "投资待快照" : (assetSnap.roi >= 0 ? "投资收益回升" : "投资收益承压");
+  var orphanStatusTitle = s.orphanExpenseCount > 0 ? "存在孤立支出" : "账目结构正常";
+  var orphanStatusValue = s.orphanExpenseCount > 0 ? (s.orphanExpenseCount + " 条 / " + money(s.orphanExpenseTotal)) : "无孤立记录";
+  var orphanClass = s.orphanExpenseCount > 0 ? "warning" : "positive";
   el.innerHTML = [
     dashboardStatusItem("云端同步正常", backupText, "positive"),
     dashboardStatusItem(expenseStatus, forecast.budgetStatus || "持续观察", s.overBudget ? "warning" : "positive"),
+    dashboardStatusItem(orphanStatusTitle, orphanStatusValue, orphanClass),
     dashboardStatusItem("储蓄率提升", savingStatus, savingRate == null ? "warning" : "positive"),
     dashboardStatusItem(investStatus, assetSnap.roi == null ? "等待数据" : assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"))
   ].join("");
@@ -249,7 +254,7 @@ function dashboardInsightValue(s, forecast) {
   if (!s.hasPlannedIncome) return "待计划";
   if (s.overBudget) return "已超支";
   if (s.surplus < 0) return "现金流为负";
-  return forecast.budgetUsedRate == null ? "鎸佺画瑙傚療" : forecast.budgetUsedRate.toFixed(0) + "%";
+  return forecast.budgetUsedRate == null ? "持续观察" : forecast.budgetUsedRate.toFixed(0) + "%";
 }
 
 function dashboardInsightText(s, forecast) {
@@ -306,7 +311,7 @@ function renderDashboardAssetTrend(month) {
   for (var i = 5; i >= 0; i--) {
     var d = new Date(y, m - 1 - i, 1);
     var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-    rows.push({ month: key, value: assetSnapshotSummary(key).totalAsset || monthlySummary(key).asset || 0 });
+    rows.push({ month: key, value: assetSnapshotSummary(key).totalAsset || monthlySummary(key).assetNet || 0 });
   }
   var max = Math.max.apply(null, rows.map(function (row) { return row.value; })) || 1;
   var w = 360, h = 108;

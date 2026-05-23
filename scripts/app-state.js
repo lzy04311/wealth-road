@@ -19,6 +19,8 @@ var dashboardPieMode = "budget";
 var assetKindFilter = "全部";
 var activeQuickType = "";
 var lastSavedAt = null;
+var statusNoticeTimer = null;
+var renderContextCache = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function byId(id) { return document.getElementById(id); }
@@ -29,8 +31,31 @@ function updateSaveStatusUI() {
   var text = savedTimeText(lastSavedAt);
   var topEl = byId("saveStatusText");
   var dataEl = byId("dataLastSavedText");
-  if (topEl) topEl.textContent = "已存";
+  if (topEl) topEl.textContent = "已保存";
   if (dataEl) dataEl.textContent = text;
+}
+function notify(message) {
+  var topEl = byId("saveStatusText");
+  if (!topEl) return;
+  topEl.textContent = cleanText(message, 80) || "已保存";
+  if (statusNoticeTimer) clearTimeout(statusNoticeTimer);
+  statusNoticeTimer = setTimeout(function () {
+    topEl.textContent = "已保存";
+    statusNoticeTimer = null;
+  }, 2600);
+}
+function buildRenderContext(month) {
+  var targetMonth = month || currentMonth();
+  return {
+    month: targetMonth,
+    summary: monthlySummary(targetMonth),
+    snapshot: assetSnapshotSummary(targetMonth)
+  };
+}
+function getRenderContext(month) {
+  var targetMonth = month || currentMonth();
+  if (!renderContextCache || renderContextCache.month !== targetMonth) renderContextCache = buildRenderContext(targetMonth);
+  return renderContextCache;
 }
 function monthOf(date) { return String(date || today()).slice(0, 7); }
 function currentMonth() { return byId("currentMonth").value || monthOf(today()); }
