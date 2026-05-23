@@ -1,4 +1,4 @@
-/* ========== Design Tokens / Variables ========== */
+﻿/* ========== Design Tokens / Variables ========== */
 :root {
   --bg: #F8F3EA;
   --surface: #FFFDF8;
@@ -22,7 +22,7 @@
   --green: var(--success);
   --blue: #8F8A7E;
 
-  /* 阴影 4 级 */
+  /* 阴影 4 档 */
   --shadow-xs: 0 1px 5px rgba(112, 84, 42, 0.04);
   --shadow-sm: 0 8px 22px rgba(133, 100, 52, 0.07);
   --shadow-md: 0 18px 42px rgba(133, 100, 52, 0.10);
@@ -47,7 +47,7 @@ html {
   overflow-y: scroll;
 }
 /* ========== Dashboard Home Mode ========== */
-/* TODO: dashboard 首页专属模式，未来应迁移到 dashboard scope 或独立 page layer。 */
+/* TODO: dashboard 首页专属模式，后续应迁移到 dashboard 作用域或独立 page layer。 */
 html:has(body.dashboard-home-mode) {
   width: 100%;
   overflow: hidden;
@@ -129,7 +129,7 @@ h2 { margin: 0; color: var(--text); }
 .hidden-view { display: none !important; }
 .tabs { position: relative; z-index: 1; display: flex; justify-content: space-between; gap: 2px; overflow-x: auto; margin-bottom: 16px; padding: 4px; border: 1px solid var(--champagne-line); border-radius: var(--radius-pill); background: rgba(255,253,248,.72); box-shadow: var(--shadow-sm); scrollbar-width: none; backdrop-filter: blur(18px) saturate(1.08); }
 /* ========== Dashboard Home Mode ========== */
-/* TODO: dashboard 首页专属模式，未来应迁移到 dashboard scope 或独立 page layer。 */
+/* TODO: dashboard 首页专属模式，后续应迁移到 dashboard 作用域或独立 page layer。 */
 .dashboard-home-mode .app-header,
 .dashboard-home-mode .tabs { display: none; }
 .tabs::-webkit-scrollbar { height: 0; }

@@ -1,4 +1,4 @@
-/* ========== Assets Page ========== */
+﻿/* ========== Assets Page ========== */
 .asset-page-head {
   margin-bottom: 18px;
   display: flex;
@@ -230,18 +230,18 @@
   font-size: .86rem;
   color: var(--text);
 }
-.cockpit-title {
+#dashboard .cockpit-title {
   font-size: 1.02rem;
   font-weight: 700;
   color: var(--text);
   text-align: center;
 }
-.cockpit-list {
+#dashboard .cockpit-list {
   margin-top: 12px;
   display: grid;
   gap: 8px;
 }
-.cockpit-list div {
+#dashboard .cockpit-list div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -252,94 +252,31 @@
   border: 0;
   border-bottom: 1px solid rgba(226,221,211,.45);
 }
-.cockpit-list div:last-child { border-bottom: 0; }
-.cockpit-list span {
+#dashboard .cockpit-list div:last-child { border-bottom: 0; }
+#dashboard .cockpit-list span {
   color: var(--muted);
   font-size: .8rem;
   font-weight: 600;
 }
-.cockpit-list strong {
+#dashboard .cockpit-list strong {
   color: var(--text);
   font-size: .98rem;
   font-weight: 800;
   text-align: right;
 }
-.cockpit-hint {
+#dashboard .cockpit-hint {
   margin-top: 12px;
   font-size: .84rem;
   color: var(--muted);
   font-weight: 600;
   text-align: center;
 }
-.cockpit-quick-actions {
+#dashboard .cockpit-quick-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 0 0 18px;
 }
-.quick-btn {
-  min-height: 40px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: rgba(248, 246, 241, .92);
-  color: var(--primary-dark);
-  font-weight: 700;
-  font-size: .86rem;
-}
-.quick-btn:hover {
-  background: rgba(241,230,200,.64);
-  color: var(--text);
-}
-.quick-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  display: none;
-}
-.quick-modal.open { display: block; }
-.quick-modal-mask {
-  position: absolute;
-  inset: 0;
-  background: rgba(29, 29, 31, .28);
-  backdrop-filter: blur(2px);
-}
-.quick-modal-panel {
-  position: relative;
-  width: min(720px, calc(100% - 24px));
-  max-height: calc(100vh - 40px);
-  margin: 20px auto;
-  overflow: auto;
-  padding: 18px;
-  border-radius: 24px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: 0 22px 52px rgba(29, 29, 31, .18);
-  backdrop-filter: blur(18px) saturate(1.08);
-}
-.quick-modal-panel h3 {
-  margin: 2px 34px 14px 2px;
-  text-align: center;
-  color: var(--text);
-}
-.quick-modal-close {
-  position: absolute;
-  right: 12px;
-  top: 10px;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface-soft);
-  color: var(--primary-dark);
-  font-size: 1.1rem;
-  line-height: 1;
-}
-.quick-form { display: none; }
-.quick-form.active { display: block; }
-.quick-save { border-radius: 999px; font-weight: 700; }
-.quick-save-expense { background: rgba(184,91,80,.10); border-color: rgba(184,91,80,.24); color: var(--danger); }
-.quick-save-income { background: var(--soft-green); border-color: rgba(79,138,98,.24); color: var(--success); }
-.quick-save-investment { background: var(--soft-gold); border-color: rgba(201,168,106,.32); color: var(--warning); }
 .section-title { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin: 20px 0 12px; }
 .section-title.compact { margin: 0 0 12px; }
 .section-title h2 { font-size: 1.18rem; font-weight: 700; }
