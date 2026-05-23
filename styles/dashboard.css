@@ -306,7 +306,7 @@
 
 .dashboard-asset-card {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background:
     radial-gradient(circle at 14% 8%, rgba(255,255,255,.82), transparent 13rem),
     radial-gradient(circle at 92% 16%, rgba(218,184,119,.13), transparent 12rem),
