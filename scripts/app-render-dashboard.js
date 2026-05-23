@@ -484,18 +484,24 @@ function renderDashboardAssetTrend(month) {
     rows.push({ month: key, value: assetSnapshotSummary(key).totalAsset || monthlySummary(key).asset || 0 });
   }
   var max = Math.max.apply(null, rows.map(function (row) { return row.value; })) || 1;
-  var min = Math.min.apply(null, rows.map(function (row) { return row.value; }));
-  var range = max - min || 1;
-  var w = 360, h = 108, pad = 14;
-  function px(index) { return pad + (w - pad * 2) * (rows.length === 1 ? 0 : index / (rows.length - 1)); }
-  function py(value) { return h - pad - ((value - min) / range) * (h - pad * 2); }
+  var w = 360, h = 108;
+  var leftPad = 34, rightPad = 14, topPad = 10, bottomPad = 14;
+  var axisMax = dashboardNiceMax(max);
+  var axisMin = 0;
+  var range = axisMax - axisMin || 1;
+  function px(index) { return leftPad + (w - leftPad - rightPad) * (rows.length === 1 ? 0 : index / (rows.length - 1)); }
+  function py(value) { return h - bottomPad - ((value - axisMin) / range) * (h - topPad - bottomPad); }
   var points = rows.map(function (row, index) { return px(index).toFixed(1) + "," + py(row.value).toFixed(1); }).join(" ");
-  var area = pad + "," + (h - pad) + " " + points + " " + (w - pad) + "," + (h - pad);
-  var grid = [0.25, 0.5, 0.75].map(function (rate) {
-    var yLine = pad + (h - pad * 2) * rate;
-    return "<line x1=\"" + pad + "\" y1=\"" + yLine.toFixed(1) + "\" x2=\"" + (w - pad) + "\" y2=\"" + yLine.toFixed(1) + "\"></line>";
+  var area = leftPad + "," + (h - bottomPad) + " " + points + " " + (w - rightPad) + "," + (h - bottomPad);
+  var ticks = [axisMax, axisMax * 2 / 3, axisMax / 3, 0];
+  var grid = ticks.map(function (tick) {
+    var yLine = py(tick);
+    return "<line x1=\"" + leftPad + "\" y1=\"" + yLine.toFixed(1) + "\" x2=\"" + (w - rightPad) + "\" y2=\"" + yLine.toFixed(1) + "\"></line>";
   }).join("");
-  var labels = rows.map(function (row, index) { return "<text x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 2) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
+  var yLabels = ticks.map(function (tick) {
+    return "<text class=\"dashboard-axis-y\" x=\"" + (leftPad - 7) + "\" y=\"" + (py(tick) + 3.2).toFixed(1) + "\" text-anchor=\"end\">" + esc(dashboardAxisMoneyLabel(tick)) + "</text>";
+  }).join("");
+  var labels = rows.map(function (row, index) { return "<text class=\"dashboard-axis-x\" x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 1) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
   var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.4\"></circle>"; }).join("");
   var first = rows[0] || { value: 0 };
   var last = rows[rows.length - 1] || { value: 0 };
@@ -507,13 +513,28 @@ function renderDashboardAssetTrend(month) {
     { label: "年化收益率", value: annualizedRate == null ? "--" : (annualizedRate >= 0 ? "+" : "") + annualizedRate.toFixed(1) + "%", className: annualizedRate == null ? "warning" : (annualizedRate >= 0 ? "positive" : "negative") },
     { label: "最大回撤", value: maxDrawdown == null ? "--" : "-" + maxDrawdown.toFixed(1) + "%", className: maxDrawdown && maxDrawdown > 0 ? "negative" : "positive" }
   ];
-  el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g><polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
+  el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g>" + yLabels + "<polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
   var factsEl = byId("dashboardTrendFacts");
   if (factsEl) {
     factsEl.innerHTML = facts.map(function (item) {
       return "<div><span>" + esc(item.label) + "</span><strong class=\"" + esc(item.className) + "\">" + esc(item.value) + "</strong></div>";
     }).join("");
   }
+}
+
+function dashboardNiceMax(value) {
+  var n = Math.max(1, numberValue(value));
+  var base = Math.pow(10, Math.floor(Math.log10(n)));
+  var ratio = n / base;
+  var step = ratio <= 1 ? 1 : (ratio <= 2 ? 2 : (ratio <= 5 ? 5 : 10));
+  return step * base;
+}
+
+function dashboardAxisMoneyLabel(value) {
+  var n = numberValue(value);
+  if (n >= 100000000) return (n / 100000000).toFixed(n % 100000000 === 0 ? 0 : 1) + "亿";
+  if (n >= 10000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + "k";
+  return String(Math.round(n));
 }
 
 function dashboardAnnualizedRate(firstValue, lastValue, months) {
