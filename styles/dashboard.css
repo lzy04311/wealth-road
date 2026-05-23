@@ -56,7 +56,7 @@
   #dashboardBottomStrip .dashboard-strip-body {
     display: grid !important;
     align-content: center !important;
-    justify-items: center !important;
+    justify-items: stretch !important;
     gap: 3px !important;
     min-height: 0 !important;
     width: 100% !important;
@@ -1800,8 +1800,8 @@
   height: 100%;
   display: grid;
   align-content: center;
-  justify-items: center;
-  gap: 5px;
+  justify-items: stretch;
+  gap: 4px;
 }
 
 .dashboard-strip-block em {
@@ -1866,7 +1866,7 @@
   grid-template-columns: 46px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
-  justify-items: center;
+  justify-items: start;
 }
 
 .dashboard-strip-donut-lg {
@@ -1888,7 +1888,7 @@
   display: grid;
   gap: 1px;
   align-content: center;
-  justify-content: center;
+  justify-content: start;
 }
 
 .dashboard-strip-list span {
@@ -1950,7 +1950,7 @@
   grid-template-columns: minmax(0, 1fr) 46px;
   gap: 8px;
   align-items: center;
-  justify-items: center;
+  justify-items: start;
 }
 
 .dashboard-strip-goal .dashboard-strip-progress {
