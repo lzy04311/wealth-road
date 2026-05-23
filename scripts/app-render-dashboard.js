@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 function renderDashboard() {
   var month = currentMonth();
@@ -15,8 +15,8 @@ function renderDashboard() {
   var roiText = assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   var backupText = lastSavedAt ? "已保存" : "本地可用";
   var coreJudgement = s.surplus >= 0 ? "资金节奏稳定" : "现金流承压";
-  if (health.className === "warning") coreJudgement = "优先校准预算";
-  if (health.className === "negative") coreJudgement = "先守住现金流";
+  if (health.className === "warning") coreJudgement = "浼樺厛鏍″噯棰勭畻";
+  if (health.className === "negative") coreJudgement = "鍏堝畧浣忕幇閲戞祦";
 
   renderDashboardStatusBar(month, backupText);
   renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate);
@@ -86,140 +86,19 @@ function renderDashboardRightCards(month, s, assetSnap, health, forecast, assetA
   byId("dashboardRightCards").innerHTML = cards.join("");
 }
 
-function renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, targetAccounts, targetProgress) {
-  var strip = byId("dashboardBottomStrip");
-  if (!strip) return;
-  var month = currentMonth();
-  var expenseRows = dashboardExpenseCategoryRows(month);
-  var assetRows = dashboardAssetAllocationRows(month, assetAccounts);
-  var sentence = s.surplus < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。");
-  var cashRate = s.income > 0 ? Math.max(0, Math.min(100, s.expense / s.income * 100)) : 0;
-  var savingProgress = targetAccounts.length ? Math.max(0, Math.min(100, targetProgress)) : Math.max(0, Math.min(100, savingRate || 0));
-  var monthLabel = String(month).slice(5, 7) + "月";
-  var totalTarget = sum(targetAccounts, function (item) { return numberValue(item.target); });
-  var cumulativeSaving = Math.max(0, numberValue(s.surplus));
-  var targetForView = totalTarget > 0 ? totalTarget : Math.max(0, numberValue(s.plannedIncome));
-  strip.innerHTML = [
-    dashboardStripCashModule(s, cashRate),
-    dashboardStripStructureModule(s, expenseRows),
-    dashboardStripInvestModule(assetSnap),
-    dashboardStripAllocationModule(assetRows, assetAccounts),
-    dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumulativeSaving, targetForView),
-    dashboardStripQuoteModule(sentence)
-  ].join("");
-}
 
-function dashboardStripCashModule(s, cashRate) {
-  var surplusText = s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus));
-  return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">现金流总览（本月）</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-kv\"><em>净流入</em><strong class=\"" + (s.surplus >= 0 ? "positive" : "negative") + "\">" + surplusText + "</strong></div>"
-    + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
-    + "<div class=\"dashboard-strip-split\"><span>收入 " + esc(money(s.income)) + "</span><span>支出 " + esc(money(s.expense)) + "</span></div>"
-    + "<div class=\"dashboard-strip-foot\">结余 " + esc(surplusText) + "</div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripStructureModule(s, expenseRows) {
-  var topRows = expenseRows.slice(0, 3);
-  return "<article class=\"dashboard-strip-item dashboard-strip-structure\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">收支结构</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-sub\">支出占比 TOP3</div>"
-    + "<div class=\"dashboard-strip-donut-row\">"
-    + "<div class=\"dashboard-strip-donut-center\">" + dashboardStripDonutCore(topRows) + "</div>"
-    + "<div class=\"dashboard-strip-list\">" + dashboardStripTopList(topRows, "本月支出结构") + "</div>"
-    + "</div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripInvestModule(assetSnap) {
-  var pnlText = assetSnap.pnl >= 0 ? "+" + money(assetSnap.pnl) : "-" + money(Math.abs(assetSnap.pnl));
-  var roiText = assetSnap.roi == null ? "--" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
-  return "<article class=\"dashboard-strip-item dashboard-strip-invest\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">投资回报（本年）</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-double\"><div><em>累计收益</em><strong class=\"" + (assetSnap.pnl >= 0 ? "positive" : "negative") + "\">" + esc(pnlText) + "</strong></div><div><em>收益率</em><b>" + esc(roiText) + "</b></div></div>"
-    + "<div class=\"dashboard-strip-invest-line\">" + dashboardStripSparkline(assetSnap) + "</div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripAllocationModule(assetRows, assetAccounts) {
-  return "<article class=\"dashboard-strip-item dashboard-strip-allocation\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">资产配置概览</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-allocation-row\">"
-    + "<div class=\"dashboard-strip-list\">" + dashboardStripTopList(assetRows.slice(0, 4), assetAccounts.length + " 个资产账户") + "</div>"
-    + "<div class=\"dashboard-strip-donut-center\">" + dashboardStripDonutCore(assetRows.slice(0, 4)) + "</div>"
-    + "</div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumulativeSaving, targetForView) {
-  var rateText = savingRate == null ? "--" : savingRate.toFixed(1) + "%";
-  return "<article class=\"dashboard-strip-item dashboard-strip-goal\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">储蓄与目标</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(monthLabel) + "储蓄率</span><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
-    + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(savingProgress.toFixed(1)) + "%\"><b></b></div>"
-    + "<div class=\"dashboard-strip-goal-foot\"><span>累计储蓄 " + esc(money(cumulativeSaving)) + "</span><span>目标 " + esc(money(targetForView)) + "</span></div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripQuoteModule(sentence) {
-  return "<article class=\"dashboard-strip-item dashboard-strip-quote\">"
-    + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\"><i class=\"dashboard-strip-quote-mark\">“</i>本月一句话</span>"
-    + "<div class=\"dashboard-strip-body\">"
-    + "<strong class=\"dashboard-strip-quote-main\">稳住节奏</strong>"
-    + "<small class=\"dashboard-strip-desc\">" + esc(sentence) + "</small>"
-    + "<div class=\"dashboard-strip-quote-art\"></div>"
-    + "</div>"
-    + "</div></article>";
-}
 
-function dashboardStripDonutCore(rows) {
-  if (!rows.length) {
-    return "<div class=\"dashboard-strip-donut dashboard-strip-donut-lg dashboard-strip-donut-empty\"></div>";
-  }
-  var palette = ["#B88A4A", "#D9B65D", "#F2E5CC", "#8F6334"];
-  var safeRows = rows.slice(0, 4).map(function (row) { return { name: row.name, pct: numberValue(row.pct) }; });
-  var total = sum(safeRows, function (row) { return row.pct; });
-  if (total < 99) safeRows.push({ name: "其他", pct: 100 - total });
-  var cursor = 0;
-  var gradient = safeRows.map(function (row, index) {
-    var color = palette[index % palette.length];
-    var start = cursor;
-    cursor += Math.max(0, row.pct);
-    return color + " " + start.toFixed(1) + "% " + cursor.toFixed(1) + "%";
-  }).join(", ");
-  return "<div class=\"dashboard-strip-donut dashboard-strip-donut-lg\" style=\"--strip-donut:" + esc(gradient) + "\"></div>";
-}
 
-function dashboardStripTopList(rows, fallbackText) {
-  if (!rows.length) {
-    return "<span><i></i>暂无数据</span><span><i></i>" + esc(fallbackText) + "</span><span><i></i>等待记录</span>";
-  }
-  return rows.slice(0, 3).map(function (row) {
-    return "<span><i></i>" + esc(dashboardStripLabel(row.name)) + " " + esc(numberValue(row.pct).toFixed(0)) + "%</span>";
-  }).join("");
-}
 
 function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupText) {
   var el = byId("dashboardBottomStatus");
   if (!el) return;
-  var expenseStatus = s.overBudget ? "支出待收紧" : "支出结构优化";
+  var expenseStatus = s.overBudget ? "支出待收缩" : "支出结构优化";
   var savingStatus = savingRate == null ? "储蓄率待记录" : "储蓄率 " + savingRate.toFixed(1) + "%";
   var investStatus = assetSnap.roi == null ? "投资待快照" : (assetSnap.roi >= 0 ? "投资收益回升" : "投资收益承压");
   el.innerHTML = [
@@ -292,10 +171,6 @@ function dashboardStatusItem(title, value, className) {
   return "<article class=\"dashboard-status-item\"><i class=\"" + esc(className || "") + "\"></i><div><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong></div></article>";
 }
 
-function dashboardStripIcon(icon) {
-  var map = { cash: "⌁", balance: "▣", invest: "↗", asset: "◌", goal: "◎", quote: "“" };
-  return map[icon] || "•";
-}
 
 function dashboardStripProgress(rate, leftText, rightText, midText) {
   var safeRate = Math.max(0, Math.min(100, numberValue(rate)));
@@ -305,12 +180,6 @@ function dashboardStripProgress(rate, leftText, rightText, midText) {
   return "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(safeRate.toFixed(1)) + "%\"><b></b><p>" + textLine + "</p></div>";
 }
 
-function dashboardStripLabel(name) {
-  var text = cleanText(name || "");
-  if (!text) return "主要类别";
-  if (/^[a-zA-Z0-9_-]+$/.test(text) && text.length <= 4) return "本月支出结构";
-  return text.length > 6 ? text.slice(0, 6) : text;
-}
 
 function dashboardStripDonut(rows, emptyText) {
   if (!rows.length) return "<div class=\"dashboard-strip-mini-empty\">" + esc(emptyText) + "</div>";
@@ -354,47 +223,9 @@ function dashboardStripSparkline(assetSnap) {
   return "<div class=\"dashboard-strip-sparkline\"><svg viewBox=\"0 0 " + width + " " + height + "\" aria-hidden=\"true\"><g class=\"strip-sparkline-guides\">" + guides + "</g><polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + circles + "</svg></div>";
 }
 
-function dashboardStripSmoothValues(values) {
-  if (!values || values.length < 3) return values || [];
-  return values.map(function (value, index, arr) {
-    if (index === 0 || index === arr.length - 1) return value;
-    return (arr[index - 1] + value * 2 + arr[index + 1]) / 4;
-  });
-}
 
-function dashboardStripInvestmentValues(assetSnap) {
-  var byDate = {};
-  state.snapshots.forEach(function (item) {
-    if (!item.date) return;
-    byDate[item.date] = (byDate[item.date] || 0) + numberValue(item.marketValue);
-  });
-  var values = Object.keys(byDate).sort().slice(-5).map(function (date) { return byDate[date]; });
-  while (values.length < 5) values.unshift(Math.max(0, numberValue(assetSnap.total) - (5 - values.length) * 80));
-  return values;
-}
 
-function dashboardExpenseCategoryRows(month) {
-  var map = {};
-  state.expenses.forEach(function (item) {
-    if (item.month !== month) return;
-    var name = item.category || "未分类";
-    map[name] = (map[name] || 0) + numberValue(item.amount);
-  });
-  var rows = Object.keys(map).map(function (name) { return { name: dashboardShortName(name), value: map[name] }; }).sort(function (a, b) { return b.value - a.value; });
-  var total = sum(rows, function (row) { return row.value; }) || 1;
-  rows.forEach(function (row) { row.pct = row.value / total * 100; });
-  return rows;
-}
 
-function dashboardAssetAllocationRows(month, assetAccounts) {
-  var rows = assetAccounts.map(function (account) {
-    var data = accountAssetValueForMonth(account, month);
-    return { name: dashboardShortName(account.name), value: Math.max(0, data.value) };
-  }).filter(function (row) { return row.value > 0; }).sort(function (a, b) { return b.value - a.value; });
-  var total = sum(rows, function (row) { return row.value; }) || 1;
-  rows.forEach(function (row) { row.pct = row.value / total * 100; });
-  return rows;
-}
 
 function dashboardPrevMonth(month) {
   var year = parseInt(String(month).slice(0, 4), 10);
@@ -418,12 +249,12 @@ function dashboardInsightValue(s, forecast) {
   if (!s.hasPlannedIncome) return "待计划";
   if (s.overBudget) return "已超支";
   if (s.surplus < 0) return "现金流为负";
-  return forecast.budgetUsedRate == null ? "持续观察" : forecast.budgetUsedRate.toFixed(0) + "%";
+  return forecast.budgetUsedRate == null ? "鎸佺画瑙傚療" : forecast.budgetUsedRate.toFixed(0) + "%";
 }
 
 function dashboardInsightText(s, forecast) {
   if (!s.hasPlannedIncome) return "先填写计划收入，预算判断才会完整。";
-  if (s.overBudget) return "本月支出越过预算线，先收紧非必要支出。";
+  if (s.overBudget) return "本月支出超过预算线，先收缩非必要支出。";
   if (s.surplus < 0) return "投入和支出合计偏高，需要看现金节奏。";
   return "预算使用处于" + forecast.budgetStatus + "，继续保持记录节奏。";
 }
@@ -465,12 +296,6 @@ function dashboardAssetStructure(month, assetAccounts) {
     }).join("") + "</div></div>";
 }
 
-function dashboardShortName(name) {
-  if (name.indexOf("纳纳") >= 0) return "投资";
-  if (name.indexOf("流动") >= 0) return "现金";
-  if (name.indexOf("保命") >= 0) return "保障";
-  return String(name).length > 4 ? String(name).slice(0, 4) : String(name);
-}
 
 function renderDashboardAssetTrend(month) {
   var el = byId("dashboardAssetTrend");
@@ -558,3 +383,5 @@ function setDashboardText(id, value) {
   var el = byId(id);
   if (el) el.textContent = value;
 }
+
+

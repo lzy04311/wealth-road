@@ -1,0 +1,102 @@
+﻿.dashboard-cockpit-page {
+  --dashboard-core-lift: 50px;
+  --dashboard-strip-rise: var(--dashboard-core-lift);
+  --font-serif-zh: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif;
+  --font-sans-zh: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+  --font-number: "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+  --glass-cream: rgba(255, 253, 248, .58);
+  --glass-cream-soft: rgba(250, 244, 232, .34);
+  --glass-line: rgba(232, 205, 156, .34);
+  --glass-line-bright: rgba(255, 255, 255, .66);
+  --warm-ink: #2F2921;
+  --deep-gold-brown: #74522A;
+  --amber-glow: rgba(221, 181, 109, .20);
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 8px;
+  padding: 4px 4px 6px;
+  border-radius: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(224,188,119,.18), transparent 36rem),
+    radial-gradient(ellipse at 23% 48%, rgba(201,166,107,.088), transparent 26rem),
+    radial-gradient(ellipse at 78% 42%, rgba(201,166,107,.092), transparent 28rem),
+    radial-gradient(ellipse at 15% 30%, rgba(255,255,255,.66), transparent 25rem),
+    linear-gradient(160deg, #FFFDF8, rgba(252,247,238,.95) 54%, rgba(248,239,223,.94));
+  border: 0;
+  box-shadow: none;
+  overflow: hidden;
+  font-family: var(--font-sans-zh);
+  line-height: 1.45;
+}
+
+/* FINAL LOCK: bottom strip title consistency + bottom status text visibility */
+#dashboardBottomStrip .dashboard-strip-title {
+  font-family: var(--font-sans-zh) !important;
+  font-size: 15px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+
+/* ===== Bottom Nav: Base (desktop default) ===== */
+.dashboard-bottom-nav {
+  min-height: 68px !important;
+  height: auto !important;
+  overflow: visible !important;
+}
+
+.dashboard-bottom-status,
+.dashboard-status-item {
+  overflow: visible !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.dashboard-status-item span,
+.dashboard-status-item strong {
+  line-height: 1.35 !important;
+}
+
+/* FINAL OVERRIDE: bottom strip internal balance (desktop/tablet) */
+
+.dashboard-cockpit-page::before,
+.dashboard-cockpit-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dashboard-cockpit-page::before {
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(217,181,112,.13), transparent 38rem),
+    radial-gradient(ellipse at 32% 72%, rgba(255,255,255,.42), transparent 26rem),
+    radial-gradient(ellipse at 16% 44%, rgba(255,255,255,.50), transparent 22rem),
+    radial-gradient(ellipse at 84% 42%, rgba(255,255,255,.42), transparent 22rem),
+    linear-gradient(90deg, rgba(255,255,255,.18), transparent 28%, transparent 72%, rgba(255,255,255,.20));
+  opacity: .92;
+}
+
+.dashboard-cockpit-page::after {
+  display: block;
+  inset: 0;
+  background:
+    linear-gradient(28deg, transparent 0 35%, rgba(201,166,107,.045) 35.1% 35.35%, transparent 35.6%),
+    linear-gradient(152deg, transparent 0 36%, rgba(201,166,107,.04) 36.1% 36.35%, transparent 36.6%);
+  opacity: .7;
+}
+
+.dashboard-topbar,
+.dashboard-main-grid,
+.dashboard-bottom-strip,
+.dashboard-bottom-nav,
+.dashboard-bottom-status,
+.dashboard-bottom-nav-actions {
+  position: relative;
+  z-index: 1;
+}
+

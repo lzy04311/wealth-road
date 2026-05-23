@@ -1,0 +1,459 @@
+﻿@media (min-width: 901px) {
+  #dashboardBottomStrip.dashboard-bottom-strip .dashboard-strip-item {
+    align-items: center !important;
+    justify-items: stretch !important;
+    padding: 3px 12px !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-block {
+    grid-template-rows: 20px 1fr !important;
+    align-content: stretch !important;
+    justify-content: stretch !important;
+    height: 100% !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-title {
+    justify-self: start !important;
+    align-self: start !important;
+    text-align: left !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-body {
+    display: grid !important;
+    align-content: center !important;
+    justify-items: stretch !important;
+    gap: 3px !important;
+    min-height: 0 !important;
+    width: 100% !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-donut-row,
+  #dashboardBottomStrip .dashboard-strip-allocation-row {
+    min-height: 0 !important;
+    align-items: center !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-list span {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-invest-line,
+  #dashboardBottomStrip .dashboard-strip-sparkline {
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-goal .dashboard-strip-progress,
+  #dashboardBottomStrip .dashboard-strip-cash .dashboard-strip-bar,
+  #dashboardBottomStrip .dashboard-strip-cash .dashboard-strip-split {
+    width: 82% !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-quote .dashboard-strip-body {
+    align-content: center !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-quote-main {
+    font-size: 24px !important;
+    line-height: 1.1 !important;
+  }
+
+  #dashboardBottomStrip .dashboard-strip-quote .dashboard-strip-desc {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    max-width: 88% !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  /* bottom status text visibility is locked by the global FINAL LOCK block above */
+}
+@media (max-width: 1180px) {
+  .dashboard-topbar,
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-status-bar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    transform: none;
+  }
+
+  .dashboard-status-pill {
+    width: 100%;
+  }
+
+  .dashboard-home-actions {
+    justify-self: start;
+  }
+
+  .dashboard-center-orbit {
+    min-height: 480px;
+  }
+
+  .dashboard-bottom-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 14px;
+  }
+
+  .dashboard-strip-item:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .dashboard-bottom-nav {
+    grid-template-columns: 1fr;
+    border-radius: 24px;
+  }
+
+  .dashboard-bottom-status {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 8px;
+  }
+
+  .dashboard-status-item:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .dashboard-bottom-nav-actions {
+    padding-left: 0;
+    padding-top: 6px;
+    border-left: 0;
+    border-top: 1px solid rgba(201,166,107,.14);
+  }
+}
+@media (min-width: 1181px) and (max-height: 1000px) {
+  .dashboard-cockpit-page {
+    grid-template-rows: 60px minmax(0, 1fr) 92px 60px;
+    gap: 9px;
+    padding: 4px 5px 5px;
+  }
+
+  .dashboard-topbar {
+    min-height: 0;
+    grid-template-columns: minmax(220px, .7fr) minmax(560px, 1.65fr) auto;
+    gap: 12px;
+  }
+
+  .dashboard-brand-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 1.55rem;
+  }
+
+  .dashboard-brand h2 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-brand p {
+    font-size: .72rem;
+    margin-top: 0;
+  }
+
+  .dashboard-status-bar {
+    gap: 9px;
+  }
+
+  .dashboard-status-pill {
+    min-height: 36px;
+    padding: 5px 12px;
+  }
+
+  .dashboard-status-pill strong {
+    font-size: .78rem;
+  }
+
+  .dashboard-status-pill small {
+    font-size: .64rem;
+  }
+
+  .dashboard-home-action {
+    width: 39px;
+    height: 39px;
+    min-height: 39px;
+    font-size: 1rem;
+  }
+
+  .dashboard-main-grid {
+    min-height: 0;
+    grid-template-columns: minmax(330px, .84fr) minmax(600px, 1.32fr) minmax(330px, .84fr);
+    gap: 9px;
+    overflow: visible;
+  }
+
+  .dashboard-asset-card {
+    padding: 16px 18px;
+    gap: 8px;
+  }
+
+  .dashboard-total-asset {
+    font-size: clamp(3.75rem, 3.65vw, 4.25rem);
+  }
+
+  .dashboard-change-row {
+    padding-bottom: 7px;
+    font-size: .8rem;
+  }
+
+  .dashboard-asset-metrics {
+    gap: 4px;
+    padding-bottom: 4px;
+  }
+
+  .dashboard-asset-metrics div {
+    padding: 4px 9px 4px;
+  }
+
+  .dashboard-asset-metrics strong {
+    font-size: 1rem;
+  }
+
+  .dashboard-mini-chart-block {
+    gap: 5px;
+    padding: 7px 10px 7px;
+  }
+
+  .dashboard-mini-chart svg {
+    height: 106px;
+  }
+
+  .dashboard-center-orbit {
+    min-height: 470px;
+  }
+
+  .wealth-core-visual {
+    width: min(106%, 730px);
+  }
+
+  .compass-core {
+    width: clamp(250px, 26vw, 320px);
+    height: clamp(250px, 26vw, 320px);
+  }
+
+  .compass-core strong {
+    font-size: clamp(7rem, 9.8vw, 9.5rem);
+  }
+
+  .compass-node {
+    width: 108px;
+    min-height: 108px;
+    padding: 24px 12px 12px;
+  }
+
+  .dashboard-right-cards {
+    gap: 9px;
+    overflow: visible;
+  }
+
+  .dashboard-side-card {
+    padding: 12px;
+    gap: 7px;
+  }
+
+  .dashboard-structure {
+    grid-template-columns: 110px 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-donut {
+    width: 104px;
+  }
+
+  .dashboard-donut::after {
+    inset: 29px;
+  }
+
+  .dashboard-bottom-strip {
+    min-height: 0;
+    height: calc(92px + var(--dashboard-strip-rise));
+    margin-top: calc(var(--dashboard-strip-rise) * -1);
+    padding: 9px 14px;
+    border-radius: 22px;
+  }
+
+  .dashboard-strip-item {
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 9px;
+    padding: 2px 12px;
+  }
+
+  .dashboard-strip-copy {
+    grid-template-rows: 14px 22px 14px minmax(22px, auto);
+  }
+
+  .dashboard-strip-value {
+    font-size: 18px;
+  }
+
+  .dashboard-bottom-nav {
+    min-height: 0;
+    height: 64px;
+    padding: 7px 14px;
+    border-radius: 22px;
+    grid-template-columns: minmax(520px, 1fr) minmax(660px, 1fr);
+  }
+
+  .dashboard-status-item {
+    grid-template-columns: 19px minmax(0, 1fr);
+    gap: 6px;
+    padding: 3px 10px;
+  }
+
+  .dashboard-status-item i {
+    width: 19px;
+    height: 19px;
+  }
+
+  .dashboard-status-item span {
+    font-size: .68rem;
+  }
+
+  .dashboard-status-item strong {
+    font-size: .61rem;
+  }
+
+  .dashboard-bottom-nav-actions {
+    gap: 5px;
+    padding-left: 10px;
+  }
+
+  .dashboard-bottom-nav span {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dashboard-bottom-nav strong {
+    font-size: .72rem;
+  }
+}
+@media (max-width: 680px) {
+  .dashboard-cockpit-page {
+    padding: 0;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .dashboard-main-grid,
+  .dashboard-bottom-strip {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .dashboard-bottom-strip {
+    min-height: 90px;
+    height: auto;
+    margin-top: 0;
+  }
+
+  .dashboard-asset-card,
+  .dashboard-right-cards {
+    margin-inline: 0;
+    height: auto;
+  }
+
+  .dashboard-status-bar,
+  .dashboard-right-cards,
+  .dashboard-bottom-strip,
+  .dashboard-bottom-status,
+  .dashboard-bottom-nav-actions,
+  .dashboard-asset-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-asset-metrics div,
+  .dashboard-strip-item,
+  .dashboard-status-item {
+    border-right: 0;
+    border-bottom: 1px solid rgba(201,166,107,.22);
+  }
+
+  .dashboard-strip-item:last-child,
+  .dashboard-status-item:last-child {
+    border-bottom: 0;
+  }
+
+  .dashboard-bottom-nav {
+    gap: 2px;
+    padding: 8px;
+  }
+
+  .dashboard-bottom-nav button {
+    justify-content: flex-start;
+    padding: 0 10px;
+  }
+
+  .dashboard-center-orbit {
+    min-height: auto;
+    transform: none;
+    display: grid;
+    gap: 12px;
+  }
+
+  .dashboard-center-orbit::before,
+  .dashboard-center-orbit::after,
+  .compass-node-layer::before,
+  .compass-node-layer::after {
+    display: none;
+  }
+
+  .compass-core {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    justify-self: center;
+    width: 180px;
+    height: 180px;
+  }
+
+  .compass-core strong {
+    font-size: 4.8rem;
+  }
+
+  .compass-node-layer {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .compass-node {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    min-height: 86px;
+    transform: none;
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "dot name"
+      "dot value"
+      "dot desc";
+    justify-items: start;
+    text-align: left;
+    border-radius: 22px;
+    padding: 10px;
+  }
+
+  .node-dot {
+    position: static;
+    transform: none;
+    width: 9px;
+    height: 9px;
+    grid-area: dot;
+  }
+
+  .node-dot::before {
+    inset: 0;
+  }
+
+  .compass-node:hover {
+    transform: none;
+  }
+
+  .dashboard-structure {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+}
