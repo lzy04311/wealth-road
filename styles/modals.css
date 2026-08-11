@@ -45,6 +45,7 @@
 }
 .quick-modal-close {
   position: absolute;
+  z-index: 2;
   right: 12px;
   top: 10px;
   width: 32px;
