@@ -34,3 +34,8 @@ coverage/
 *.bak
 *.swp
 ~$*
+
+# Private append-only finance ledger
+data/raw/*.csv
+data/raw/*.lock
+data/raw/*.json

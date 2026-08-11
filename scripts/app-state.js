@@ -6,9 +6,17 @@ var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储�
 var investmentTypes = ["投资", "储蓄", "转入", "转出"];
 var assetKinds = ["现金", "投资", "电子产品", "贵重物品", "电子订阅", "买断软件", "数字资产", "其他"];
 var assetStatuses = ["在用", "闲置", "观察", "保留", "准备卖出", "已停用"];
-var accountNameMigration = { "生活费": "生存专项拨款", "自我投资": "自我升级基金", "纳斯达克": "纳纳你是我的神", "短债/现金": "流动资金（子弹）", "A股玩耍仓": "与大A斗智斗勇专项基金", "租房/应急金": "保命钱", "自由支配": "败家额度" };
-var defaultBudgetPercents = { "生存专项拨款": 25.8, "自我升级基金": 14.5, "纳纳你是我的神": 16.1, "流动资金（子弹）": 4.8, "与大A斗智斗勇专项基金": 1.6, "保命钱": 30.6, "败家额度": 6.5 };
-var defaultRules = ["应急金达到目标前，结余优先进入应急金。", "自由支配账户不能透支。", "长期投资账户不用于生活消费。", "兴趣仓不能污染主仓。"].join("\n");
+var accountNameMigration = {
+  "生活费": "日常开支", "生存专项拨款": "日常开支",
+  "自我投资": "学习成长", "自我升级基金": "学习成长",
+  "纳斯达克": "长期投资", "纳纳你是我的神": "长期投资", "娜娜你是我的神": "长期投资",
+  "短债/现金": "备用现金", "流动资金（子弹）": "备用现金",
+  "A股玩耍仓": "高风险投资", "与大A斗智斗勇专项基金": "高风险投资",
+  "租房/应急金": "应急金", "保命钱": "应急金",
+  "自由支配": "娱乐消费", "败家额度": "娱乐消费"
+};
+var defaultBudgetPercents = { "日常开支": 25.8, "学习成长": 14.5, "长期投资": 16.1, "备用现金": 4.8, "高风险投资": 1.6, "应急金": 30.6, "娱乐消费": 6.5 };
+var defaultRules = ["应急金达到目标前，结余优先进入应急金。", "娱乐消费不能透支。", "长期投资不用于日常开支。", "高风险投资不能影响长期投资。"].join("\n");
 var MAX_IMPORT_BYTES = 1024 * 1024;
 var MAX_TEXT_LENGTH = 160;
 var MAX_NOTE_LENGTH = 1200;
@@ -166,12 +174,12 @@ function normalizeMonthlyPlans(plans) {
 }
 function defaultAccounts() {
   return [
-    { id: uid(), name: "生存专项拨款", type: "生活消费", budgetPercent: defaultBudgetPercents["生存专项拨款"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
-    { id: uid(), name: "自我升级基金", type: "自我投资", budgetPercent: defaultBudgetPercents["自我升级基金"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
-    { id: uid(), name: "纳纳你是我的神", type: "长期投资", budgetPercent: defaultBudgetPercents["纳纳你是我的神"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
-    { id: uid(), name: "流动资金（子弹）", type: "短期储蓄", budgetPercent: defaultBudgetPercents["流动资金（子弹）"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
-    { id: uid(), name: "与大A斗智斗勇专项基金", type: "长期投资", budgetPercent: defaultBudgetPercents["与大A斗智斗勇专项基金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "兴趣仓" },
-    { id: uid(), name: "保命钱", type: "应急金", budgetPercent: defaultBudgetPercents["保命钱"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, note: "" },
-    { id: uid(), name: "败家额度", type: "自由支配", budgetPercent: defaultBudgetPercents["败家额度"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" }
+    { id: uid(), name: "日常开支", type: "生活消费", budgetPercent: defaultBudgetPercents["日常开支"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
+    { id: uid(), name: "学习成长", type: "自我投资", budgetPercent: defaultBudgetPercents["学习成长"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
+    { id: uid(), name: "长期投资", type: "长期投资", budgetPercent: defaultBudgetPercents["长期投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
+    { id: uid(), name: "备用现金", type: "短期储蓄", budgetPercent: defaultBudgetPercents["备用现金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
+    { id: uid(), name: "高风险投资", type: "长期投资", budgetPercent: defaultBudgetPercents["高风险投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "控制仓位" },
+    { id: uid(), name: "应急金", type: "应急金", budgetPercent: defaultBudgetPercents["应急金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, note: "" },
+    { id: uid(), name: "娱乐消费", type: "自由支配", budgetPercent: defaultBudgetPercents["娱乐消费"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" }
   ];
 }

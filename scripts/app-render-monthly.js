@@ -7,7 +7,7 @@ function renderMonthly(ctx) {
   var summaryText = !s.hasPlannedIncome
     ? "请先填写本月计划收入，预算系统才能完整运行。"
     : (s.overBudget
-      ? "本月花销偏高，建议检查败家额度和生存专项拨款。"
+      ? "本月花销偏高，建议检查娱乐消费和日常开支。"
       : (s.surplus < 0 ? "本月现金流为负，需要检查投入节奏和支出结构。" : (s.surplus > 0 ? "这个月系统运行平稳，继续保持。" : "本月数据还不完整，继续记录后再判断。")));
 
   byId("monthlyReportTitle").textContent = month + " 月度资金报告";
@@ -36,7 +36,7 @@ function renderMonthly(ctx) {
   if (monthlyCurrentHead) monthlyCurrentHead.textContent = "当前金额（投入净额）";
 }
 
-function renderGoals() { var month = currentMonth(), targets = state.accounts.filter(function (a) { return numberValue(a.target) > 0; }); byId("goalList").innerHTML = targets.length ? targets.map(function (account) { var current = accountBalance(account, month), target = numberValue(account.target), pct = Math.min(100, current / target * 100), gap = target - current, visual = accountVisual(account); return accountCard(account, visual, pct, "<div class=\"account-mini-grid\"><div class=\"account-mini\"><span>当前金额</span><strong>" + esc(money(current)) + "</strong></div><div class=\"account-mini\"><span>目标金额</span><strong>" + esc(money(target)) + "</strong></div></div><div class=\"progress\"><span style=\"width:" + pct + "%\"></span></div><div class=\"row-meta " + (gap > 0 ? "warning" : "positive") + "\">" + esc(gap > 0 ? "距离目标还差 " + money(gap) : "已完成，超出 " + money(Math.abs(gap))) + "</div>"); }).join("") : empty("还没有设置储蓄目标。", "可以先给「保命钱」设置一个目标金额，比如 25000。", "", "🎯"); }
+function renderGoals() { var month = currentMonth(), targets = state.accounts.filter(function (a) { return numberValue(a.target) > 0; }); byId("goalList").innerHTML = targets.length ? targets.map(function (account) { var current = accountBalance(account, month), target = numberValue(account.target), pct = Math.min(100, current / target * 100), gap = target - current, visual = accountVisual(account); return accountCard(account, visual, pct, "<div class=\"account-mini-grid\"><div class=\"account-mini\"><span>当前金额</span><strong>" + esc(money(current)) + "</strong></div><div class=\"account-mini\"><span>目标金额</span><strong>" + esc(money(target)) + "</strong></div></div><div class=\"progress\"><span style=\"width:" + pct + "%\"></span></div><div class=\"row-meta " + (gap > 0 ? "warning" : "positive") + "\">" + esc(gap > 0 ? "距离目标还差 " + money(gap) : "已完成，超出 " + money(Math.abs(gap))) + "</div>"); }).join("") : empty("还没有设置储蓄目标。", "可以先给「应急金」设置一个目标金额，比如 25000。", "", "🎯"); }
 
 function renderAll() {
   updateMonthText();
