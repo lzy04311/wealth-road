@@ -14,7 +14,9 @@
 .assets-panorama-card {
   border-radius: var(--radius-lg);
   padding: 24px 28px;
-  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-soft) 30%, var(--soft-green) 100%);
+  background:
+    radial-gradient(circle at 92% 16%, rgba(218,184,119,.13), transparent 12rem),
+    linear-gradient(155deg, rgba(255,253,248,.96), rgba(252,246,236,.82));
   box-shadow: 0 2px 8px rgba(29,29,31,.05), 0 12px 32px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8);
   border: 1px solid rgba(226,221,211,.45);
   display: grid;
@@ -183,7 +185,7 @@
 .asset-kind-software { --asset-kind-color: var(--muted); }
 .asset-kind-digital { --asset-kind-color: var(--primary); }
 .asset-item-head { display: flex; align-items: flex-start; gap: 10px; }
-.asset-kind-icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid rgba(226,221,211,.9); border-radius: var(--radius-sm); background: var(--soft-green); }
+.asset-kind-icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border: 1px solid rgba(226,221,211,.9); border-radius: var(--radius-sm); background: var(--soft-gold); }
 .asset-item-head h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
 .asset-item-head p { margin: 3px 0 0; color: var(--muted); font-size: .78rem; font-weight: 600; }
 .asset-item-head .status-pill { margin-left: auto; }
@@ -291,7 +293,7 @@
 .asset-pie-card { display: grid; grid-template-columns: 1fr; gap: 18px; align-content: start; background: linear-gradient(135deg, rgba(255,254,250,.96), rgba(248,246,241,.92)); }
 .asset-pie-card h2 { margin: 4px 0 6px; font-size: 1.25rem; }
 .asset-pie-layout { width: fit-content; max-width: 100%; margin: 0 auto; display: grid; grid-template-columns: minmax(250px, auto) minmax(180px, auto); gap: 28px; align-items: center; justify-content: center; }
-.asset-pie { width: min(300px, 100%); height: auto; aspect-ratio: 1 / 1; margin: 0 auto; display: grid; place-items: center; border-radius: 999px; background: linear-gradient(160deg, var(--surface) 0%, var(--surface-soft) 30%, var(--soft-green) 100%); box-shadow: 0 2px 8px rgba(29,29,31,.06), 0 8px 20px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8); border: 1px solid rgba(226,221,211,.5); }
+.asset-pie { width: min(300px, 100%); height: auto; aspect-ratio: 1 / 1; margin: 0 auto; display: grid; place-items: center; border-radius: 999px; background: radial-gradient(circle at 72% 18%, rgba(218,184,119,.13), transparent 10rem), linear-gradient(155deg, rgba(255,253,248,.96), rgba(252,246,236,.82)); box-shadow: 0 2px 8px rgba(29,29,31,.06), 0 8px 20px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8); border: 1px solid rgba(226,221,211,.5); }
 .asset-pie svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 16px rgba(29,29,31,.10)); }
 .labeled-pie { width: min(280px, 100%); border-radius: 999px; background: linear-gradient(160deg, rgba(255,254,250,.65) 0%, rgba(248,246,241,.55) 42%, rgba(231,238,233,.46) 100%); box-shadow: 0 2px 8px rgba(29,29,31,.05), 0 6px 16px rgba(29,29,31,.06), inset 0 1px 0 rgba(255,255,255,.6); border: 1px solid rgba(226,221,211,.4); }
 .labeled-pie svg { filter: drop-shadow(0 6px 12px rgba(29,29,31,.08)); }
@@ -710,7 +712,9 @@ footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .
   justify-content: center;
   padding: 18px 20px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-soft) 35%, var(--soft-green) 100%);
+  background:
+    radial-gradient(circle at 92% 16%, rgba(218,184,119,.13), transparent 12rem),
+    linear-gradient(155deg, rgba(255,253,248,.96), rgba(252,246,236,.82));
   box-shadow: 0 2px 8px rgba(29,29,31,.05), 0 8px 20px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8);
   border: 1px solid rgba(226,221,211,.45);
 }
@@ -982,7 +986,9 @@ footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .
   justify-content: center;
   padding: 20px 22px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(160deg, var(--surface) 0%, var(--surface-soft) 35%, var(--soft-green) 100%);
+  background:
+    radial-gradient(circle at 92% 16%, rgba(218,184,119,.13), transparent 12rem),
+    linear-gradient(155deg, rgba(255,253,248,.96), rgba(252,246,236,.82));
   box-shadow: 0 2px 8px rgba(29,29,31,.05), 0 8px 20px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8);
   border: 1px solid rgba(226,221,211,.45);
 }
@@ -1111,7 +1117,7 @@ footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .
   flex: 0 0 auto;
   border: 1px solid rgba(226,221,211,.9);
   border-radius: var(--radius-sm);
-  background: var(--soft-green);
+  background: var(--soft-gold);
   font-size: 1.1rem;
 }
 .ip-card-title { min-width: 0; }
