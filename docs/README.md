@@ -33,6 +33,12 @@
 - `scripts/`: 运行中的 JS 模块。
 - `docs/`: 当前最高优先级工程文档。
 
+## 财务原始数据与完善路线
+
+- `RAW_FINANCE_LEDGER.md`: 自然语言记账、追加式 CSV、校验和现有 JSON 备份迁移流程。
+- `FINANCIAL_SYSTEM_CLOSURE_PLAN.md`: 当前未闭环问题和后续分阶段完善路线。
+- `data/raw/wealth-events.csv`: 本机私有原始事件账本，由工具创建并写入，已排除在 Git 之外。
+
 ## 使用方式
 
 直接打开 `index.html`，或使用 VS Code Live Server 打开。

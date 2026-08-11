@@ -171,6 +171,22 @@ test("normalizeState always returns core array fields", function () {
   });
 });
 
+test("legacy personalized account names migrate to simple names without changing IDs", function () {
+  var context = createContext();
+  var backup = validV2Backup({
+    accounts: [
+      { id: "daily", name: "生存专项拨款", type: "生活消费", budgetPercent: 25.8, fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
+      { id: "emergency", name: "保命钱", type: "应急金", budgetPercent: 30.6, fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, note: "" }
+    ],
+    expenses: [{ id: "exp", date: "2026-08-12", month: "2026-08", accountId: "daily", category: "餐饮", amount: 32, note: "" }]
+  });
+  var normalized = context.normalizeState(backup);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(normalized.accounts.map(function (account) { return [account.id, account.name]; }))), [
+    ["daily", "日常开支"], ["emergency", "应急金"]
+  ]);
+  assert.strictEqual(normalized.expenses[0].accountId, "daily");
+});
+
 test("corrupt localStorage string writes recovery key", function () {
   var broken = "{not json";
   var context = createContext({ general_money_manager_v1: broken });

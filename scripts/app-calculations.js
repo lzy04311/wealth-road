@@ -111,13 +111,13 @@ function assetSnapshotSummary(month) {
 function accountName(id) { var a = state.accounts.find(function (item) { return item.id === id; }); return a ? a.name : "已删除账户"; }
 function accountRole(account) {
   var roleMap = {
-    "生存专项拨款": { emoji: "🍚", desc: "吃饭、交通、日常刚需", color: "#B9B8B2", tip: "优先守住刚需开支节奏" },
-    "自我升级基金": { emoji: "🌱", desc: "身体、技能、书籍和工具", color: "#A99A78", tip: "把投入变成长期复利" },
-    "纳纳你是我的神": { emoji: "🚀", desc: "长期投资主仓，只投不短炒", color: "#6E7378", tip: "主仓重纪律，不追涨杀跌" },
-    "流动资金（子弹）": { emoji: "🛡️", desc: "短债、现金、可调度资金", color: "#9AA7AA", tip: "保持流动性，随时可调度" },
-    "与大A斗智斗勇专项基金": { emoji: "🎲", desc: "兴趣仓，永远不能膨胀", color: "#9A8F7A", tip: "仓位可玩，但上限要硬" },
-    "保命钱": { emoji: "💰", desc: "应急金、租房、安全垫", color: "#D8B45F", tip: "先稳住底盘，再谈进攻" },
-    "败家额度": { emoji: "☕", desc: "小确幸预算，花完就停", color: "#B85B50", tip: "放松可以，边界更重要" }
+    "日常开支": { emoji: "🍚", desc: "吃饭、交通、居住和日用品", color: "#B9B8B2", tip: "优先守住必要开支" },
+    "学习成长": { emoji: "🌱", desc: "课程、书籍、健身和工具", color: "#A99A78", tip: "让成长投入产生长期价值" },
+    "长期投资": { emoji: "🚀", desc: "长期定投和核心资产", color: "#6E7378", tip: "坚持长期纪律，不追涨杀跌" },
+    "备用现金": { emoji: "🛡️", desc: "随时可用的现金和短期存款", color: "#9AA7AA", tip: "保持流动性，方便随时调度" },
+    "高风险投资": { emoji: "🎲", desc: "波动较大的小仓位投资", color: "#9A8F7A", tip: "控制仓位，不影响长期计划" },
+    "应急金": { emoji: "💰", desc: "突发支出和生活安全垫", color: "#D8B45F", tip: "优先补足安全垫" },
+    "娱乐消费": { emoji: "☕", desc: "聚餐、游戏、旅行和小确幸", color: "#B85B50", tip: "可以享受，但不要透支" }
   };
   return roleMap[account.name] || { emoji: "📦", desc: "自定义资金模块", color: "#B8976E", tip: "按你的策略持续优化" };
 }

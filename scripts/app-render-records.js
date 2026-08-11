@@ -56,8 +56,8 @@ function renderAccounts() {
   if (byId("accountModuleSummary")) byId("accountModuleSummary").innerHTML = pill("账户数量", state.accounts.length + " 个") + pill("比例合计", totalBudgetPercent().toFixed(1) + "%") + pill("本月预算", budgetTotal == null ? "待填写计划收入" : money(budgetTotal));
 
   var displayAccounts = state.accounts.slice();
-  var idxEmergency = displayAccounts.findIndex(function (a) { return a.name === "保命钱"; });
-  var idxFree = displayAccounts.findIndex(function (a) { return a.name === "败家额度"; });
+  var idxEmergency = displayAccounts.findIndex(function (a) { return a.name === "应急金"; });
+  var idxFree = displayAccounts.findIndex(function (a) { return a.name === "娱乐消费"; });
   if (idxEmergency >= 0 && idxFree >= 0) {
     var temp = displayAccounts[idxEmergency];
     displayAccounts[idxEmergency] = displayAccounts[idxFree];
@@ -127,7 +127,7 @@ function renderAccounts() {
       + "<div class=\"progress role-progress\"><span style=\"width:" + progressPct + "%\"></span></div>"
       + "<div class=\"role-tip\">" + esc(account.note || tip) + "</div>"
       + "</article>";
-  }).join("") : empty("还没有账户。", "先建立几个资金角色，比如生存专项拨款、保命钱、败家额度。", "", "🧱");
+  }).join("") : empty("还没有账户。", "先建立几个资金账户，比如日常开支、应急金、娱乐消费。", "", "🧱");
 }
 function renderExpenses(ctx) {
   var month = currentMonth(), records = state.expenses.filter(function (item) { return item.month === month; }), total = sum(records, function (item) { return item.amount; });

@@ -58,13 +58,13 @@ function renderPie(pieId, legendId, items, centerLabel, emptyText, centerValue, 
 function renderDashboardPies(month) {
   var plan = monthlyPlan(month), monthIncome = monthlyIncome(month), budgetCenter = plan.hasPlannedIncome ? plan.plannedIncome : monthIncome;
   var budgetMap = {
-    "生存专项拨款": "生存",
-    "自我升级基金": "自投",
-    "纳纳你是我的神": "长投",
-    "与大A斗智斗勇专项基金": "长投",
-    "流动资金（子弹）": "短储",
-    "败家额度": "自由",
-    "保命钱": "应急"
+    "日常开支": "日常",
+    "学习成长": "成长",
+    "长期投资": "长投",
+    "高风险投资": "高风险",
+    "备用现金": "备用",
+    "娱乐消费": "娱乐",
+    "应急金": "应急"
   };
   var budgetTypeMap = { "生活消费": "生存", "自我投资": "自投", "长期投资": "长投", "短期储蓄": "短储", "自由支配": "自由", "应急金": "应急", "其他": "其他" };
   var colorMap = { "生存": "#B9B8B2", "自投": "#A99A78", "长投": "#6E7378", "短储": "#9AA7AA", "自由": "#D8B45F", "应急": "#D8CCB4" };
@@ -80,8 +80,8 @@ function renderDashboardPies(month) {
     item.display = plan.hasPlannedIncome ? money(item.displayValue) : "待填写计划收入";
     return item;
   }).filter(function (item) { return item.value > 0; });
-  var assetShortNames = { "纳纳你是我的神": "娜娜", "娜娜你是我的神": "娜娜", "与大A斗智斗勇专项基金": "大A", "流动资金（子弹）": "子弹", "保命钱": "保命" };
-  var assetColorMap = { "纳纳你是我的神": "#6E7378", "娜娜你是我的神": "#6E7378", "与大A斗智斗勇专项基金": "#9A8F7A", "流动资金（子弹）": "#9AA7AA", "保命钱": "#D8B45F" };
+  var assetShortNames = { "长期投资": "长投", "高风险投资": "高风险", "备用现金": "备用", "应急金": "应急" };
+  var assetColorMap = { "长期投资": "#6E7378", "高风险投资": "#9A8F7A", "备用现金": "#9AA7AA", "应急金": "#D8B45F" };
   var assetItems = state.accounts.filter(function (account) { return account.includeAsset; }).map(function (account) { var row = accountAssetValueForMonth(account, month); return { name: assetShortNames[account.name] || account.name, value: Math.max(0, row.value), display: money(row.value), color: assetColorMap[account.name] || "#B9B8B2" }; }).filter(function (item) { return item.value > 0; });
   var assetSnap = assetSnapshotSummary(month);
   var isAssetMode = dashboardPieMode === "asset";
