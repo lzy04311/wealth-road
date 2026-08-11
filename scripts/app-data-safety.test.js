@@ -185,6 +185,12 @@ test("corrupt localStorage string does not immediately overwrite main key", func
   assert.strictEqual(context.__store.general_money_manager_v1, broken);
 });
 
+test("corrupt sync metadata falls back to safe defaults", function () {
+  var context = createContext({ general_money_manager_v1_sync_meta: "{bad json" });
+  var meta = context.loadSyncMeta();
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(meta)), { localUpdatedAt: "", lastCloudUpdatedAt: "", lastSyncedAt: "" });
+});
+
 test("monthlySummary returns expected totals for fixture state", function () {
   var context = createContext(null, { calculations: true });
   context.state = context.normalizeState(calculationState());

@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="theme-color" content="#C9A66B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="财富中枢">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <title>财富自由之路</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -618,6 +626,31 @@
           <div class="notice data-save-note">最近保存时间：<strong id="dataLastSavedText">--</strong></div>
         </div>
         <div class="data-actions">
+          <div class="card data-card sync-card">
+            <h2>多设备同步</h2>
+            <p class="subtitle" id="backendAuthStatus">本地模式：云同步未初始化</p>
+            <div class="form-grid sync-login-grid">
+              <div class="field"><label>邮箱</label><input type="email" id="backendLoginEmail" placeholder="name@example.com"></div>
+              <div class="field"><label>验证码</label><input type="text" id="backendOtpToken" inputmode="numeric" placeholder="可选"></div>
+              <div class="field sync-login-actions">
+                <label>操作</label>
+                <div class="actions">
+                  <button class="btn primary small" type="button" id="backendSendLogin">发送登录邮件</button>
+                  <button class="btn ghost small" type="button" id="backendVerifyOtp">验证登录</button>
+                  <button class="btn ghost small" type="button" id="backendLogout">退出</button>
+                </div>
+              </div>
+            </div>
+            <div class="notice data-save-note">云同步状态：<strong id="backendSyncStatus">本地可用，云同步待登录</strong></div>
+            <div class="sync-meta-grid">
+              <div><span>本地保存</span><strong id="backendLocalSavedAt">--</strong></div>
+              <div><span>云端同步</span><strong id="backendCloudSyncedAt">--</strong></div>
+            </div>
+            <div class="actions">
+              <button class="btn ghost" type="button" id="backendPullCloud">拉取云端</button>
+              <button class="btn ghost" type="button" id="backendPushLocal">上传本机</button>
+            </div>
+          </div>
           <div class="card data-card">
             <h2>导出数据</h2>
             <p class="subtitle">导出完整 JSON，可用于备份或换电脑</p>
@@ -640,6 +673,7 @@
   <script defer src="scripts/app-validators.js"></script>
   <script defer src="scripts/app-migrations.js"></script>
   <script defer src="scripts/app-storage.js"></script>
+  <script defer src="scripts/app-backend-config.js"></script>
   <script defer src="scripts/app-calculations.js"></script>
   <script defer src="scripts/app-render-core.js"></script>
   <script defer src="scripts/dashboard/dashboard-formatters.js"></script>
@@ -654,7 +688,10 @@
   <script defer src="scripts/app-actions-crud.js"></script>
   <script defer src="scripts/app-actions-quick-entry.js"></script>
   <script defer src="scripts/app-actions-modals.js"></script>
+  <script defer src="scripts/app-auth.js"></script>
+  <script defer src="scripts/app-sync.js"></script>
   <script defer src="scripts/app-actions-navigation.js"></script>
   <script defer src="scripts/app-actions.js"></script>
+  <script defer src="scripts/app-pwa.js"></script>
 </body>
 </html>

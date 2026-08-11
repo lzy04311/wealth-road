@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="财富中枢">
+  <rect width="512" height="512" rx="112" fill="#F7F1E6"/>
+  <circle cx="256" cy="256" r="178" fill="#FFFDF8" stroke="#C9A66B" stroke-width="18"/>
+  <circle cx="256" cy="256" r="126" fill="#1F2D24"/>
+  <path fill="#D6B16D" d="M164 184h184v48h-64v38h58v46h-58v96h-56v-96h-58v-46h58v-38h-64z"/>
+  <path fill="#FFF6D8" d="M190 126h132c21 0 38 17 38 38v22h-54v-10c0-4-3-7-7-7h-86c-4 0-7 3-7 7v10h-54v-22c0-21 17-38 38-38z"/>
+</svg>

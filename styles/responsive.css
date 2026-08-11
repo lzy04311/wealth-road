@@ -16,6 +16,7 @@
   .asset-item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .asset-page-head { flex-direction: column; align-items: stretch; }
   .app-header, .pie-grid, .asset-pie-layout, .data-actions { grid-template-columns: 1fr; }
+  .sync-login-grid, .sync-meta-grid { grid-template-columns: 1fr; }
   .brand-title { order: -1; }
   .month-picker { justify-self: stretch; }
   .month-picker-inner { flex: 1; }

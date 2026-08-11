@@ -95,6 +95,7 @@ function createContext() {
     "app-validators.js",
     "app-migrations.js",
     "app-storage.js",
+    "app-backend-config.js",
     "app-calculations.js",
     "app-render-core.js",
     "dashboard/dashboard-formatters.js",
@@ -109,6 +110,8 @@ function createContext() {
     "app-actions-crud.js",
     "app-actions-quick-entry.js",
     "app-actions-modals.js",
+    "app-auth.js",
+    "app-sync.js",
     "app-actions-navigation.js",
     "app-actions.js"
   ].forEach(function (fileName) {
@@ -187,6 +190,70 @@ test("activateView switches between home and module page modes", function () {
   context.activateView("dashboard");
   assert.strictEqual(context.document.body.classList.contains("dashboard-home-mode"), true);
   assert.strictEqual(context.document.body.classList.contains("module-page-mode"), false);
+});
+
+test("backend auth stays local-only when Supabase client is unavailable", function () {
+  var context = createContext();
+  assert.strictEqual(context.backendAuthState.status, "local-only");
+  assert.strictEqual(context.backendAuthState.user, null);
+});
+
+test("backend config is local-only by default", function () {
+  var context = createContext();
+  assert.strictEqual(context.isBackendConfigured(), false);
+});
+
+test("sync conflict detection flags two-device edits", function () {
+  var context = createContext();
+  var result = context.detectSyncConflict({
+    localUpdatedAt: "2026-06-07T10:10:00.000Z",
+    lastCloudUpdatedAt: "2026-06-07T10:00:00.000Z"
+  }, "2026-06-07T10:12:00.000Z");
+  assert.strictEqual(result.conflict, true);
+  assert.strictEqual(result.localChangedSinceCloud, true);
+  assert.strictEqual(result.cloudChangedSinceSync, true);
+});
+
+test("automatic cloud resolution does not overwrite local state", function () {
+  var context = createContext();
+  context.state.rules = "local rules";
+  context.syncMeta = {
+    localUpdatedAt: "2026-06-07T09:00:00.000Z",
+    lastCloudUpdatedAt: "2026-06-07T09:00:00.000Z",
+    lastSyncedAt: "2026-06-07T09:00:00.000Z"
+  };
+  var cloudState = context.normalizeState(null);
+  cloudState.rules = "cloud rules";
+  return context.resolveCloudStateRow({
+    state: cloudState,
+    updated_at: "2026-06-07T10:00:00.000Z"
+  }, false).then(function (result) {
+    assert.strictEqual(result, false);
+    assert.strictEqual(context.state.rules, "local rules");
+    assert.strictEqual(context.backendSyncState.status, "cloud-newer");
+    assert.ok(context.backendSyncState.pendingCloudState);
+  });
+});
+
+test("applying cloud state exports local backup first", function () {
+  var context = createContext();
+  var backups = [];
+  context.state.rules = "local rules";
+  context.downloadStateBackup = function (payload, fileName) {
+    backups.push({ payload: payload, fileName: fileName });
+  };
+  var cloudState = context.normalizeState(null);
+  cloudState.rules = "cloud rules";
+  return context.applyCloudState({
+    state: cloudState,
+    updatedAt: "2026-06-07T10:00:00.000Z"
+  }).then(function (result) {
+    assert.strictEqual(result, true);
+    assert.strictEqual(backups.length, 1);
+    assert.match(backups[0].fileName, /^money-os-backup-before-cloud-pull_/);
+    assert.strictEqual(backups[0].payload.rules, "local rules");
+    assert.strictEqual(context.state.rules, "cloud rules");
+  });
 });
 
 testChain.then(function () {}, function () {});

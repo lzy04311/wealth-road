@@ -106,7 +106,7 @@ function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupT
   var orphanStatusValue = s.orphanExpenseCount > 0 ? (s.orphanExpenseCount + " 条 / " + money(s.orphanExpenseTotal)) : "无孤立记录";
   var orphanClass = s.orphanExpenseCount > 0 ? "warning" : "positive";
   el.innerHTML = [
-    dashboardStatusItem("云端同步正常", backupText, "positive"),
+    dashboardStatusItem("同步状态", backupText, "positive"),
     dashboardStatusItem(expenseStatus, forecast.budgetStatus || "持续观察", s.overBudget ? "warning" : "positive"),
     dashboardStatusItem(orphanStatusTitle, orphanStatusValue, orphanClass),
     dashboardStatusItem("储蓄率提升", savingStatus, savingRate == null ? "warning" : "positive"),
@@ -388,5 +388,4 @@ function setDashboardText(id, value) {
   var el = byId(id);
   if (el) el.textContent = value;
 }
-
 

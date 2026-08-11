@@ -57,14 +57,18 @@ function bindClicks() {
   byId("saveRules").addEventListener("click", function () { var previous = state.rules; state.rules = cleanText(byId("rulesText").value, 5000); if (save()) { renderAll(); notify("规则已保存"); } else { state.rules = previous; } });
   byId("saveMonthlyPlan").addEventListener("click", function () { var month = currentMonth(), incomeRaw = byId("plannedIncome").value.trim(), payday = parseInt(byId("plannedPayday").value, 10) || 15, previousPlans = Object.assign({}, state.monthlyPlans || {}); if (!state.monthlyPlans) state.monthlyPlans = {}; state.monthlyPlans[month] = { plannedIncome: incomeRaw === "" ? "" : safeAmount(incomeRaw), payday: Math.min(31, Math.max(1, payday)) }; if (save()) { renderAll(); notify("本月计划已保存"); } else { state.monthlyPlans = previousPlans; } });
   byId("exportData").addEventListener("click", exportData); byId("importData").addEventListener("click", importData);
+  if (byId("backendSendLogin")) byId("backendSendLogin").addEventListener("click", sendBackendLoginEmail);
+  if (byId("backendVerifyOtp")) byId("backendVerifyOtp").addEventListener("click", verifyBackendEmailOtp);
+  if (byId("backendLogout")) byId("backendLogout").addEventListener("click", logoutBackend);
+  if (byId("backendPullCloud")) byId("backendPullCloud").addEventListener("click", function () { pullCloudState(true); });
+  if (byId("backendPushLocal")) byId("backendPushLocal").addEventListener("click", function () { pushLocalStateToCloud({ force: true }); });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") { if (activeQuickType) closeQuickModal(); closeForm("snapshot"); closeSnapshotRecords(); closeHealthModal("dismiss"); }
   });
 }
-function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").value = today(); byId(p + "Month").value = currentMonth(); }); syncSelects(); handleSubmit(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); }
+function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "snapshot"].forEach(function (p) { byId(p + "Date").value = today(); byId(p + "Month").value = currentMonth(); }); syncSelects(); handleSubmit(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); if (typeof initBackendAuth === "function") initBackendAuth(); }
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {
   init();
 }
-
