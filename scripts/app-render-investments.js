@@ -9,8 +9,8 @@ function renderInvestments(ctx) {
 
   // Layer 1: Cockpit
   var snap = renderCtx.snapshot;
-  byId("investCockpitValue").textContent = money(snap.totalAsset);
-  byId("investCockpitPrincipal").textContent = money(snap.totalPrincipal);
+  byId("investCockpitValue").textContent = money(snap.performanceAsset);
+  byId("investCockpitPrincipal").textContent = money(snap.performancePrincipal);
   byId("investCockpitPnl").textContent = money(snap.pnl);
   byId("investCockpitPnl").className = snap.pnl >= 0 ? "positive" : "negative";
   byId("investCockpitRoi").textContent = snap.roi != null ? (snap.roi >= 0 ? "+" : "") + snap.roi.toFixed(2) + "%" : "--";
@@ -20,10 +20,10 @@ function renderInvestments(ctx) {
   byId("investStatMonthChange").className = (snap.monthChange || 0) >= 0 ? "positive" : (snap.monthChange != null ? "negative" : "warning");
 
   // Layer 2: Portfolio cards
-  var assetAccounts = state.accounts.filter(function (a) { return a.includeAsset; });
+  var assetAccounts = state.accounts.filter(function (a) { return a.includeAsset && !a.archived && a.valuationMethod === "净值快照"; });
   var lastDates = [];
   byId("investStatAccountCount").textContent = assetAccounts.length + " 个";
-  byId("investPortfolioSummary").textContent = assetAccounts.length + " 个账户 · 总市值 " + money(snap.totalAsset);
+  byId("investPortfolioSummary").textContent = assetAccounts.length + " 个净值账户 · 总市值 " + money(snap.performanceAsset);
 
   byId("investPortfolioGrid").innerHTML = assetAccounts.length ? assetAccounts.map(function (account) {
     var av = accountAssetValueForMonth(account, month);
@@ -66,8 +66,8 @@ function renderInvestments(ctx) {
     return latestSnapshotForAccount(a.id) !== null;
   }).length;
   byId("investRightStats").innerHTML =
-    "<div class=\"invest-right-stat\"><span>总市值</span><strong>" + money(snap.totalAsset) + "</strong></div>" +
-    "<div class=\"invest-right-stat\"><span>总本金</span><strong>" + money(snap.totalPrincipal) + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>总市值</span><strong>" + money(snap.performanceAsset) + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>总本金</span><strong>" + money(snap.performancePrincipal) + "</strong></div>" +
     "<div class=\"invest-right-stat\"><span>盈亏</span><strong class=\"" + (snap.pnl >= 0 ? "positive" : "negative") + "\">" + money(snap.pnl) + "</strong></div>" +
     "<div class=\"invest-right-stat\"><span>收益率</span><strong class=\"" + ((snap.roi || 0) >= 0 ? "positive" : "negative") + "\">" + (snap.roi != null ? (snap.roi >= 0 ? "+" : "") + snap.roi.toFixed(2) + "%" : "--") + "</strong></div>" +
     "<div class=\"invest-right-stat\"><span>已更新账户</span><strong>" + accountsWithSnap + "/" + assetAccounts.length + "</strong></div>";
@@ -76,4 +76,15 @@ function renderInvestments(ctx) {
   byId("investmentModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("转入/储蓄/投资", money(inTotal)) + pill("净额", money(net));
   byId("investmentSummary").textContent = month + " 共 " + records.length + " 条，净额 " + money(net);
   byId("investmentList").innerHTML = recordList(records, "investment");
+  renderTransfers(month);
+}
+
+function renderTransfers(month) {
+  var records = (state.transfers || []).filter(function (item) { return item.month === month; });
+  var total = sum(records, function (item) { return item.amount; });
+  if (byId("transferSummary")) byId("transferSummary").textContent = month + " 共 " + records.length + " 笔内部调拨，合计 " + money(total) + "，不影响净资产";
+  if (!byId("transferList")) return;
+  byId("transferList").innerHTML = records.length ? records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(accountName(item.fromAccountId)) + " → " + esc(accountName(item.toAccountId)) + "</span><span class=\"badge\">内部转账</span></div><div class=\"row-amount\">" + money(item.amount) + "</div>" + meta(["日期：" + item.date, "备注：" + (item.note || "无")]) + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+  }).join("") : empty("本月没有账户间转账。", "账户内部调拨应记录在这里，不要记成收入或支出。", "", "↔");
 }

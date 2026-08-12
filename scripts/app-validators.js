@@ -26,6 +26,12 @@ function validateStateShape(data) {
     if (!Object.prototype.hasOwnProperty.call(data, "assetItems")) errors.push("缺少核心字段 assetItems。");
     else if (!Array.isArray(data.assetItems)) errors.push("核心字段 assetItems 必须是数组。");
   }
+  if (Number(data.schemaVersion) >= 3) {
+    ["transfers", "liabilities"].forEach(function (key) {
+      if (!Object.prototype.hasOwnProperty.call(data, key)) errors.push("缺少核心字段 " + key + "。");
+      else if (!Array.isArray(data[key])) errors.push("核心字段 " + key + " 必须是数组。");
+    });
+  }
   return errors;
 }
 function validateImportData(data) { return validateStateShape(data); }
@@ -38,6 +44,8 @@ function importedStateSummary(rawState) {
     "收入记录：" + (Array.isArray(rawState.incomes) ? rawState.incomes.length : 0),
     "支出记录：" + (Array.isArray(rawState.expenses) ? rawState.expenses.length : 0),
     "投资数量：" + (Array.isArray(rawState.investments) ? rawState.investments.length : 0),
+    "转账数量：" + (Array.isArray(rawState.transfers) ? rawState.transfers.length : 0),
+    "负债数量：" + (Array.isArray(rawState.liabilities) ? rawState.liabilities.length : 0),
     "目标数量：" + targets,
     "快照数量：" + (Array.isArray(rawState.snapshots) ? rawState.snapshots.length : 0)
   ].join("\n");

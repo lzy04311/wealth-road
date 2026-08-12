@@ -144,6 +144,18 @@ test("renderAll does not throw in DOM smoke context", function () {
   assert.ok(context.__elements.expenseList);
 });
 
+test("dated record forms do not expose duplicate month inputs", function () {
+  var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  [
+    "quickIncomeMonth", "quickExpenseMonth", "quickInvestmentMonth",
+    "incomeMonth", "expenseMonth", "investmentMonth", "transferMonth", "snapshotMonth"
+  ].forEach(function (id) {
+    assert.doesNotMatch(html, new RegExp("id=[\\\"']" + id + "[\\\"']"), id + " should not exist");
+  });
+  assert.match(html, /id=["']currentMonth["'][^>]*hidden/);
+  assert.match(html, /id=["']planMonth["'][^>]*hidden/);
+});
+
 test("core render functions reuse provided month context", function () {
   var context = createContext();
   var current = context.currentMonth();

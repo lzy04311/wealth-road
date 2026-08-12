@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
   <div class="app">
@@ -48,8 +48,8 @@
         <form id="quickFormIncome" class="quick-form" data-quick-form="income">
           <div class="form-grid">
             <div class="field"><label>日期</label><input type="date" id="quickIncomeDate" required></div>
-            <div class="field"><label>月份</label><input type="month" id="quickIncomeMonth" required></div>
             <div class="field"><label>收入来源</label><select id="quickIncomeSource" required></select></div>
+            <div class="field"><label>到账账户</label><select id="quickIncomeAccount"></select></div>
             <div class="field"><label>金额</label><input type="number" id="quickIncomeAmount" min="0.01" step="0.01" required></div>
             <div class="field wide"><label>备注</label><input type="text" id="quickIncomeNote" placeholder="可选"></div>
           </div>
@@ -58,8 +58,8 @@
         <form id="quickFormExpense" class="quick-form" data-quick-form="expense">
           <div class="form-grid">
             <div class="field"><label>日期</label><input type="date" id="quickExpenseDate" required></div>
-            <div class="field"><label>月份</label><input type="month" id="quickExpenseMonth" required></div>
             <div class="field"><label>账户</label><select id="quickExpenseAccount" required></select></div>
+            <div class="field"><label>付款账户</label><select id="quickExpenseSourceAccount"></select></div>
             <div class="field"><label>类别</label><input type="text" id="quickExpenseCategory" required></div>
             <div class="field"><label>金额</label><input type="number" id="quickExpenseAmount" min="0.01" step="0.01" required></div>
             <div class="field wide"><label>备注</label><input type="text" id="quickExpenseNote" placeholder="可选"></div>
@@ -69,8 +69,8 @@
         <form id="quickFormInvestment" class="quick-form" data-quick-form="investment">
           <div class="form-grid">
             <div class="field"><label>日期</label><input type="date" id="quickInvestmentDate" required></div>
-            <div class="field"><label>月份</label><input type="month" id="quickInvestmentMonth" required></div>
             <div class="field"><label>账户</label><select id="quickInvestmentAccount" required></select></div>
+            <div class="field"><label>付款账户</label><select id="quickInvestmentSourceAccount"></select></div>
             <div class="field"><label>类型</label><select id="quickInvestmentType" required></select></div>
             <div class="field"><label>金额</label><input type="number" id="quickInvestmentAmount" min="0.01" step="0.01" required></div>
             <div class="field"><label>产品名称</label><input type="text" id="quickInvestmentProduct" placeholder="可选"></div>
@@ -119,9 +119,9 @@
           </header>
 
           <div class="dashboard-main-grid">
-            <section class="dashboard-asset-card dashboard-panel" aria-label="总资产">
+            <section class="dashboard-asset-card dashboard-panel" aria-label="净资产">
               <div class="dashboard-panel-head">
-                <h3>总资产</h3>
+                <h3>净资产</h3>
                 <span id="dashboardAssetHealth" class="dashboard-pill">资产健康度 --</span>
               </div>
               <strong id="dashboardTotalAsset" class="dashboard-total-asset">¥0.00</strong>
@@ -129,8 +129,8 @@
               <div id="dashboardAssetMetrics" class="dashboard-asset-metrics"></div>
               <div class="dashboard-mini-chart-block">
                 <div class="dashboard-mini-chart-title">
-                  <span>资产趋势（近6个月）</span>
-                  <small>总资产（元）</small>
+                  <span>金融资产趋势（近6个月）</span>
+                  <small>金融资产（元）</small>
                 </div>
                 <div id="dashboardAssetTrend" class="dashboard-mini-chart"></div>
                 <div id="dashboardTrendFacts" class="dashboard-trend-facts"></div>
@@ -242,12 +242,10 @@
           </div>
           <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
         </header>
-        <div class="page-toolbar asset-page-head">
+        <div class="page-toolbar asset-page-head subpage-context-bar">
           <div>
-            <p>管理现金、投资、实物、订阅和软件资产</p>
-          </div>
-          <div class="asset-toolbar-actions">
-            <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
+            <span class="context-label">资产工作区</span>
+            <p>按资产类型筛选清单，重点关注流动性、闲置价值与续费成本</p>
           </div>
         </div>
         <div id="assetsOverview" class="assets-overview-main"></div>
@@ -267,7 +265,10 @@
                 <div class="field"><label>资产类型</label><select id="assetItemKind" required></select></div>
                 <div class="field"><label>名称</label><input type="text" id="assetItemName" required placeholder="例如 MacBook、ChatGPT、现金"></div>
                 <div class="field"><label>状态</label><select id="assetItemStatus" required></select></div>
+                <div class="field"><label>净资产口径</label><select id="assetItemValuationMode" required></select></div>
+                <div class="field"><label>关联账户</label><select id="assetItemLinkedAccount"></select></div>
                 <div class="field"><label>当前估值/余额</label><input type="number" id="assetItemCurrentValue" min="0" step="0.01"></div>
+                <div class="field"><label>估值日期</label><input type="date" id="assetItemValuationDate"></div>
                 <div class="field"><label>购买价/本金</label><input type="number" id="assetItemPurchasePrice" min="0" step="0.01"></div>
                 <div class="field"><label>月成本</label><input type="number" id="assetItemMonthlyCost" min="0" step="0.01" placeholder="订阅或维护成本"></div>
                 <div class="field"><label>续费/到期日</label><input type="date" id="assetItemRenewalDate"></div>
@@ -278,6 +279,31 @@
             </form>
           </div>
           <div id="assetItemList" class="asset-item-grid"></div>
+        </section>
+        <section class="asset-inventory-section finance-secondary-section">
+          <div class="section-title compact">
+            <div><h2>负债清单</h2><p id="liabilitySummary">信用卡、贷款和借款会从净资产中扣除</p></div>
+            <button class="btn primary small" type="button" data-open-form="liability">＋ 添加负债</button>
+          </div>
+          <div class="card collapsible-form" id="liabilityFormCard">
+            <div class="section-title compact"><div><h2 id="liabilityFormTitle">新增负债</h2><p>填写当前未偿还余额，已结清后不会计入净资产</p></div></div>
+            <form id="liabilityForm">
+              <input type="hidden" id="liabilityId">
+              <div class="form-grid">
+                <div class="field"><label>名称</label><input type="text" id="liabilityName" required placeholder="例如信用卡、房贷"></div>
+                <div class="field"><label>类型</label><select id="liabilityType" required></select></div>
+                <div class="field"><label>当前余额</label><input type="number" id="liabilityCurrentBalance" min="0" step="0.01" required></div>
+                <div class="field"><label>余额日期</label><input type="date" id="liabilityBalanceDate" required></div>
+                <div class="field"><label>年利率 %</label><input type="number" id="liabilityInterestRate" min="0" max="100" step="0.01"></div>
+                <div class="field"><label>最低还款</label><input type="number" id="liabilityMinimumPayment" min="0" step="0.01"></div>
+                <div class="field"><label>到期日</label><input type="date" id="liabilityDueDate"></div>
+                <div class="field"><label>状态</label><select id="liabilityStatus" required></select></div>
+                <div class="field wide"><label>备注</label><input type="text" id="liabilityNote" placeholder="可选"></div>
+              </div>
+              <div class="actions"><button class="btn primary" type="submit">保存负债</button><button class="btn ghost" type="button" id="cancelLiabilityEdit">取消编辑</button></div>
+            </form>
+          </div>
+          <div id="liabilityList" class="asset-item-grid"></div>
         </section>
       </section>
 
@@ -294,7 +320,7 @@
         <!-- Top bar: horizontal summary -->
         <section class="flow-topbar">
           <div class="flow-topbar-hero">
-            <span>本月结余</span>
+            <span>待分配资金</span>
             <strong id="flowOvSurplus">¥0.00</strong>
             <span id="flowOvSurplusSub"></span>
           </div>
@@ -310,14 +336,13 @@
         <!-- Middle: asymmetric two-column -->
         <div class="flow-main">
           <!-- Left: records -->
-          <section class="flow-main-left">
+          <section class="flow-main-left subpage-workspace">
             <div class="flow-records-head">
               <div class="flow-records-tabs">
                 <button class="flow-tab active" data-flow-tab="income">收入</button>
                 <button class="flow-tab" data-flow-tab="expense">支出</button>
                 <button class="flow-tab" data-flow-tab="investment">投资</button>
               </div>
-              <button class="btn primary small" id="flowAddRecord">＋ 添加</button>
             </div>
             <div class="flow-records-body">
               <div class="flow-record-panel active" data-flow-panel="income">
@@ -345,7 +370,8 @@
           </section>
 
           <!-- Right: controls + quick info -->
-          <aside class="flow-main-right">
+          <aside class="flow-main-right subpage-inspector">
+            <div class="subpage-inspector-head"><span>本月计划</span><strong>预算控制</strong></div>
             <div class="flow-controls">
               <div class="flow-controls-field">
                 <label>计划收入</label>
@@ -385,8 +411,8 @@
                 <div><span>本月实际收入</span><strong id="mrIncome">¥0.00</strong></div>
                 <div><span>本月支出</span><strong id="mrExpense">¥0.00</strong></div>
                 <div><span>本月投入/储蓄</span><strong id="mrInvestment">¥0.00</strong></div>
-                <div><span>本月结余</span><strong id="mrSurplus">¥0.00</strong></div>
-                <div><span>月末总资产</span><strong id="mrAsset">¥0.00</strong></div>
+                <div><span>待分配资金</span><strong id="mrSurplus">¥0.00</strong></div>
+                <div><span>月末净资产</span><strong id="mrAsset">¥0.00</strong></div>
                 <div><span>工资到账状态</span><strong id="mrSalary">等待填写计划收入</strong></div>
                 <div><span>系统状态判断</span><strong id="mrSystem">持续观察</strong></div>
               </div>
@@ -398,7 +424,7 @@
                 </article>
                 <article class="card monthly-mini-card">
                   <h3>预算执行</h3>
-                  <p id="mrBudgetExec">总预算：待填写计划收入｜总支出：¥0.00｜预算结余：待填写计划收入</p>
+                  <p id="mrBudgetExec">消费预算：待填写计划收入｜总支出：¥0.00｜预算结余：待填写计划收入</p>
                 </article>
                 <article class="card monthly-mini-card">
                   <h3>资产动作</h3>
@@ -413,13 +439,13 @@
         </section>
 
         <div class="card collapsible-form" id="incomeFormCard">
-          <div class="section-title compact"><div><h2 id="incomeFormTitle">新增收入</h2><p>日期会自动生成月份，也可以手动改月份</p></div></div>
+          <div class="section-title compact"><div><h2 id="incomeFormTitle">新增收入</h2><p>月份将根据日期自动归档</p></div></div>
           <form id="incomeForm">
             <input type="hidden" id="incomeId">
             <div class="form-grid">
               <div class="field"><label>日期</label><input type="date" id="incomeDate" required></div>
-              <div class="field"><label>月份</label><input type="month" id="incomeMonth" required></div>
               <div class="field"><label>收入来源</label><select id="incomeSource" required></select></div>
+              <div class="field"><label>到账账户</label><select id="incomeAccount"></select></div>
               <div class="field"><label>金额</label><input type="number" id="incomeAmount" min="0.01" step="0.01" required></div>
               <div class="field wide"><label>备注</label><input type="text" id="incomeNote" placeholder="可选"></div>
             </div>
@@ -432,8 +458,8 @@
             <input type="hidden" id="expenseId">
             <div class="form-grid">
               <div class="field"><label>日期</label><input type="date" id="expenseDate" required></div>
-              <div class="field"><label>月份</label><input type="month" id="expenseMonth" required></div>
               <div class="field"><label>账户</label><select id="expenseAccount" required></select></div>
+              <div class="field"><label>付款账户</label><select id="expenseSourceAccount"></select></div>
               <div class="field"><label>类别</label><input type="text" id="expenseCategory" placeholder="餐饮、交通等" required></div>
               <div class="field"><label>金额</label><input type="number" id="expenseAmount" min="0.01" step="0.01" required></div>
               <div class="field wide"><label>备注</label><input type="text" id="expenseNote" placeholder="可选"></div>
@@ -474,17 +500,15 @@
 
         <!-- Layer 2+3: Portfolio + Actions -->
         <div class="invest-main">
-          <section class="invest-main-left">
+          <section class="invest-main-left subpage-workspace">
             <div class="section-title compact"><div><h2>持仓账户</h2><p id="investPortfolioSummary"></p></div></div>
             <div class="invest-portfolio-grid" id="investPortfolioGrid"></div>
           </section>
-          <aside class="invest-main-right">
+          <aside class="invest-main-right subpage-inspector">
+            <div class="subpage-inspector-head"><span>净值状态</span><strong>投资维护</strong></div>
             <div class="invest-actions">
               <span id="investActionsHint">定期更新净值，追踪投资真实表现</span>
-              <div class="invest-actions-btns">
-                <button class="btn primary small" type="button" data-open-form="snapshot">更新净值</button>
-                <button class="btn ghost small" type="button" data-action="open-snapshot-records">更新记录</button>
-              </div>
+              <button class="btn ghost small invest-history-btn" type="button" data-action="open-snapshot-records">查看更新记录</button>
             </div>
             <div class="invest-right-stats" id="investRightStats"></div>
           </aside>
@@ -498,13 +522,13 @@
           </div>
           <div class="module-summary" id="investmentModuleSummary"></div>
           <div class="card collapsible-form" id="investmentFormCard">
-            <div class="section-title compact"><div><h2 id="investmentFormTitle">新增投资/储蓄</h2><p>投资、储蓄、转入增加余额；转出减少余额</p></div></div>
+            <div class="section-title compact"><div><h2 id="investmentFormTitle">新增投资/储蓄</h2><p>新增持仓记录；账户内部调拨请使用下方双边转账</p></div></div>
             <form id="investmentForm">
               <input type="hidden" id="investmentId">
               <div class="form-grid">
                 <div class="field"><label>日期</label><input type="date" id="investmentDate" required></div>
-                <div class="field"><label>月份</label><input type="month" id="investmentMonth" required></div>
                 <div class="field"><label>账户</label><select id="investmentAccount" required></select></div>
+                <div class="field"><label>付款账户</label><select id="investmentSourceAccount"></select></div>
                 <div class="field"><label>类型</label><select id="investmentType" required></select></div>
                 <div class="field"><label>金额</label><input type="number" id="investmentAmount" min="0.01" step="0.01" required></div>
                 <div class="field"><label>产品名称</label><input type="text" id="investmentProduct" placeholder="可选"></div>
@@ -515,6 +539,27 @@
           </div>
           <div class="section-title compact"><div><h2>本月记录</h2><p id="investmentSummary"></p></div></div>
           <div class="card-grid" id="investmentList"></div>
+        </section>
+        <section class="invest-records finance-secondary-section">
+          <div class="invest-records-head">
+            <div><h2>账户间转账</h2><p class="subtitle" id="transferSummary">内部调拨不影响收入、支出和净资产</p></div>
+            <button class="btn primary small" type="button" data-open-form="transfer">＋ 添加转账</button>
+          </div>
+          <div class="card collapsible-form" id="transferFormCard">
+            <div class="section-title compact"><div><h2 id="transferFormTitle">新增转账</h2><p>转出和转入账户必须不同</p></div></div>
+            <form id="transferForm">
+              <input type="hidden" id="transferId">
+              <div class="form-grid">
+                <div class="field"><label>日期</label><input type="date" id="transferDate" required></div>
+                <div class="field"><label>转出账户</label><select id="transferFromAccount" required></select></div>
+                <div class="field"><label>转入账户</label><select id="transferToAccount" required></select></div>
+                <div class="field"><label>金额</label><input type="number" id="transferAmount" min="0.01" step="0.01" required></div>
+                <div class="field wide"><label>备注</label><input type="text" id="transferNote" placeholder="可选"></div>
+              </div>
+              <div class="actions"><button class="btn primary" type="submit">保存转账</button><button class="btn ghost" type="button" id="cancelTransferEdit">取消编辑</button></div>
+            </form>
+          </div>
+          <div class="card-grid" id="transferList"></div>
         </section>
 
         <div id="snapshotModal" class="quick-modal" aria-hidden="true">
@@ -527,7 +572,6 @@
                 <input type="hidden" id="snapshotId">
                 <div class="form-grid">
                   <div class="field"><label>日期</label><input type="date" id="snapshotDate" required></div>
-                  <div class="field"><label>月份</label><input type="month" id="snapshotMonth" required></div>
                   <div class="field"><label>账户</label><select id="snapshotAccount" required></select></div>
                   <div class="field"><label>当前市值</label><input type="number" id="snapshotMarketValue" min="0" step="0.01" required></div>
                   <div class="field"><label>累计本金</label><input type="number" id="snapshotPrincipal" min="0" step="0.01" required></div>
@@ -563,13 +607,12 @@
           </div>
           <button class="btn primary small" type="button" data-open-form="account">计划设置</button>
         </header>
-        <div class="page-toolbar">
+        <div class="page-toolbar subpage-context-bar">
           <div>
-            <h2>资金计划</h2>
+            <span class="context-label">分配矩阵</span>
             <p>查看各账户的预算比例、当前余额、目标和状态</p>
             <div class="module-summary" id="accountModuleSummary"></div>
           </div>
-          <button class="btn primary small" type="button" data-open-form="account">计划设置</button>
         </div>
         <div class="card collapsible-form" id="accountFormCard">
           <div class="section-title compact"><div><h2 id="accountFormTitle">新增账户</h2><p>预算、资产、目标都在这里配置</p></div></div>
@@ -580,6 +623,9 @@
               <div class="field"><label>账户类型</label><select id="accountType" required></select></div>
               <div class="field"><label>预算比例 %</label><input type="number" id="accountBudgetPercent" min="0" step="0.1"></div>
               <div class="field"><label>目标金额</label><input type="number" id="accountTarget" min="0" step="0.01" placeholder="可选"></div>
+              <div class="field"><label>期初余额</label><input type="number" id="accountOpeningBalance" min="0" step="0.01" placeholder="建账时已有余额"></div>
+              <div class="field"><label>期初日期</label><input type="date" id="accountOpeningBalanceDate"></div>
+              <div class="field"><label>估值方式</label><select id="accountValuationMethod" required></select></div>
               <label class="check-field"><input type="checkbox" id="accountFixed"> 每月固定比例</label>
               <label class="check-field"><input type="checkbox" id="accountExpense"> 计入支出</label>
               <label class="check-field"><input type="checkbox" id="accountAsset"> 计入资产</label>
@@ -602,7 +648,9 @@
           </div>
           <button class="btn ghost small" type="button" data-action="open-view" data-view="accounts">去计划页</button>
         </header>
-        <div class="section-title compact"><div><h2>目标</h2><p>给账户设置目标金额后，这里会显示完成百分比和差额</p></div></div>
+        <div class="goal-page-intro">
+          <div><span class="context-label">目标路线</span><h2>阶段目标进度</h2><p>给账户设置目标金额后，这里会显示完成百分比和剩余差额</p></div>
+        </div>
         <div class="account-grid" id="goalList"></div>
       </section>
 
@@ -620,8 +668,9 @@
           </div>
           <button class="btn primary small" type="button" id="exportDataTop">导出备份</button>
         </header>
-        <div class="card data-center-head">
-          <h2>本地数据安全中心</h2>
+        <div class="card data-center-head data-health-hero">
+          <span class="context-label">数据健康</span>
+          <h2>你的数据由当前设备保管</h2>
           <p class="subtitle">数据保存在当前浏览器 localStorage 中建议每周导出一次 JSON 备份导入会覆盖当前本地数据，请确认文件无误</p>
           <div class="notice data-save-note">最近保存时间：<strong id="dataLastSavedText">--</strong></div>
         </div>
@@ -635,7 +684,7 @@
               <div class="field sync-login-actions">
                 <label>操作</label>
                 <div class="actions">
-                  <button class="btn primary small" type="button" id="backendSendLogin">发送登录邮件</button>
+            <button class="btn ghost small" type="button" id="backendSendLogin">发送登录邮件</button>
                   <button class="btn ghost small" type="button" id="backendVerifyOtp">验证登录</button>
                   <button class="btn ghost small" type="button" id="backendLogout">退出</button>
                 </div>
@@ -654,14 +703,14 @@
           <div class="card data-card">
             <h2>导出数据</h2>
             <p class="subtitle">导出完整 JSON，可用于备份或换电脑</p>
-            <button class="btn primary" id="exportData">导出数据为 JSON</button>
+            <button class="btn ghost" id="exportData">下载完整 JSON</button>
           </div>
           <div class="card data-card import-card">
             <h2>导入备份</h2>
             <p class="subtitle">选择之前导出的 JSON 文件，将覆盖当前浏览器中的本地数据</p>
             <div class="notice import-warning">导入前系统会先自动导出当前数据作为备份</div>
             <input type="file" id="importFile" accept="application/json,.json">
-            <div class="actions"><button class="btn primary" id="importData">导入 JSON 数据</button></div>
+            <div class="actions"><button class="btn ghost" id="importData">导入 JSON 数据</button></div>
           </div>
         </div>
       </section>
@@ -669,29 +718,29 @@
 
     <footer>通用个人资金管理网页 App · 本地版</footer>
   </div>
-  <script defer src="scripts/app-state.js"></script>
-  <script defer src="scripts/app-validators.js"></script>
-  <script defer src="scripts/app-migrations.js"></script>
-  <script defer src="scripts/app-storage.js"></script>
-  <script defer src="scripts/app-backend-config.js"></script>
-  <script defer src="scripts/app-calculations.js"></script>
-  <script defer src="scripts/app-render-core.js"></script>
-  <script defer src="scripts/dashboard/dashboard-formatters.js"></script>
-  <script defer src="scripts/dashboard/render-bottom-strip.js"></script>
-  <script defer src="scripts/app-render-dashboard.js"></script>
-  <script defer src="scripts/app-render-assets.js"></script>
-  <script defer src="scripts/app-render-records.js"></script>
-  <script defer src="scripts/app-render-investments.js"></script>
-  <script defer src="scripts/app-render-monthly.js"></script>
-  <script defer src="scripts/app-render-flow.js"></script>
-  <script defer src="scripts/app-actions-data.js"></script>
-  <script defer src="scripts/app-actions-crud.js"></script>
-  <script defer src="scripts/app-actions-quick-entry.js"></script>
-  <script defer src="scripts/app-actions-modals.js"></script>
-  <script defer src="scripts/app-auth.js"></script>
-  <script defer src="scripts/app-sync.js"></script>
-  <script defer src="scripts/app-actions-navigation.js"></script>
-  <script defer src="scripts/app-actions.js"></script>
-  <script defer src="scripts/app-pwa.js"></script>
+  <script defer src="scripts/app-state.js?v=15"></script>
+  <script defer src="scripts/app-validators.js?v=15"></script>
+  <script defer src="scripts/app-migrations.js?v=15"></script>
+  <script defer src="scripts/app-storage.js?v=15"></script>
+  <script defer src="scripts/app-backend-config.js?v=15"></script>
+  <script defer src="scripts/app-calculations.js?v=15"></script>
+  <script defer src="scripts/app-render-core.js?v=15"></script>
+  <script defer src="scripts/dashboard/dashboard-formatters.js?v=15"></script>
+  <script defer src="scripts/dashboard/render-bottom-strip.js?v=15"></script>
+  <script defer src="scripts/app-render-dashboard.js?v=15"></script>
+  <script defer src="scripts/app-render-assets.js?v=15"></script>
+  <script defer src="scripts/app-render-records.js?v=15"></script>
+  <script defer src="scripts/app-render-investments.js?v=15"></script>
+  <script defer src="scripts/app-render-monthly.js?v=15"></script>
+  <script defer src="scripts/app-render-flow.js?v=15"></script>
+  <script defer src="scripts/app-actions-data.js?v=15"></script>
+  <script defer src="scripts/app-actions-crud.js?v=15"></script>
+  <script defer src="scripts/app-actions-quick-entry.js?v=15"></script>
+  <script defer src="scripts/app-actions-modals.js?v=15"></script>
+  <script defer src="scripts/app-auth.js?v=15"></script>
+  <script defer src="scripts/app-sync.js?v=15"></script>
+  <script defer src="scripts/app-actions-navigation.js?v=15"></script>
+  <script defer src="scripts/app-actions.js?v=15"></script>
+  <script defer src="scripts/app-pwa.js?v=15"></script>
 </body>
 </html>

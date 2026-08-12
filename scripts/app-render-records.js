@@ -6,9 +6,9 @@
   }
   return records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
     var title = "", details = "", amountClass = "";
-    if (type === "income") { title = item.source; details = meta(["日期：" + item.date, "月份：" + item.month, "备注：" + (item.note || "无")]); amountClass = "positive"; }
-    else if (type === "expense") { title = accountName(item.accountId); details = meta(["类别：" + item.category, "日期：" + item.date, "月份：" + item.month, "备注：" + (item.note || "无")]); amountClass = "negative"; }
-    else { title = accountName(item.accountId); details = meta(["类型：" + item.type, "产品：" + (item.product || "无"), "日期：" + item.date, "月份：" + item.month, "备注：" + (item.note || "无")]); amountClass = item.type === "转出" ? "negative" : "positive"; }
+    if (type === "income") { title = item.source; details = meta(["到账：" + accountName(item.accountId), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "positive"; }
+    else if (type === "expense") { title = accountName(item.accountId); details = meta(["付款：" + accountName(item.sourceAccountId), "类别：" + item.category, "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "negative"; }
+    else { title = accountName(item.accountId); details = meta(["付款：" + accountName(item.sourceAccountId), "类型：" + item.type, "产品：" + (item.product || "无"), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = item.type === "转出" ? "negative" : "positive"; }
     return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(title) + "</span><span class=\"badge\">" + esc(type === "income" ? "收入" : (type === "expense" ? item.category : item.type)) + "</span></div><div class=\"row-amount " + amountClass + "\">" + (type === "expense" || item.type === "转出" ? "-" : "+") + money(item.amount) + "</div>" + details + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
   }).join("");
 }
@@ -51,11 +51,11 @@ function renderIncome() {
     + "</div></div>";
 }
 function renderAccounts() {
-  var status = budgetPercentMessage(), month = currentMonth(), plan = monthlyPlan(month), budgetTotal = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return accountBudgetAmount(item, month); }) : null;
+  var status = budgetPercentMessage(), month = currentMonth(), plan = monthlyPlan(month), budgetTotal = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return item.includeExpense && !item.archived ? accountBudgetAmount(item, month) : 0; }) : null;
   if (byId("budgetPercentSummary")) { byId("budgetPercentSummary").textContent = status.text; byId("budgetPercentSummary").className = "notice " + status.className; }
-  if (byId("accountModuleSummary")) byId("accountModuleSummary").innerHTML = pill("账户数量", state.accounts.length + " 个") + pill("比例合计", totalBudgetPercent().toFixed(1) + "%") + pill("本月预算", budgetTotal == null ? "待填写计划收入" : money(budgetTotal));
+  if (byId("accountModuleSummary")) byId("accountModuleSummary").innerHTML = pill("账户数量", state.accounts.filter(function (a) { return !a.archived; }).length + " 个") + pill("分配比例", totalBudgetPercent().toFixed(1) + "%") + pill("消费预算", budgetTotal == null ? "待填写计划收入" : money(budgetTotal));
 
-  var displayAccounts = state.accounts.slice();
+  var displayAccounts = state.accounts.filter(function (account) { return !account.archived; });
   var idxEmergency = displayAccounts.findIndex(function (a) { return a.name === "应急金"; });
   var idxFree = displayAccounts.findIndex(function (a) { return a.name === "娱乐消费"; });
   if (idxEmergency >= 0 && idxFree >= 0) {
@@ -126,6 +126,7 @@ function renderAccounts() {
       + "<div class=\"role-progress-label\"><span>" + esc(progressLabel) + "</span><strong>" + esc(progressText) + "</strong></div>"
       + "<div class=\"progress role-progress\"><span style=\"width:" + progressPct + "%\"></span></div>"
       + "<div class=\"role-tip\">" + esc(account.note || tip) + "</div>"
+      + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"account\" data-id=\"" + esc(account.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"account\" data-id=\"" + esc(account.id) + "\">删除</button></div>"
       + "</article>";
   }).join("") : empty("还没有账户。", "先建立几个资金账户，比如日常开支、应急金、娱乐消费。", "", "🧱");
 }
@@ -134,7 +135,7 @@ function renderExpenses(ctx) {
   var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var s = renderCtx.summary;
   byId("expenseModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("支出合计", money(total)) + pill("预算状态", s.overBudget ? "已超支" : "正常");
-  if (s.orphanExpenseCount > 0) byId("expenseModuleSummary").innerHTML += "<span class=\"summary-pill warning\">发现 " + s.orphanExpenseCount + " 条孤立支出（" + money(s.orphanExpenseTotal) + "），未计入总支出。</span>";
+  if (s.orphanExpenseCount > 0) byId("expenseModuleSummary").innerHTML += "<span class=\"summary-pill warning\">发现 " + s.orphanExpenseCount + " 条孤立支出（" + money(s.orphanExpenseTotal) + "），已计入总支出，需修复分类账户。</span>";
   byId("expenseSummary").textContent = month + " 共 " + records.length + " 条，合计 " + money(total);
   byId("expenseList").innerHTML = recordList(records, "expense");
 

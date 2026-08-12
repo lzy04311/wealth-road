@@ -6,33 +6,33 @@ function renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, tar
   var month = currentMonth();
   var expenseRows = dashboardExpenseCategoryRows(month);
   var assetRows = dashboardAssetAllocationRows(month, assetAccounts);
-  var sentence = s.surplus < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。");
+  var sentence = s.freeCash < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。");
   var cashRate = s.income > 0 ? Math.max(0, Math.min(100, s.expense / s.income * 100)) : 0;
-  var savingProgress = targetAccounts.length ? Math.max(0, Math.min(100, targetProgress)) : Math.max(0, Math.min(100, savingRate || 0));
+  var savingProgress = Math.max(0, Math.min(100, savingRate || 0));
   var monthLabel = String(month).slice(5, 7) + "月";
   var totalTarget = sum(targetAccounts, function (item) { return numberValue(item.target); });
-  var cumulativeSaving = Math.max(0, numberValue(s.surplus));
+  var monthlySaving = Math.max(0, numberValue(s.netCashFlow));
   var targetForView = totalTarget > 0 ? totalTarget : Math.max(0, numberValue(s.plannedIncome));
   strip.innerHTML = [
     dashboardStripCashModule(s, cashRate),
     dashboardStripStructureModule(s, expenseRows),
     dashboardStripInvestModule(assetSnap),
     dashboardStripAllocationModule(assetRows, assetAccounts),
-    dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumulativeSaving, targetForView),
+    dashboardStripGoalModule(monthLabel, savingRate, savingProgress, monthlySaving, targetForView),
     dashboardStripQuoteModule(sentence)
   ].join("");
 }
 
 function dashboardStripCashModule(s, cashRate) {
-  var surplusText = s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus));
+  var flowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
   return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
     + "<div class=\"dashboard-strip-block\">"
     + "<span class=\"dashboard-strip-title\">现金流总览（本月）</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-kv\"><em>净流入</em><strong class=\"" + (s.surplus >= 0 ? "positive" : "negative") + "\">" + surplusText + "</strong></div>"
+    + "<div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
     + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
     + "<div class=\"dashboard-strip-split\"><span>收入 " + esc(money(s.income)) + "</span><span>支出 " + esc(money(s.expense)) + "</span></div>"
-    + "<div class=\"dashboard-strip-foot\">结余 " + esc(surplusText) + "</div>"
+    + "<div class=\"dashboard-strip-foot\">待分配 " + esc(money(s.freeCash)) + "</div>"
     + "</div>"
     + "</div></article>";
 }
@@ -57,9 +57,9 @@ function dashboardStripInvestModule(assetSnap) {
   var roiText = assetSnap.roi == null ? "--" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-invest\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">投资回报（本年）</span>"
+    + "<span class=\"dashboard-strip-title\">投资回报（快照口径）</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-double\"><div><em>累计收益</em><strong class=\"" + (assetSnap.pnl >= 0 ? "positive" : "negative") + "\">" + esc(pnlText) + "</strong></div><div><em>收益率</em><b>" + esc(roiText) + "</b></div></div>"
+    + "<div class=\"dashboard-strip-double\"><div><em>浮动盈亏</em><strong class=\"" + (assetSnap.roi == null ? "warning" : (assetSnap.pnl >= 0 ? "positive" : "negative")) + "\">" + esc(assetSnap.roi == null ? "数据不足" : pnlText) + "</strong></div><div><em>收益率</em><b>" + esc(roiText) + "</b></div></div>"
     + "<div class=\"dashboard-strip-invest-line\">" + dashboardStripSparkline(assetSnap) + "</div>"
     + "</div>"
     + "</div></article>";
@@ -78,7 +78,7 @@ function dashboardStripAllocationModule(assetRows, assetAccounts) {
     + "</div></article>";
 }
 
-function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumulativeSaving, targetForView) {
+function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, monthlySaving, targetForView) {
   var rateText = savingRate == null ? "--" : savingRate.toFixed(1) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-goal\">"
     + "<div class=\"dashboard-strip-block\">"
@@ -86,7 +86,7 @@ function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, cumula
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(monthLabel) + "储蓄率</span><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
     + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(savingProgress.toFixed(1)) + "%\"><b></b></div>"
-    + "<div class=\"dashboard-strip-goal-foot\"><span>累计储蓄 " + esc(money(cumulativeSaving)) + "</span><span>目标 " + esc(money(targetForView)) + "</span></div>"
+    + "<div class=\"dashboard-strip-goal-foot\"><span>本月储蓄 " + esc(money(monthlySaving)) + "</span><span>账户目标 " + esc(money(targetForView)) + "</span></div>"
     + "</div>"
     + "</div></article>";
 }
@@ -165,7 +165,7 @@ function dashboardStripInvestmentValues(assetSnap) {
     byDate[item.date] = (byDate[item.date] || 0) + numberValue(item.marketValue);
   });
   var values = Object.keys(byDate).sort().slice(-5).map(function (date) { return byDate[date]; });
-  while (values.length < 5) values.unshift(Math.max(0, numberValue(assetSnap.total) - (5 - values.length) * 80));
+  while (values.length < 5) values.unshift(Math.max(0, numberValue(assetSnap.performanceAsset) - (5 - values.length) * 80));
   return values;
 }
 

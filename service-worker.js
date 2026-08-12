@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "wealth-road-pwa-v11";
+var CACHE_NAME = "wealth-road-pwa-v15";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ var APP_SHELL = [
   "./styles/modals.css",
   "./styles/dashboard.css",
   "./styles/pages.css",
+  "./styles/subpages.css",
   "./styles/responsive.css",
   "./styles/dashboard/layout.css",
   "./styles/dashboard/layout-topbar.css",
@@ -98,17 +99,12 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  if (!isAppShellRequest(requestUrl)) {
+  if (!isAppShellRequest(requestUrl) && !APP_SHELL_URLS.some(function (url) { return requestUrl.href.split("?")[0] === url; })) {
     return;
   }
 
   event.respondWith(
-    caches.match(requestUrl.href).then(function (cachedResponse) {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(request).then(function (networkResponse) {
+    fetch(request).then(function (networkResponse) {
         if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
@@ -118,7 +114,10 @@ self.addEventListener("fetch", function (event) {
           cache.put(requestUrl.href, responseCopy);
         });
         return networkResponse;
-      });
-    })
+      }).catch(function () {
+        return caches.match(requestUrl.href).then(function (cachedResponse) {
+          return cachedResponse || caches.match(requestUrl.href.split("?")[0]);
+        });
+      })
   );
 });
