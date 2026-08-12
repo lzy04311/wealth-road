@@ -6,7 +6,7 @@
 
 ### 当前版本
 
-- 当前 `schemaVersion`: `2`
+- 当前 `schemaVersion`: `3`
 - 定义位置：`scripts/app-state.js` 中的 `CURRENT_SCHEMA_VERSION`
 
 ### v1 到 v2 迁移
@@ -18,6 +18,14 @@ v1 -> v2 的迁移规则：
 - 保留原始 state 中已有字段。
 - 如果 `assetItems` 不存在或不是数组，则补为 `[]`。
 - 将 `schemaVersion` 升级为 `2`。
+
+### v2 到 v3 迁移
+
+- 新增 `transfers` 与 `liabilities` 顶层数组。
+- 为账户补齐期初余额、估值方式和归档状态。
+- 为收入、支出和投资补齐实际资金账户字段。
+- 为资产清单补齐估值口径、关联账户和估值日期。
+- 保留所有旧记录、ID 和 localStorage 键，不推断或重写历史金额。
 
 ### 未来版本升级原则
 
@@ -32,15 +40,17 @@ v1 -> v2 的迁移规则：
 
 ```js
 {
-  schemaVersion: 2,
+  schemaVersion: 3,
   accounts: [],
   incomes: [],
   expenses: [],
   investments: [],
+  transfers: [],
   snapshots: [],
   monthlyPlans: {},
   rules: "",
-  assetItems: []
+  assetItems: [],
+  liabilities: []
 }
 ```
 
@@ -55,6 +65,21 @@ v1 -> v2 的迁移规则：
 - `monthlyPlans`: object。按月份保存计划收入和发薪日。
 - `rules`: string。用户自定义资金规则文本。
 - `assetItems`: array。非账户型资产或实物/订阅/软件等资产清单。
+- `transfers`: array。账户之间的双边内部调拨，不计入收入、支出或净资产变化。
+- `liabilities`: array。信用卡、贷款和借款等当前未偿还余额。
+
+### v3 统一财务口径
+
+- `accounts.openingBalance` / `openingBalanceDate`: 建账前已经存在的账户余额和生效日期。
+- `accounts.valuationMethod`: `流水余额` 由交易流水推导；`净值快照` 使用最近快照并补计快照后的资金变动。
+- `incomes.accountId`: 实际到账账户；为空时进入待归集现金。
+- `expenses.accountId`: 支出分类账户；`sourceAccountId` 才是实际付款账户。
+- `investments.accountId`: 投资目标账户；`sourceAccountId` 是实际付款账户。
+- `assetItems.valuationMode`: `独立计入`、`关联账户`、`不计入` 或 `待确认`。现金和投资类旧清单默认待确认，避免重复计入。
+- `assetItems.valuationDate`: 当前估值的生效日期。
+- `liabilities.balanceDate`: 当前负债余额的生效日期。
+
+统一公式：`净资产 = 金融资产 + 独立计入资产 - 未结清负债`。内部转账只改变账户分布，不改变净资产。
 
 ## 3. Entity Fields
 
@@ -82,7 +107,7 @@ v1 -> v2 的迁移规则：
 | --- | --- | --- |
 | `id` | string | 收入记录唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
-| `month` | string | 月份，格式 `YYYY-MM`。 |
+| `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `source` | string | 收入来源，必须属于 `incomeSources`，否则归一化为 `其他`。 |
 | `amount` | number | 收入金额，范围 `0-999999999`。 |
 | `note` | string | 备注。 |
@@ -95,7 +120,7 @@ v1 -> v2 的迁移规则：
 | --- | --- | --- |
 | `id` | string | 支出记录唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
-| `month` | string | 月份，格式 `YYYY-MM`。 |
+| `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `accountId` | string | 关联的 `accounts[].id`。 |
 | `category` | string | 支出分类，为空时归一化为 `未分类`。 |
 | `amount` | number | 支出金额，范围 `0-999999999`。 |
@@ -109,7 +134,7 @@ v1 -> v2 的迁移规则：
 | --- | --- | --- |
 | `id` | string | 投资记录唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
-| `month` | string | 月份，格式 `YYYY-MM`。 |
+| `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `accountId` | string | 关联的 `accounts[].id`。 |
 | `type` | string | 投资类型，必须属于 `investmentTypes`，否则归一化为 `投资`。 |
 | `amount` | number | 金额，范围 `0-999999999`。 |
@@ -121,6 +146,20 @@ v1 -> v2 的迁移规则：
 - `type === "转出"` 时，在余额和投资净额计算中按负数处理。
 - 其他类型通常按正向投入处理。
 
+### transfers
+
+账户间转账字段：
+
+| 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `id` | string | 转账记录唯一 id。 |
+| `date` | string | 日期，格式 `YYYY-MM-DD`。 |
+| `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
+| `fromAccountId` | string | 转出账户的 `accounts[].id`。 |
+| `toAccountId` | string | 转入账户的 `accounts[].id`。 |
+| `amount` | number | 转账金额，范围 `0-999999999`。 |
+| `note` | string | 备注。 |
+
 ### snapshots
 
 净值快照字段：
@@ -129,7 +168,7 @@ v1 -> v2 的迁移规则：
 | --- | --- | --- |
 | `id` | string | 快照唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
-| `month` | string | 月份，格式 `YYYY-MM`。 |
+| `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `accountId` | string | 关联的 `accounts[].id`。 |
 | `marketValue` | number | 当前市值或真实余额。 |
 | `principal` | number | 累计本金。 |

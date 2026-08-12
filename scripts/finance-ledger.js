@@ -292,13 +292,16 @@ function importStateEvents(state, importedAt, rawStateText) {
       source_text: source + " / account / " + item.id, source_channel: "app_json_import", raw_payload_json: JSON.stringify(item) });
   });
   state.incomes.forEach(function (item) {
-    events.push(importRecord("income", item, { event_subtype: item.source, amount: item.amount }, lookup, source));
+    events.push(importRecord("income", item, { event_subtype: item.source, account: lookup[item.accountId] || item.accountId, amount: item.amount }, lookup, source));
   });
   state.expenses.forEach(function (item) {
-    events.push(importRecord("expense", item, { account: lookup[item.accountId] || item.accountId, category: item.category, amount: item.amount }, lookup, source));
+    events.push(importRecord("expense", item, { account: lookup[item.accountId] || item.accountId, from_account: lookup[item.sourceAccountId] || item.sourceAccountId, category: item.category, amount: item.amount }, lookup, source));
   });
   state.investments.forEach(function (item) {
-    events.push(importRecord("investment", item, { account: lookup[item.accountId] || item.accountId, event_subtype: item.type, amount: item.amount, asset_name: item.product }, lookup, source));
+    events.push(importRecord("investment", item, { account: lookup[item.accountId] || item.accountId, from_account: lookup[item.sourceAccountId] || item.sourceAccountId, event_subtype: item.type, amount: item.amount, asset_name: item.product }, lookup, source));
+  });
+  (Array.isArray(state.transfers) ? state.transfers : []).forEach(function (item) {
+    events.push(importRecord("transfer", item, { from_account: lookup[item.fromAccountId] || item.fromAccountId, to_account: lookup[item.toAccountId] || item.toAccountId, amount: item.amount }, lookup, source));
   });
   state.snapshots.forEach(function (item) {
     events.push(importRecord("asset_snapshot", item, { account: lookup[item.accountId] || item.accountId, market_value: item.marketValue, principal: item.principal }, lookup, source));
@@ -309,6 +312,12 @@ function importStateEvents(state, importedAt, rawStateText) {
       current_value: item.currentValue, monthly_cost: item.monthlyCost, renewal_date: item.renewalDate,
       status: item.status === "已停用" ? "voided" : "confirmed", note: item.note,
       source_text: source + " / asset_item / " + item.id, source_channel: "app_json_import", raw_payload_json: JSON.stringify(item) });
+  });
+  (Array.isArray(state.liabilities) ? state.liabilities : []).forEach(function (item) {
+    events.push({ event_type: "asset_item", event_subtype: "liability/" + item.type, operation: "import", entity_id: item.id,
+      effective_date: importDate, asset_name: item.name, current_value: item.currentBalance,
+      monthly_cost: item.minimumPayment, status: item.status === "已结清" ? "voided" : "confirmed", note: item.note,
+      source_text: source + " / liability / " + item.id, source_channel: "app_json_import", raw_payload_json: JSON.stringify(item) });
   });
   Object.keys(state.monthlyPlans || {}).forEach(function (month) {
     var plan = state.monthlyPlans[month] || {};

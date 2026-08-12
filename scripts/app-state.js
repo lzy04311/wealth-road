@@ -1,11 +1,16 @@
 ﻿"use strict";
 
-var CURRENT_SCHEMA_VERSION = 2;
+var CURRENT_SCHEMA_VERSION = 3;
 var incomeSources = ["工资", "奖金", "副业", "其他"];
 var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储蓄", "应急金", "自由支配", "其他"];
+var accountValuationMethods = ["流水余额", "净值快照"];
 var investmentTypes = ["投资", "储蓄", "转入", "转出"];
+var investmentEntryTypes = ["投资", "储蓄"];
 var assetKinds = ["现金", "投资", "电子产品", "贵重物品", "电子订阅", "买断软件", "数字资产", "其他"];
 var assetStatuses = ["在用", "闲置", "观察", "保留", "准备卖出", "已停用"];
+var assetValuationModes = ["独立计入", "关联账户", "不计入", "待确认"];
+var liabilityTypes = ["信用卡", "消费贷", "房贷", "车贷", "借款", "其他"];
+var liabilityStatuses = ["还款中", "已结清"];
 var accountNameMigration = {
   "生活费": "日常开支", "生存专项拨款": "日常开支",
   "自我投资": "学习成长", "自我升级基金": "学习成长",
@@ -102,11 +107,13 @@ function normalizeState(data) {
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     accounts: accounts,
-    incomes: Array.isArray(base.incomes) ? base.incomes.map(normalizeIncome) : [],
+    incomes: Array.isArray(base.incomes) ? base.incomes.map(function (item) { return normalizeIncome(item, idMap); }) : [],
     expenses: Array.isArray(base.expenses) ? base.expenses.map(function (item) { return normalizeExpense(item, idMap); }) : [],
     investments: Array.isArray(base.investments) ? base.investments.map(function (item) { return normalizeInvestment(item, idMap); }) : [],
+    transfers: Array.isArray(base.transfers) ? base.transfers.map(function (item) { return normalizeTransfer(item, idMap); }) : [],
     snapshots: Array.isArray(base.snapshots) ? base.snapshots.map(function (item) { return normalizeSnapshot(item, idMap); }) : [],
-    assetItems: Array.isArray(base.assetItems) ? base.assetItems.map(normalizeAssetItem) : [],
+    assetItems: Array.isArray(base.assetItems) ? base.assetItems.map(function (item) { return normalizeAssetItem(item, idMap); }) : [],
+    liabilities: Array.isArray(base.liabilities) ? base.liabilities.map(normalizeLiability) : [],
     monthlyPlans: normalizeMonthlyPlans(base.monthlyPlans),
     rules: typeof base.rules === "string" ? cleanText(base.rules, 5000) : defaultRules
   };
@@ -120,42 +127,77 @@ function normalizeAccount(account, idMap) {
   var normalizedName = accountNameMigration[rawName] || rawName;
   var budgetPercent = account.budgetPercent;
   if ((budgetPercent == null || budgetPercent === "") && account.budget != null) budgetPercent = Math.round((numberValue(account.budget) / 6200 * 100) * 10) / 10;
-  if ((!budgetPercent || numberValue(budgetPercent) === 0) && defaultBudgetPercents[normalizedName] != null) budgetPercent = defaultBudgetPercents[normalizedName];
-  return { id: id, name: normalizedName || "未命名账户", type: safeEnum(account.type, accountTypes, "其他"), budgetPercent: safePercent(budgetPercent), fixedBudget: !!account.fixedBudget, includeExpense: !!account.includeExpense, includeAsset: !!account.includeAsset, target: safeAmount(account.target), note: cleanText(account.note, MAX_NOTE_LENGTH) };
+  if ((budgetPercent == null || budgetPercent === "") && defaultBudgetPercents[normalizedName] != null) budgetPercent = defaultBudgetPercents[normalizedName];
+  var accountType = safeEnum(account.type, accountTypes, "其他");
+  var defaultValuation = accountType === "长期投资" ? "净值快照" : "流水余额";
+  return { id: id, name: normalizedName || "未命名账户", type: accountType, budgetPercent: safePercent(budgetPercent), fixedBudget: !!account.fixedBudget, includeExpense: !!account.includeExpense, includeAsset: !!account.includeAsset, target: safeAmount(account.target), openingBalance: safeAmount(account.openingBalance), openingBalanceDate: safeOptionalDate(account.openingBalanceDate), valuationMethod: safeEnum(account.valuationMethod, accountValuationMethods, defaultValuation), archived: !!account.archived, note: cleanText(account.note, MAX_NOTE_LENGTH) };
 }
 function normalizeAccountId(id, idMap) { var raw = String(id || ""); return idMap[raw] || (/^[A-Za-z0-9_-]{1,80}$/.test(raw) ? raw : ""); }
-function normalizeIncome(item) {
+function normalizeIncome(item, idMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: safeMonth(item.month, date), source: safeEnum(item.source, incomeSources, "其他"), amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap || {}), source: safeEnum(item.source, incomeSources, "其他"), amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
 function normalizeExpense(item, idMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: safeMonth(item.month, date), accountId: normalizeAccountId(item.accountId, idMap), category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
 function normalizeInvestment(item, idMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: safeMonth(item.month, date), accountId: normalizeAccountId(item.accountId, idMap), type: safeEnum(item.type, investmentTypes, "投资"), amount: safeAmount(item.amount), product: cleanText(item.product), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), type: safeEnum(item.type, investmentTypes, "投资"), amount: safeAmount(item.amount), product: cleanText(item.product), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+}
+function normalizeTransfer(item, idMap) {
+  item = item && typeof item === "object" ? item : {};
+  var date = safeDate(item.date);
+  var fromAccountId = normalizeAccountId(item.fromAccountId, idMap);
+  var toAccountId = normalizeAccountId(item.toAccountId, idMap);
+  if (fromAccountId && fromAccountId === toAccountId) toAccountId = "";
+  return { id: safeId(item.id), date: date, month: monthOf(date), fromAccountId: fromAccountId, toAccountId: toAccountId, amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
 function normalizeSnapshot(item, idMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: safeMonth(item.month, date), accountId: normalizeAccountId(item.accountId, idMap), marketValue: safeAmount(item.marketValue), principal: safeAmount(item.principal), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), marketValue: safeAmount(item.marketValue), principal: safeAmount(item.principal), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
-function normalizeAssetItem(item) {
+function defaultAssetValuationMode(item) {
+  if (item.kind === "电子订阅") return "不计入";
+  if (item.kind === "现金" || item.kind === "投资") return "待确认";
+  return "独立计入";
+}
+function normalizeAssetItem(item, idMap) {
   item = item && typeof item === "object" ? item : {};
+  var kind = safeEnum(item.kind, assetKinds, "其他");
+  var valuationMode = safeEnum(item.valuationMode, assetValuationModes, defaultAssetValuationMode({ kind: kind }));
   return {
     id: safeId(item.id),
-    kind: safeEnum(item.kind, assetKinds, "其他"),
+    kind: kind,
     name: cleanText(item.name) || "未命名资产",
     owner: cleanText(item.owner),
     purchasePrice: safeAmount(item.purchasePrice),
     currentValue: safeAmount(item.currentValue),
+    valuationDate: safeOptionalDate(item.valuationDate),
     monthlyCost: safeAmount(item.monthlyCost),
     renewalDate: safeOptionalDate(item.renewalDate),
     status: safeEnum(item.status, assetStatuses, "在用"),
+    valuationMode: valuationMode,
+    linkedAccountId: valuationMode === "关联账户" ? normalizeAccountId(item.linkedAccountId, idMap || {}) : "",
+    note: cleanText(item.note, MAX_NOTE_LENGTH)
+  };
+}
+function normalizeLiability(item) {
+  item = item && typeof item === "object" ? item : {};
+  return {
+    id: safeId(item.id),
+    name: cleanText(item.name) || "未命名负债",
+    type: safeEnum(item.type, liabilityTypes, "其他"),
+    currentBalance: safeAmount(item.currentBalance),
+    balanceDate: safeOptionalDate(item.balanceDate),
+    interestRate: safePercent(item.interestRate),
+    minimumPayment: safeAmount(item.minimumPayment),
+    dueDate: safeOptionalDate(item.dueDate),
+    status: safeEnum(item.status, liabilityStatuses, "还款中"),
     note: cleanText(item.note, MAX_NOTE_LENGTH)
   };
 }
@@ -174,12 +216,12 @@ function normalizeMonthlyPlans(plans) {
 }
 function defaultAccounts() {
   return [
-    { id: uid(), name: "日常开支", type: "生活消费", budgetPercent: defaultBudgetPercents["日常开支"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
-    { id: uid(), name: "学习成长", type: "自我投资", budgetPercent: defaultBudgetPercents["学习成长"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" },
-    { id: uid(), name: "长期投资", type: "长期投资", budgetPercent: defaultBudgetPercents["长期投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
-    { id: uid(), name: "备用现金", type: "短期储蓄", budgetPercent: defaultBudgetPercents["备用现金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "" },
-    { id: uid(), name: "高风险投资", type: "长期投资", budgetPercent: defaultBudgetPercents["高风险投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, note: "控制仓位" },
-    { id: uid(), name: "应急金", type: "应急金", budgetPercent: defaultBudgetPercents["应急金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, note: "" },
-    { id: uid(), name: "娱乐消费", type: "自由支配", budgetPercent: defaultBudgetPercents["娱乐消费"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, note: "" }
+    { id: uid(), name: "日常开支", type: "生活消费", budgetPercent: defaultBudgetPercents["日常开支"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "流水余额", archived: false, note: "" },
+    { id: uid(), name: "学习成长", type: "自我投资", budgetPercent: defaultBudgetPercents["学习成长"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "流水余额", archived: false, note: "" },
+    { id: uid(), name: "长期投资", type: "长期投资", budgetPercent: defaultBudgetPercents["长期投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "净值快照", archived: false, note: "" },
+    { id: uid(), name: "备用现金", type: "短期储蓄", budgetPercent: defaultBudgetPercents["备用现金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "流水余额", archived: false, note: "" },
+    { id: uid(), name: "高风险投资", type: "长期投资", budgetPercent: defaultBudgetPercents["高风险投资"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "净值快照", archived: false, note: "控制仓位" },
+    { id: uid(), name: "应急金", type: "应急金", budgetPercent: defaultBudgetPercents["应急金"], fixedBudget: true, includeExpense: false, includeAsset: true, target: 25000, openingBalance: 0, openingBalanceDate: "", valuationMethod: "流水余额", archived: false, note: "" },
+    { id: uid(), name: "娱乐消费", type: "自由支配", budgetPercent: defaultBudgetPercents["娱乐消费"], fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, openingBalance: 0, openingBalanceDate: "", valuationMethod: "流水余额", archived: false, note: "" }
   ];
 }

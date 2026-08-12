@@ -1,8 +1,27 @@
 ﻿"use strict";
 
 function optionHtml(list, value) { return list.map(function (item) { return "<option value=\"" + esc(item) + "\"" + (item === value ? " selected" : "") + ">" + esc(item) + "</option>"; }).join(""); }
-function accountOptions(selected, filterFn) { return state.accounts.filter(filterFn || function () { return true; }).map(function (item) { return "<option value=\"" + esc(item.id) + "\"" + (item.id === selected ? " selected" : "") + ">" + esc(item.name) + "</option>"; }).join(""); }
-function syncSelects() { var selectedExpenseAccount = byId("expenseAccount").value; var selectedInvestmentAccount = byId("investmentAccount").value; var selectedSnapshotAccount = byId("snapshotAccount").value; byId("incomeSource").innerHTML = optionHtml(incomeSources, byId("incomeSource").value); byId("accountType").innerHTML = optionHtml(accountTypes, byId("accountType").value); byId("investmentType").innerHTML = optionHtml(investmentTypes, byId("investmentType").value); if (byId("assetItemKind")) byId("assetItemKind").innerHTML = optionHtml(assetKinds, byId("assetItemKind").value); if (byId("assetItemStatus")) byId("assetItemStatus").innerHTML = optionHtml(assetStatuses, byId("assetItemStatus").value); byId("expenseAccount").innerHTML = accountOptions(selectedExpenseAccount, function (acc) { return acc.includeExpense || acc.id === selectedExpenseAccount; }); byId("investmentAccount").innerHTML = accountOptions(selectedInvestmentAccount, function (acc) { return acc.includeAsset || !acc.includeExpense || acc.id === selectedInvestmentAccount; }); byId("snapshotAccount").innerHTML = accountOptions(selectedSnapshotAccount, function (acc) { return acc.includeAsset || acc.id === selectedSnapshotAccount; }); }
+function accountOptions(selected, filterFn) { return state.accounts.filter(function (item) { return (!item.archived || item.id === selected) && (!filterFn || filterFn(item)); }).map(function (item) { return "<option value=\"" + esc(item.id) + "\"" + (item.id === selected ? " selected" : "") + ">" + esc(item.name) + "</option>"; }).join(""); }
+function optionalAccountOptions(selected, label, filterFn) { return "<option value=\"\">" + esc(label || "未指定") + "</option>" + accountOptions(selected, filterFn); }
+function syncAccountSelect(id, selected, label, filterFn) { var el = byId(id); if (el) el.innerHTML = optionalAccountOptions(selected == null ? el.value : selected, label, filterFn); }
+function syncSelects() {
+  var selectedExpenseAccount = byId("expenseAccount").value, selectedInvestmentAccount = byId("investmentAccount").value, selectedSnapshotAccount = byId("snapshotAccount").value;
+  byId("incomeSource").innerHTML = optionHtml(incomeSources, byId("incomeSource").value);
+  byId("accountType").innerHTML = optionHtml(accountTypes, byId("accountType").value);
+  byId("accountValuationMethod").innerHTML = optionHtml(accountValuationMethods, byId("accountValuationMethod").value);
+  byId("investmentType").innerHTML = optionHtml(investmentEntryTypes, byId("investmentType").value);
+  if (byId("assetItemKind")) byId("assetItemKind").innerHTML = optionHtml(assetKinds, byId("assetItemKind").value);
+  if (byId("assetItemStatus")) byId("assetItemStatus").innerHTML = optionHtml(assetStatuses, byId("assetItemStatus").value);
+  if (byId("assetItemValuationMode")) byId("assetItemValuationMode").innerHTML = optionHtml(assetValuationModes, byId("assetItemValuationMode").value);
+  if (byId("liabilityType")) byId("liabilityType").innerHTML = optionHtml(liabilityTypes, byId("liabilityType").value);
+  if (byId("liabilityStatus")) byId("liabilityStatus").innerHTML = optionHtml(liabilityStatuses, byId("liabilityStatus").value);
+  byId("expenseAccount").innerHTML = accountOptions(selectedExpenseAccount, function (acc) { return acc.includeExpense || acc.id === selectedExpenseAccount; });
+  byId("investmentAccount").innerHTML = accountOptions(selectedInvestmentAccount, function (acc) { return acc.includeAsset || acc.id === selectedInvestmentAccount; });
+  byId("snapshotAccount").innerHTML = accountOptions(selectedSnapshotAccount, function (acc) { return acc.includeAsset || acc.id === selectedSnapshotAccount; });
+  ["incomeAccount", "expenseSourceAccount", "investmentSourceAccount", "quickIncomeAccount", "quickExpenseSourceAccount", "quickInvestmentSourceAccount"].forEach(function (id) { syncAccountSelect(id, null, "待归集现金", function (acc) { return acc.includeAsset; }); });
+  ["transferFromAccount", "transferToAccount"].forEach(function (id) { var el = byId(id); if (el) el.innerHTML = accountOptions(el.value, function (acc) { return acc.includeAsset; }); });
+  syncAccountSelect("assetItemLinkedAccount", null, "不关联账户", function (acc) { return acc.includeAsset; });
+}
 function renderTodayWidget() { var dateValue = byId("dashboardDate") && byId("dashboardDate").value ? byId("dashboardDate").value : today(), parts = dateValue.split("-"), d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2])), hour = new Date().getHours(), emoji = hour < 6 ? "😴" : hour < 11 ? "😊" : hour < 14 ? "😋" : hour < 18 ? "🙂" : hour < 22 ? "🌙" : "😴"; byId("todayDate").textContent = d.getFullYear() + "年" + String(d.getMonth() + 1).padStart(2, "0") + "月" + String(d.getDate()).padStart(2, "0") + "日"; byId("todayEmoji").textContent = emoji; }
 function renderStats(containerId, stats) { byId(containerId).innerHTML = stats.map(function (item) { var details = Array.isArray(item.details) ? "<div class=\"stat-details\">" + item.details.map(function (d) { return "<div class=\"stat-detail\"><span>" + esc(d.label) + "</span><strong class=\"" + (d.className || "") + "\">" + esc(d.value) + "</strong></div>"; }).join("") + "</div>" : ""; return "<div class=\"card stat " + (item.featured ? "main-stat" : "") + "\"><div class=\"label\">" + esc(item.label) + "</div><div class=\"value " + (item.className || "") + "\">" + esc(item.value) + "</div><div class=\"hint\">" + esc(item.hint || "") + "</div>" + details + "</div>"; }).join(""); }
 function renderPie(pieId, legendId, items, centerLabel, emptyText, centerValue, budgetMode) {
@@ -82,7 +101,7 @@ function renderDashboardPies(month) {
   }).filter(function (item) { return item.value > 0; });
   var assetShortNames = { "长期投资": "长投", "高风险投资": "高风险", "备用现金": "备用", "应急金": "应急" };
   var assetColorMap = { "长期投资": "#6E7378", "高风险投资": "#9A8F7A", "备用现金": "#9AA7AA", "应急金": "#D8B45F" };
-  var assetItems = state.accounts.filter(function (account) { return account.includeAsset; }).map(function (account) { var row = accountAssetValueForMonth(account, month); return { name: assetShortNames[account.name] || account.name, value: Math.max(0, row.value), display: money(row.value), color: assetColorMap[account.name] || "#B9B8B2" }; }).filter(function (item) { return item.value > 0; });
+  var assetItems = state.accounts.filter(function (account) { return account.includeAsset && !account.archived; }).map(function (account) { var row = accountAssetValueForMonth(account, month); return { name: assetShortNames[account.name] || account.name, value: Math.max(0, row.value), display: money(row.value), color: assetColorMap[account.name] || "#B9B8B2" }; }).filter(function (item) { return item.value > 0; });
   var assetSnap = assetSnapshotSummary(month);
   var isAssetMode = dashboardPieMode === "asset";
   var title = byId("dashboardPieTitle");

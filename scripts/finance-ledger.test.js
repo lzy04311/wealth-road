@@ -118,8 +118,8 @@ run("converts an app backup into preserved and analyzable events", function () {
 run("import-state retains the original JSON text in the state_import row", function () {
   var target = tempLedger();
   var state = {
-    schemaVersion: 2, accounts: [], incomes: [], expenses: [], investments: [], snapshots: [],
-    assetItems: [], monthlyPlans: {}, rules: ""
+    schemaVersion: 3, accounts: [], incomes: [], expenses: [], investments: [], transfers: [], snapshots: [],
+    assetItems: [], liabilities: [], monthlyPlans: {}, rules: ""
   };
   var raw = JSON.stringify(state, null, 4) + "\n";
   var input = path.join(target.dir, "backup.json");

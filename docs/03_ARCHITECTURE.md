@@ -41,7 +41,7 @@
 
 - `scripts/app-migrations.js`
   - `CURRENT_SCHEMA_VERSION` 对应的迁移管线。
-  - 当前支持 v1 -> v2。
+  - 当前支持 v1 -> v2 -> v3。
   - 不认识的未来版本必须拒绝。
 
 - `scripts/app-storage.js`

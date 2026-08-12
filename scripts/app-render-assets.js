@@ -1,11 +1,12 @@
 function renderAssets() {
   var month = currentMonth(), summary = assetSnapshotSummary(month), list = state.snapshots.filter(function (x) { return x.month === month; });
-  renderAssetInventory(summary);
+  renderAssetInventory(wealthSummary(month));
+  renderLiabilities();
   var fallbackTip = summary.fallbackAccounts.length ? ("｜估算账户：" + summary.fallbackAccounts.join("、") + "（该账户使用投入净额估算）") : "";
   if (byId("snapshotSummary")) byId("snapshotSummary").textContent = month + " 共 " + list.length + " 条更新记录" + fallbackTip;
   if (byId("snapshotList")) byId("snapshotList").innerHTML = list.length ? list.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
     var pnl = numberValue(item.marketValue) - numberValue(item.principal), roi = numberValue(item.principal) > 0 ? pnl / numberValue(item.principal) * 100 : null;
-    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(accountName(item.accountId)) + "</span><span class=\"badge\">净值更新</span></div><div class=\"row-meta\">日期：" + esc(item.date) + "｜月份：" + esc(item.month) + "</div><div class=\"account-mini-grid\"><div class=\"account-mini\"><span>当前市值</span><strong>" + money(item.marketValue) + "</strong></div><div class=\"account-mini\"><span>累计本金</span><strong>" + money(item.principal) + "</strong></div><div class=\"account-mini\"><span>浮动盈亏</span><strong class=\"" + (pnl >= 0 ? "positive" : "negative") + "\">" + money(pnl) + "</strong></div><div class=\"account-mini\"><span>收益率</span><strong class=\"" + ((roi || 0) >= 0 ? "positive" : "negative") + "\">" + (roi == null ? "--" : roi.toFixed(2) + "%") + "</strong></div></div><div class=\"row-meta\">备注：" + esc(item.note || "无") + "</div><div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"snapshot\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"snapshot\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(accountName(item.accountId)) + "</span><span class=\"badge\">净值更新</span></div><div class=\"row-meta\">日期：" + esc(item.date) + "</div><div class=\"account-mini-grid\"><div class=\"account-mini\"><span>当前市值</span><strong>" + money(item.marketValue) + "</strong></div><div class=\"account-mini\"><span>累计本金</span><strong>" + money(item.principal) + "</strong></div><div class=\"account-mini\"><span>浮动盈亏</span><strong class=\"" + (pnl >= 0 ? "positive" : "negative") + "\">" + money(pnl) + "</strong></div><div class=\"account-mini\"><span>收益率</span><strong class=\"" + ((roi || 0) >= 0 ? "positive" : "negative") + "\">" + (roi == null ? "--" : roi.toFixed(2) + "%") + "</strong></div></div><div class=\"row-meta\">备注：" + esc(item.note || "无") + "</div><div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"snapshot\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"snapshot\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
   }).join("") : empty("还没有净值更新。", "先记录一次当前资产，未来的变化才有坐标。", "", "📸");
 }
 
@@ -49,17 +50,18 @@ function assetStatusPlan(data) {
   }
   return { label: "结构清楚", level: "positive", text: "资产分类、更新节奏和订阅成本都比较清楚，继续保持。" };
 }
-function renderAssetInventory(snapshotSummary) {
+function renderAssetInventory(wealth) {
   var items = state.assetItems || [];
   var subscriptionCost = sum(items, function (item) { return isSubscriptionAsset(item) ? item.monthlyCost : 0; });
-  var inventoryValue = sum(items, function (item) { return isSubscriptionAsset(item) ? 0 : item.currentValue; });
-  var liquidValue = sum(items, function (item) { return isLiquidAsset(item) && !isSubscriptionAsset(item) ? item.currentValue : 0; });
-  var nonLiquidValue = sum(items, function (item) { return !isLiquidAsset(item) && !isSubscriptionAsset(item) ? item.currentValue : 0; });
-  var investmentValue = numberValue(snapshotSummary ? snapshotSummary.totalAsset : 0);
+  var inventoryValue = numberValue(wealth.independentAssets);
+  var liquidValue = sum(independentAssetItems(currentMonth()), function (item) { return isLiquidAsset(item) ? item.currentValue : 0; });
+  var nonLiquidValue = sum(independentAssetItems(currentMonth()), function (item) { return !isLiquidAsset(item) ? item.currentValue : 0; });
+  var investmentValue = numberValue(wealth.financialAssets);
   liquidValue += investmentValue;
-  var totalAsset = numberValue(investmentValue + inventoryValue);
-  var idleItems = items.filter(function (item) { return item.status === "闲置"; });
-  var idleValue = sum(idleItems, function (item) { return isSubscriptionAsset(item) ? 0 : item.currentValue; });
+  var totalAsset = numberValue(wealth.grossAssets);
+  var netWorth = numberValue(wealth.netWorth);
+  var idleItems = independentAssetItems(currentMonth()).filter(function (item) { return item.status === "闲置"; });
+  var idleValue = sum(idleItems, function (item) { return item.currentValue; });
   var latest = state.snapshots.slice().sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); })[0] || null;
   var daysSinceUpdate = latest ? daysSinceDate(latest.date) : null;
   var now = today();
@@ -77,16 +79,16 @@ function renderAssetInventory(snapshotSummary) {
     daysSinceUpdate: daysSinceUpdate,
     idleValue: idleValue
   });
-  if (byId("assetInventorySummary")) byId("assetInventorySummary").textContent = "共 " + items.length + " 项资产，清单估值 " + money(inventoryValue) + "，每月订阅成本 " + money(subscriptionCost);
+  if (byId("assetInventorySummary")) byId("assetInventorySummary").textContent = "共 " + items.length + " 项，独立计入 " + money(inventoryValue) + "，待确认 " + wealth.unresolvedAssets.length + " 项，每月订阅 " + money(subscriptionCost);
   if (byId("assetsOverview")) {
     byId("assetsOverview").innerHTML = "<article class=\"assets-panorama-card\">"
-      + "<div class=\"ap-head\"><div><h2>资产全景</h2><p>现金、投资、实物、订阅与软件</p></div><span class=\"status-pill " + esc(status.level) + "\">" + esc(status.label) + "</span></div>"
-      + "<div class=\"ap-hero\"><strong class=\"positive\">" + money(totalAsset) + "</strong><span>当前可管理资产</span></div>"
+      + "<div class=\"ap-head\"><div><h2>资产全景</h2><p>金融资产、独立资产与负债采用统一口径</p></div><span class=\"status-pill " + esc(status.level) + "\">" + esc(status.label) + "</span></div>"
+      + "<div class=\"ap-hero\"><strong class=\"" + (netWorth >= 0 ? "positive" : "negative") + "\">" + money(netWorth) + "</strong><span>当前净资产</span></div>"
       + "<div class=\"ap-metrics\">"
-      + "<div class=\"ap-metric\"><span>可动用资产</span><strong>" + money(liquidValue) + "</strong><small>" + ratioLabel(liquidityRatio) + "</small></div>"
-      + "<div class=\"ap-metric\"><span>非流动资产</span><strong>" + money(nonLiquidValue) + "</strong><small>" + ratioLabel(nonLiquidRatio) + "</small></div>"
+      + "<div class=\"ap-metric\"><span>金融资产</span><strong>" + money(wealth.financialAssets) + "</strong><small>含待归集 " + money(wealth.unallocatedCash) + "</small></div>"
+      + "<div class=\"ap-metric\"><span>独立资产</span><strong>" + money(wealth.independentAssets) + "</strong><small>不与账户重复</small></div>"
+      + "<div class=\"ap-metric\"><span>负债</span><strong class=\"" + (wealth.liabilities > 0 ? "negative" : "") + "\">" + money(wealth.liabilities) + "</strong><small>总资产 " + money(totalAsset) + "</small></div>"
       + "<div class=\"ap-metric\"><span>每月订阅</span><strong class=\"" + (subscriptionCost > 0 ? "warning" : "") + "\">" + money(subscriptionCost) + "</strong><small>年 " + money(subscriptionCost * 12) + "</small></div>"
-      + "<div class=\"ap-metric\"><span>闲置估值</span><strong class=\"" + (idleValue > 0 ? "warning" : "") + "\">" + money(idleValue) + "</strong><small>" + idleItems.length + " 项</small></div>"
       + "</div>"
       + "<div class=\"ap-bars\">"
       + "<div class=\"ap-bar-row\"><span>流动性</span><div class=\"ap-bar\"><span style=\"width:" + Math.max(2, Math.min(100, liquidityRatio || 0)).toFixed(0) + "%\"></span></div><strong>" + ratioLabel(liquidityRatio) + "</strong></div>"
@@ -97,6 +99,8 @@ function renderAssetInventory(snapshotSummary) {
       + "<div class=\"ap-footer-item\"><span>最近扣费</span><strong>" + esc(nextRenewal ? nextRenewal.name + " · " + nextRenewal.renewalDate : "暂无") + "</strong><small>" + esc(nextRenewal ? "订阅续费日" : "暂无订阅扣费") + "</small></div>"
       + "</div>"
       + "<div class=\"ap-advice\">" + esc(status.text) + "</div>"
+      + (wealth.unresolvedAssets.length ? "<div class=\"notice warning\">有 " + wealth.unresolvedAssets.length + " 项现金/投资清单待确认口径，当前未计入净资产，避免与账户重复。</div>" : "")
+      + (wealth.unallocatedGap > 0 ? "<div class=\"notice warning\">有 " + money(wealth.unallocatedGap) + " 的历史资金来源尚未关联账户，当前资产金额保留，但需要后续补齐来源。</div>" : "")
       + "</article>";
   }
   var filterKinds = ["全部"].concat(assetKinds);
@@ -122,10 +126,24 @@ function assetItemCard(item) {
   var thirdValue = isSub ? money(item.monthlyCost * 12) : (depreciation == null ? money(item.currentValue - item.purchasePrice) : depreciation.toFixed(1) + "%");
   var thirdClass = isSub ? "warning" : (item.currentValue >= item.purchasePrice ? "positive" : "negative");
   return "<article class=\"asset-item-card asset-kind-" + esc(assetKindClass(item.kind)) + "\">"
-    + "<div class=\"asset-item-head\"><div class=\"asset-kind-icon\">" + esc(assetKindIcon(item.kind)) + "</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.kind) + (item.owner ? " · " + esc(item.owner) : "") + "</p></div><span class=\"status-pill\">" + esc(item.status) + "</span></div>"
+    + "<div class=\"asset-item-head\"><div class=\"asset-kind-icon\">" + esc(assetKindIcon(item.kind)) + "</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.kind) + (item.owner ? " · " + esc(item.owner) : "") + "</p></div><span class=\"status-pill\">" + esc(item.valuationMode || "待确认") + "</span></div>"
     + "<div class=\"asset-item-main\"><span>" + esc(mainLabel) + "</span><strong>" + esc(mainValue) + "</strong></div>"
     + "<div class=\"asset-item-facts\"><div><span>" + esc(secondaryLabel) + "</span><strong>" + esc(secondaryValue) + "</strong></div><div><span>" + esc(thirdLabel) + "</span><strong class=\"" + thirdClass + "\">" + esc(thirdValue) + "</strong></div></div>"
     + "<div class=\"asset-item-note\">" + esc(item.note || (isSub ? "检查使用频率和自动续费。" : "记录估值、保修、转卖或继续使用状态。")) + "</div>"
     + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"assetItem\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"assetItem\" data-id=\"" + esc(item.id) + "\">删除</button></div>"
     + "</article>";
+}
+
+function renderLiabilities() {
+  var items = state.liabilities || [];
+  var total = liabilityTotal(currentMonth());
+  if (byId("liabilitySummary")) byId("liabilitySummary").textContent = "共 " + items.length + " 项，未偿还 " + money(total);
+  if (!byId("liabilityList")) return;
+  byId("liabilityList").innerHTML = items.length ? items.map(function (item) {
+    return "<article class=\"asset-item-card\"><div class=\"asset-item-head\"><div class=\"asset-kind-icon\">−</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.type) + "</p></div><span class=\"status-pill\">" + esc(item.status) + "</span></div>"
+      + "<div class=\"asset-item-main\"><span>当前未偿还</span><strong class=\"negative\">" + money(item.currentBalance) + "</strong></div>"
+      + "<div class=\"asset-item-facts\"><div><span>年利率</span><strong>" + numberValue(item.interestRate).toFixed(2) + "%</strong></div><div><span>最低还款</span><strong>" + money(item.minimumPayment) + "</strong></div></div>"
+      + "<div class=\"asset-item-note\">" + esc(item.note || (item.dueDate ? "到期日：" + item.dueDate : "持续更新未偿还余额。")) + "</div>"
+      + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"liability\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"liability\" data-id=\"" + esc(item.id) + "\">删除</button></div></article>";
+  }).join("") : empty("还没有负债记录。", "没有负债可以保持为空；有信用卡或贷款时在这里登记未偿还余额。", "", "−");
 }

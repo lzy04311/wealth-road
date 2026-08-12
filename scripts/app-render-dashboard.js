@@ -5,12 +5,13 @@ function renderDashboard(ctx) {
   var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var s = renderCtx.summary;
   var assetSnap = renderCtx.snapshot;
+  var wealth = wealthSummary(month);
   var health = financialHealth(month);
   var forecast = monthlyForecast(month);
-  var totalAsset = assetSnap.totalAsset || s.assetNet || 0;
-  var assetAccounts = state.accounts.filter(function (account) { return account.includeAsset; });
-  var targetAccounts = state.accounts.filter(function (account) { return numberValue(account.target) > 0; });
-  var reachedTargets = targetAccounts.filter(function (account) { return accountBalance(account, month) >= numberValue(account.target); });
+  var totalAsset = wealth.netWorth;
+  var assetAccounts = state.accounts.filter(function (account) { return account.includeAsset && !account.archived; });
+  var targetAccounts = state.accounts.filter(function (account) { return !account.archived && numberValue(account.target) > 0; });
+  var reachedTargets = targetAccounts.filter(function (account) { var current = account.includeAsset ? accountAssetValueForMonth(account, month).value : accountBalance(account, month); return current >= numberValue(account.target); });
   var targetProgress = targetAccounts.length ? reachedTargets.length / targetAccounts.length * 100 : 0;
   var savingRate = s.income > 0 ? Math.max(0, (s.income - s.expense) / s.income * 100) : null;
   var roiText = assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
@@ -20,7 +21,7 @@ function renderDashboard(ctx) {
   if (health.className === "negative") coreJudgement = "先守住现金流";
 
   renderDashboardStatusBar(month, backupText);
-  renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate);
+  renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate, wealth);
   renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts, reachedTargets, roiText, backupText, coreJudgement);
   renderDashboardRightCards(month, s, assetSnap, health, forecast, assetAccounts, targetAccounts, reachedTargets, targetProgress, backupText);
   renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, targetAccounts, targetProgress);
@@ -44,20 +45,20 @@ function dashboardWeekdayText() {
   return names[new Date().getDay()];
 }
 
-function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate) {
-  setDashboardText("dashboardAssetHealth", "资产健康度 " + health.score + "分");
+function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate, wealth) {
+  setDashboardText("dashboardAssetHealth", "数据与资金健康 " + health.score + "分");
   setDashboardText("dashboardTotalAsset", money(totalAsset));
-  var previousAsset = assetSnapshotSummary(dashboardPrevMonth(month)).totalAsset || monthlySummary(dashboardPrevMonth(month)).assetNet || 0;
-  var monthDelta = previousAsset > 0 ? totalAsset - previousAsset : null;
-  var recentChange = dashboardRecentAssetChange();
+  var previousWealth = wealthSummary(dashboardPrevMonth(month));
+  var previousAsset = previousWealth.financialAssets;
+  var monthDelta = previousWealth.financialAssets > 0 ? wealth.financialAssets - previousAsset : null;
   var changeText = monthDelta == null ? "上月基线不足，继续记录后显示变化" : (monthDelta >= 0 ? "+" : "") + money(monthDelta);
   var changeClass = monthDelta == null ? "warning" : (monthDelta >= 0 ? "positive" : "negative");
-  byId("dashboardAssetChange").innerHTML = "<span>较上月</span><strong class=\"" + changeClass + "\">" + esc(changeText) + "</strong>";
+  byId("dashboardAssetChange").innerHTML = "<span>金融资产较上月</span><strong class=\"" + changeClass + "\">" + esc(changeText) + "</strong>";
   byId("dashboardAssetMetrics").innerHTML = [
-    dashboardMetric("本月结余", money(s.surplus), s.surplus >= 0 ? "positive" : "negative", "现金流"),
-    dashboardMetric("可用资金", money(Math.max(0, s.income - s.expense)), "", "收入减支出"),
-    dashboardMetric("投资增长", assetSnap.roi == null ? "待更新" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), "累计收益 " + money(assetSnap.pnl)),
-    dashboardMetric("昨日收益", recentChange == null ? "待快照" : (recentChange >= 0 ? "+" : "") + money(recentChange), recentChange == null ? "warning" : (recentChange >= 0 ? "positive" : "negative"), "近两次快照")
+    dashboardMetric("待分配资金", money(s.freeCash), s.freeCash >= 0 ? "positive" : "negative", "收入减支出和投入"),
+    dashboardMetric("金融资产", money(wealth.financialAssets), "", "账户及待归集现金"),
+    dashboardMetric("投资收益率", assetSnap.roi == null ? "数据不足" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), assetSnap.roi == null ? "需补齐投资账户净值" : "浮动盈亏 " + money(assetSnap.pnl)),
+    dashboardMetric("负债", money(wealth.liabilities), wealth.liabilities > 0 ? "negative" : "", wealth.unresolvedAssets.length ? wealth.unresolvedAssets.length + " 项资产待确认" : "已从净资产扣除")
   ].join("");
   renderDashboardAssetTrend(month);
 }
@@ -66,9 +67,9 @@ function renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts
   setDashboardText("compassCoreStatus", coreJudgement);
   var targetText = targetAccounts.length ? reachedTargets.length + "/" + targetAccounts.length + " 已完成" : "待设置目标";
   var nodes = [
-    { key: "flow", view: "flow", name: "流水", desc: "本月净流入", value: s.surplus >= 0 ? "+" + money(s.surplus) : "-" + money(Math.abs(s.surplus)), className: s.surplus >= 0 ? "positive" : "negative", level: "core" },
+    { key: "flow", view: "flow", name: "流水", desc: "待分配资金", value: s.freeCash >= 0 ? "+" + money(s.freeCash) : "-" + money(Math.abs(s.freeCash)), className: s.freeCash >= 0 ? "positive" : "negative", level: "core" },
     { key: "invest", view: "investments", name: "投资", desc: "收益率", value: roiText, className: assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), level: "core" },
-    { key: "assets", view: "assets", name: "资产", desc: "当前总资产", value: money(totalAsset), className: "", level: "core" },
+    { key: "assets", view: "assets", name: "资产", desc: "当前净资产", value: money(totalAsset), className: totalAsset < 0 ? "negative" : "", level: "core" },
     { key: "accounts", view: "accounts", name: "计划", desc: "预算比例", value: totalBudgetPercent().toFixed(1) + "%", className: totalBudgetPercent() > 100 ? "negative" : "positive", level: "aux" },
     { key: "goals", view: "goals", name: "目标", desc: "阶段目标", value: targetText, className: targetAccounts.length ? "positive" : "warning", level: "aux" },
     { key: "data", view: "data", name: "备份", desc: "数据安全", value: backupText, className: "positive", level: "aux" }
@@ -311,7 +312,7 @@ function renderDashboardAssetTrend(month) {
   for (var i = 5; i >= 0; i--) {
     var d = new Date(y, m - 1 - i, 1);
     var key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-    rows.push({ month: key, value: assetSnapshotSummary(key).totalAsset || monthlySummary(key).assetNet || 0 });
+    rows.push({ month: key, value: wealthSummary(key).financialAssets });
   }
   var max = Math.max.apply(null, rows.map(function (row) { return row.value; })) || 1;
   var w = 360, h = 108;
@@ -335,13 +336,11 @@ function renderDashboardAssetTrend(month) {
   var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.4\"></circle>"; }).join("");
   var first = rows[0] || { value: 0 };
   var last = rows[rows.length - 1] || { value: 0 };
-  var cumulativeReturn = last.value - first.value;
-  var annualizedRate = dashboardAnnualizedRate(first.value, last.value, rows.length);
-  var maxDrawdown = dashboardMaxDrawdown(rows);
+  var cumulativeChange = last.value - first.value;
   var facts = [
-    { label: "累计收益", value: cumulativeReturn >= 0 ? "+" + money(cumulativeReturn) : "-" + money(Math.abs(cumulativeReturn)), className: cumulativeReturn >= 0 ? "positive" : "negative" },
-    { label: "年化收益率", value: annualizedRate == null ? "--" : (annualizedRate >= 0 ? "+" : "") + annualizedRate.toFixed(1) + "%", className: annualizedRate == null ? "warning" : (annualizedRate >= 0 ? "positive" : "negative") },
-    { label: "最大回撤", value: maxDrawdown == null ? "--" : "-" + maxDrawdown.toFixed(1) + "%", className: maxDrawdown && maxDrawdown > 0 ? "negative" : "positive" }
+    { label: "金融资产变化", value: cumulativeChange >= 0 ? "+" + money(cumulativeChange) : "-" + money(Math.abs(cumulativeChange)), className: cumulativeChange >= 0 ? "positive" : "negative" },
+    { label: "当前投资收益", value: assetSnapshotSummary(month).roi == null ? "数据不足" : assetSnapshotSummary(month).roi.toFixed(1) + "%", className: assetSnapshotSummary(month).roi == null ? "warning" : "" },
+    { label: "数据口径", value: wealthSummary(month).unresolvedAssets.length ? "待确认" : "已统一", className: wealthSummary(month).unresolvedAssets.length ? "warning" : "positive" }
   ];
   el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g>" + yLabels + "<polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
   var factsEl = byId("dashboardTrendFacts");
@@ -388,4 +387,3 @@ function setDashboardText(id, value) {
   var el = byId(id);
   if (el) el.textContent = value;
 }
-

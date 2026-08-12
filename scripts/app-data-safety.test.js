@@ -140,16 +140,18 @@ test("wrong core field type is rejected", function () {
   assert.match(result.errors.join("\n"), /investments/);
 });
 
-test("valid v1 backup migrates to v2 and adds assetItems", function () {
+test("valid v1 backup migrates to current schema and adds financial collections", function () {
   var context = createContext();
   var result = context.prepareImportedState(validV1Backup());
   assert.strictEqual(result.ok, true, (result.errors || []).join(", "));
   assert.strictEqual(result.state.schemaVersion, context.CURRENT_SCHEMA_VERSION);
   assert.ok(Array.isArray(result.state.assetItems));
+  assert.ok(Array.isArray(result.state.transfers));
+  assert.ok(Array.isArray(result.state.liabilities));
   assert.strictEqual(result.state.assetItems.length, 0);
 });
 
-test("valid v2 backup passes validation", function () {
+test("valid v2 backup migrates to current schema", function () {
   var context = createContext();
   var result = context.prepareImportedState(validV2Backup());
   assert.strictEqual(result.ok, true, (result.errors || []).join(", "));
@@ -166,7 +168,7 @@ test("migrateState does not silently accept unknown future versions", function (
 test("normalizeState always returns core array fields", function () {
   var context = createContext();
   var normalized = context.normalizeState({});
-  ["accounts", "incomes", "expenses", "investments", "snapshots", "assetItems"].forEach(function (key) {
+  ["accounts", "incomes", "expenses", "investments", "transfers", "snapshots", "assetItems", "liabilities"].forEach(function (key) {
     assert.ok(Array.isArray(normalized[key]), key + " should be an array");
   });
 });
@@ -213,25 +215,27 @@ test("monthlySummary returns expected totals for fixture state", function () {
   var summary = context.monthlySummary("2026-05");
   assert.strictEqual(summary.income, 1000);
   assert.strictEqual(summary.plannedIncome, 1000);
-  assert.strictEqual(summary.budget, 1000);
-  assert.strictEqual(summary.expense, 100);
+  assert.strictEqual(summary.allocationBudget, 1000);
+  assert.strictEqual(summary.spendingBudget, 600);
+  assert.strictEqual(summary.budget, 600);
+  assert.strictEqual(summary.expense, 130);
   assert.strictEqual(summary.investment, 420);
-  assert.strictEqual(summary.surplus, 480);
-  assert.strictEqual(summary.budgetBalance, 900);
-  assert.strictEqual(summary.assetNet, 590);
+  assert.strictEqual(summary.surplus, 450);
+  assert.strictEqual(summary.budgetBalance, 470);
+  assert.strictEqual(summary.assetNet, 620);
   assert.strictEqual(summary.assetMarketValue, 760);
   assert.strictEqual(summary.orphanExpenseCount, 0);
   assert.strictEqual(summary.orphanExpenseTotal, 0);
   assert.strictEqual(summary.overBudget, false);
 });
 
-test("monthlySummary ignores orphan expenses and reports them", function () {
+test("monthlySummary includes orphan expenses and reports them", function () {
   var context = createContext(null, { calculations: true });
   var fixture = calculationState();
   fixture.expenses.push({ id: "orphan-exp", date: "2026-05-06", month: "2026-05", accountId: "missing-account", category: "异常", amount: 88, note: "" });
   context.state = context.normalizeState(fixture);
   var summary = context.monthlySummary("2026-05");
-  assert.strictEqual(summary.expense, 100);
+  assert.strictEqual(summary.expense, 218);
   assert.strictEqual(summary.orphanExpenseCount, 1);
   assert.strictEqual(summary.orphanExpenseTotal, 88);
 });
@@ -249,9 +253,118 @@ test("assetSnapshotSummary returns expected asset values for fixture state", fun
   assert.strictEqual(summary.fallbackAccounts.length, 0);
 });
 
-test("accountBalance returns expected cumulative net balance", function () {
+test("accountBalance does not subtract classification-only expenses", function () {
   var context = createContext(null, { calculations: true });
   context.state = context.normalizeState(calculationState());
   var account = context.state.accounts.find(function (item) { return item.id === "invest"; });
-  assert.strictEqual(context.accountBalance(account, "2026-05"), 590);
+  assert.strictEqual(context.accountBalance(account, "2026-05"), 620);
+});
+
+test("explicit zero snapshot remains zero in unified wealth total", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = calculationState();
+  fixture.snapshots = [{ id: "zero", date: "2026-05-31", month: "2026-05", accountId: "invest", marketValue: 0, principal: 620, note: "" }];
+  context.state = context.normalizeState(fixture);
+  var wealth = context.wealthSummary("2026-05");
+  assert.strictEqual(wealth.accountAssets, 0);
+  assert.strictEqual(wealth.netWorth, 250);
+  assert.strictEqual(wealth.unallocatedGap, 0);
+});
+
+test("spending budget excludes savings and investment allocations", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = calculationState();
+  fixture.expenses = [{ id: "exp", date: "2026-05-02", month: "2026-05", accountId: "living", amount: 700, category: "生活", note: "" }];
+  context.state = context.normalizeState(fixture);
+  var summary = context.monthlySummary("2026-05");
+  assert.strictEqual(summary.spendingBudget, 600);
+  assert.strictEqual(summary.overBudget, true);
+});
+
+test("two-sided transfer conserves total account assets", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = validV2Backup({
+    accounts: [
+      { id: "a", name: "备用现金", type: "短期储蓄", includeAsset: true, includeExpense: false, openingBalance: 1000, openingBalanceDate: "2026-05-01", valuationMethod: "流水余额" },
+      { id: "b", name: "应急金", type: "应急金", includeAsset: true, includeExpense: false, openingBalance: 0, openingBalanceDate: "2026-05-01", valuationMethod: "流水余额" }
+    ],
+    transfers: [{ id: "t", date: "2026-05-10", month: "2026-05", fromAccountId: "a", toAccountId: "b", amount: 300, note: "" }],
+    liabilities: []
+  });
+  fixture.schemaVersion = 3;
+  context.state = context.normalizeState(fixture);
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-05"), 700);
+  assert.strictEqual(context.accountBalance(context.state.accounts[1], "2026-05"), 300);
+  assert.strictEqual(context.wealthSummary("2026-05").accountAssets, 1000);
+});
+
+test("liabilities reduce net worth and unresolved cash items do not double count", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = validV2Backup({
+    assetItems: [{ id: "cash", kind: "现金", name: "银行卡", currentValue: 1000, status: "在用" }],
+    liabilities: [{ id: "card", name: "信用卡", type: "信用卡", currentBalance: 300, balanceDate: "2026-05-01", status: "还款中" }],
+    transfers: []
+  });
+  fixture.schemaVersion = 3;
+  context.state = context.normalizeState(fixture);
+  var wealth = context.wealthSummary("2026-05");
+  assert.strictEqual(wealth.independentAssets, 0);
+  assert.strictEqual(wealth.liabilities, 300);
+  assert.strictEqual(wealth.unresolvedAssets.length, 1);
+});
+
+test("default account can retain a zero allocation percentage", function () {
+  var context = createContext();
+  var fixture = validV2Backup({ accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 0, includeExpense: true, includeAsset: false }] });
+  var account = context.normalizeState(fixture).accounts[0];
+  assert.strictEqual(account.budgetPercent, 0);
+});
+
+test("dated records always derive month from date", function () {
+  var context = createContext();
+  var fixture = validV2Backup({
+    incomes: [{ id: "inc", date: "2026-08-13", month: "2026-07", accountId: "asset", source: "工资", amount: 100, note: "" }],
+    expenses: [{ id: "exp", date: "2026-09-01", month: "2026-08", accountId: "living", category: "餐饮", amount: 20, note: "" }],
+    investments: [{ id: "inv", date: "2026-10-02", month: "2026-09", accountId: "asset", type: "投资", amount: 30, product: "基金", note: "" }],
+    transfers: [{ id: "transfer", date: "2026-11-03", month: "2026-10", fromAccountId: "living", toAccountId: "asset", amount: 10, note: "" }],
+    snapshots: [{ id: "snap", date: "2026-12-04", month: "2026-11", accountId: "asset", marketValue: 50, principal: 40, note: "" }]
+  });
+  fixture.schemaVersion = 3;
+  var normalized = context.normalizeState(fixture);
+  assert.strictEqual(normalized.incomes[0].month, "2026-08");
+  assert.strictEqual(normalized.expenses[0].month, "2026-09");
+  assert.strictEqual(normalized.investments[0].month, "2026-10");
+  assert.strictEqual(normalized.transfers[0].month, "2026-11");
+  assert.strictEqual(normalized.snapshots[0].month, "2026-12");
+});
+
+test("income allocation and funded investment conserve owned cash", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = validV2Backup({
+    accounts: [
+      { id: "cash", name: "备用现金", type: "短期储蓄", includeAsset: true, includeExpense: false, valuationMethod: "流水余额" },
+      { id: "fund", name: "长期投资", type: "长期投资", includeAsset: true, includeExpense: false, valuationMethod: "流水余额" }
+    ],
+    incomes: [{ id: "inc", date: "2026-05-01", month: "2026-05", accountId: "cash", source: "工资", amount: 1000, note: "" }],
+    investments: [{ id: "inv", date: "2026-05-02", month: "2026-05", accountId: "fund", sourceAccountId: "cash", type: "投资", amount: 400, product: "基金", note: "" }],
+    transfers: [], liabilities: []
+  });
+  fixture.schemaVersion = 3;
+  context.state = context.normalizeState(fixture);
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-05"), 600);
+  assert.strictEqual(context.accountBalance(context.state.accounts[1], "2026-05"), 400);
+  assert.strictEqual(context.wealthSummary("2026-05").accountAssets, 1000);
+});
+
+test("expense category does not reduce an asset account without a payment account", function () {
+  var context = createContext(null, { calculations: true });
+  var fixture = validV2Backup({
+    accounts: [{ id: "cash", name: "备用现金", type: "短期储蓄", includeAsset: true, includeExpense: false, openingBalance: 500, openingBalanceDate: "2026-05-01", valuationMethod: "流水余额" }],
+    expenses: [{ id: "exp", date: "2026-05-02", month: "2026-05", accountId: "cash", sourceAccountId: "", category: "测试", amount: 100, note: "" }],
+    transfers: [], liabilities: []
+  });
+  fixture.schemaVersion = 3;
+  context.state = context.normalizeState(fixture);
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-05"), 500);
+  assert.strictEqual(context.monthlySummary("2026-05").expense, 100);
 });

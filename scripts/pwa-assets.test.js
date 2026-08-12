@@ -32,7 +32,7 @@ test("index exposes installable PWA metadata", function () {
   var html = readText("index.html");
   assert.match(html, /<link rel="manifest" href="manifest\.webmanifest">/);
   assert.match(html, /<meta name="theme-color" content="#C9A66B">/);
-  assert.match(html, /<script defer src="scripts\/app-pwa\.js"><\/script>/);
+  assert.match(html, /<script defer src="scripts\/app-pwa\.js(?:\?v=\d+)?"><\/script>/);
   assert.doesNotMatch(html, /navigator\.serviceWorker\.register/);
 });
 
