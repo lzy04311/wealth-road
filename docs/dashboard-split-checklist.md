@@ -2,6 +2,8 @@
 
 Date: 2026-05-24
 
+Visual reference: `../picture/reference-dashboard.png(1).png`
+
 ## Scope
 Verify no visual regression after splitting `styles/dashboard.css` into modular imports.
 

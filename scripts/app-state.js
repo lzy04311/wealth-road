@@ -29,7 +29,6 @@ var MAX_NOTE_LENGTH = 1200;
 var state = null;
 var expenseViewMode = "list";
 var selectedExpenseDate = "";
-var dashboardPieMode = "budget";
 var assetKindFilter = "全部";
 var activeQuickType = "";
 var flowRecordSearch = "";
@@ -123,12 +122,10 @@ function safeOptionalDate(value) {
   var parts = text.split("-"), d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
   return d.getFullYear() === Number(parts[0]) && d.getMonth() === Number(parts[1]) - 1 && d.getDate() === Number(parts[2]) ? text : "";
 }
-function safeMonth(value, fallbackDate) { var text = String(value || ""); return /^\d{4}-(0[1-9]|1[0-2])$/.test(text) ? text : monthOf(fallbackDate || today()); }
 function safeAmount(value) { return Math.max(0, Math.min(999999999, numberValue(value))); }
 function safeSignedAmount(value) { return Math.max(-999999999, Math.min(999999999, numberValue(value))); }
 function safePercent(value) { return Math.max(0, Math.min(100, numberValue(value))); }
 function safeEnum(value, list, fallback) { return list.indexOf(value) >= 0 ? value : fallback; }
-function ensureId(item) { if (!item || typeof item !== "object") return item; item.id = safeId(item.id); return item; }
 function monthEndDate(month) { var y = parseInt(String(month).slice(0, 4), 10), m = parseInt(String(month).slice(5, 7), 10); if (!y || !m) return "9999-12-31"; var d = new Date(y, m, 0); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 
 function normalizeState(data) {

@@ -2,6 +2,8 @@
 
 Date: 2026-06-07
 
+Status: historical implementation reference. The repository contains optional auth/sync modules with empty configuration; deployment setup, same-origin client packaging, RLS, redirects, and multi-device acceptance remain pending. Do not execute unchecked phases from this document as if they were current instructions.
+
 Design source: `docs/superpowers/specs/2026-06-07-backend-sync-design.md`
 
 ## Constraints

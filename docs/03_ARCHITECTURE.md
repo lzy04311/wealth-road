@@ -56,12 +56,13 @@
 - `scripts/app-calculations.js`
   - 月度收入、支出、预算、资金池余额和真实账户余额。
   - 余额核对、资产快照与统一净资产汇总。
-  - 财务健康分、预测、账户状态。
+  - 版本化月度执行健康度、预测和账户状态。
+  - `FINANCIAL_HEALTH_MODEL` 是评分权重、阈值和展示说明的单一事实源。
 
 ### Render Layer
 
 - `scripts/app-render-core.js`
-  - 通用渲染工具、选项渲染、饼图、趋势图基础渲染。
+  - 通用选项、状态卡、空状态和摘要渲染工具。
 
 - `scripts/app-render-dashboard.js`
   - Dashboard 首页驾驶舱渲染。
@@ -80,9 +81,6 @@
 
 - `scripts/app-render-monthly.js`
   - 月报、目标和统一 `renderAll` 入口。
-
-- `scripts/app-render.js`
-  - 兼容说明文件，正常任务不要优先修改。
 
 ### Actions Layer
 
@@ -126,7 +124,6 @@
 
 - `styles/components.css`
   - 通用 cards/stats。
-  - 当前仍包含部分 legacy cockpit components，后续需二次验证。
 
 - `styles/dashboard.css`
   - Dashboard 首页视觉和座舱布局。
@@ -139,7 +136,12 @@
 
 - `styles/responsive.css`
   - 响应式规则。
-  - 当前已标记旧 dashboard responsive selector 风险。
+
+### Project Gate
+
+- `scripts/check-project.js`
+  - 运行全部 Node 回归测试与 JavaScript 语法检查。
+  - 检查浏览器全局符号、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
 
 ## 4. 数据结构
 

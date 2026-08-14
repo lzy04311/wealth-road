@@ -46,7 +46,7 @@ function dashboardWeekdayText() {
 }
 
 function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savingRate, wealth) {
-  setDashboardText("dashboardAssetHealth", "数据与资金健康 " + health.score + "分");
+  setDashboardText("dashboardAssetHealth", health.label + " " + health.score + "分");
   setDashboardText("dashboardTotalAsset", money(totalAsset));
   var previousWealth = wealthSummary(dashboardPrevMonth(month));
   var previousAsset = previousWealth.financialAssets;
@@ -119,10 +119,6 @@ function dashboardMetric(label, value, className, hint) {
   return "<div><span>" + esc(label) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><small>" + esc(hint || "") + "</small></div>";
 }
 
-function dashboardSideCard(title, value, desc, className, visualClass, visualText) {
-  return "<article class=\"dashboard-side-card dashboard-panel\"><h3><i></i>" + esc(title) + "</h3><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong><p>" + esc(desc) + "</p><div class=\"" + esc(visualClass || "") + "\"><span>" + esc(visualText || "") + "</span></div></article>";
-}
-
 function dashboardInsightCard(s, forecast) {
   return "<article class=\"dashboard-side-card dashboard-panel dashboard-insight-card\"><h3><i></i>本月洞察</h3>"
     + "<strong class=\"" + esc(dashboardInsightClass(s, forecast)) + "\">" + esc(dashboardInsightValue(s, forecast)) + "</strong>"
@@ -132,11 +128,12 @@ function dashboardInsightCard(s, forecast) {
 }
 
 function dashboardRiskCard(health, forecast) {
-  var status = health.risk || "低风险";
-  return "<article class=\"dashboard-side-card dashboard-panel dashboard-risk-card\"><h3><i></i>风险评估</h3>"
+  var status = health.level || "稳定";
+  return "<article class=\"dashboard-side-card dashboard-panel dashboard-risk-card\"><h3><i></i>月度执行健康</h3>"
     + "<strong class=\"" + esc(health.className || "positive") + "\">" + esc(status) + "</strong>"
     + "<p>" + esc(health.advice) + "</p>"
     + "<div class=\"dashboard-risk-bar\"><span>" + esc(forecast.budgetStatus || "持续观察") + "</span></div>"
+    + "<div class=\"dashboard-health-actions\"><button type=\"button\" class=\"dashboard-link\" data-health-detail=\"score\">评分规则</button><button type=\"button\" class=\"dashboard-link\" data-health-detail=\"level\">状态分级</button></div>"
     + "</article>";
 }
 
@@ -169,86 +166,15 @@ function dashboardMiniSparkline(s, forecast) {
   return "<div class=\"dashboard-mini-sparkline\"><svg viewBox=\"0 0 104 62\" aria-hidden=\"true\"><polyline points=\"" + points + "\"></polyline><circle cx=\"96\" cy=\"" + (58 - values[4] * .42).toFixed(1) + "\" r=\"2.4\"></circle></svg></div>";
 }
 
-function dashboardStripItem(title, value, desc, className, icon, visual, modifier) {
-  return "<article class=\"dashboard-strip-item dashboard-strip-" + esc(modifier || icon || "item") + "\"><i>" + esc(dashboardStripIcon(icon)) + "</i><div class=\"dashboard-strip-copy\"><span class=\"dashboard-strip-title\">" + esc(title) + "</span><strong class=\"dashboard-strip-value " + esc(className || "") + "\">" + esc(value) + "</strong><small class=\"dashboard-strip-desc\">" + esc(desc) + "</small><div class=\"dashboard-strip-visual\">" + (visual || "") + "</div></div></article>";
-}
-
 function dashboardStatusItem(title, value, className) {
   return "<article class=\"dashboard-status-item\"><i class=\"" + esc(className || "") + "\"></i><div><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong></div></article>";
 }
-
-
-function dashboardStripProgress(rate, leftText, rightText, midText) {
-  var safeRate = Math.max(0, Math.min(100, numberValue(rate)));
-  var textLine = "<span>" + esc(leftText) + "</span>";
-  if (midText) textLine += "<span>" + esc(midText) + "</span>";
-  textLine += "<span>" + esc(rightText) + "</span>";
-  return "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(safeRate.toFixed(1)) + "%\"><b></b><p>" + textLine + "</p></div>";
-}
-
-
-function dashboardStripDonut(rows, emptyText) {
-  if (!rows.length) return "<div class=\"dashboard-strip-mini-empty\">" + esc(emptyText) + "</div>";
-  var palette = ["#B88A4A", "#D9B65D", "#F2E5CC", "#8F6334"];
-  var visibleRows = rows.slice(0, 4).map(function (row) {
-    return { name: row.name, pct: row.pct };
-  });
-  var visibleTotal = sum(visibleRows, function (row) { return row.pct; });
-  if (visibleTotal < 99) visibleRows.push({ name: "其他", pct: 100 - visibleTotal });
-  var cursor = 0;
-  var gradient = visibleRows.map(function (row, index) {
-    var color = palette[index % palette.length];
-    var start = cursor;
-    cursor += Math.max(0, row.pct);
-    row.color = color;
-    return color + " " + start.toFixed(1) + "% " + cursor.toFixed(1) + "%";
-  }).join(", ");
-  return "<div class=\"dashboard-strip-donut-wrap\"><div class=\"dashboard-strip-donut\" style=\"--strip-donut:" + esc(gradient) + "\"></div><div class=\"dashboard-strip-mini-list\">"
-    + visibleRows.slice(0, 4).map(function (row) {
-      return "<span><i style=\"background:" + esc(row.color) + "\"></i>" + esc(row.name) + " " + esc(row.pct.toFixed(0)) + "%</span>";
-    }).join("") + "</div></div>";
-}
-
-function dashboardStripSparkline(assetSnap) {
-  var values = dashboardStripSmoothValues(dashboardStripInvestmentValues(assetSnap));
-  var max = Math.max.apply(null, values), min = Math.min.apply(null, values);
-  var span = max - min || 1;
-  var width = 94, height = 36, baseY = 34;
-  var dots = values.map(function (value, index) {
-    return { x: 4 + index * 18, y: +(32 - (value - min) / span * 24).toFixed(1) };
-  });
-  var points = dots.map(function (p) { return p.x + "," + p.y; }).join(" ");
-  var area = "4," + baseY + " " + points + " 76," + baseY;
-  var guides = [22, 40, 58].map(function (x) {
-    return "<line x1=\"" + x + "\" y1=\"8\" x2=\"" + x + "\" y2=\"34\"></line>";
-  }).join("");
-  var circles = dots.map(function (p, index) {
-    var r = index === dots.length - 1 ? 2.8 : 2.1;
-    return "<circle cx=\"" + p.x + "\" cy=\"" + p.y + "\" r=\"" + r + "\"></circle>";
-  }).join("");
-  return "<div class=\"dashboard-strip-sparkline\"><svg viewBox=\"0 0 " + width + " " + height + "\" aria-hidden=\"true\"><g class=\"strip-sparkline-guides\">" + guides + "</g><polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + circles + "</svg></div>";
-}
-
-
-
-
 
 function dashboardPrevMonth(month) {
   var year = parseInt(String(month).slice(0, 4), 10);
   var mon = parseInt(String(month).slice(5, 7), 10);
   var d = new Date(year, mon - 2, 1);
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
-}
-
-function dashboardRecentAssetChange() {
-  var byDate = {};
-  state.snapshots.forEach(function (item) {
-    if (!item.date) return;
-    byDate[item.date] = (byDate[item.date] || 0) + numberValue(item.marketValue);
-  });
-  var dates = Object.keys(byDate).sort();
-  if (dates.length < 2) return null;
-  return numberValue(byDate[dates[dates.length - 1]] - byDate[dates[dates.length - 2]]);
 }
 
 function dashboardInsightValue(s, forecast) {
@@ -364,23 +290,6 @@ function dashboardAxisMoneyLabel(value) {
   if (n >= 100000000) return (n / 100000000).toFixed(n % 100000000 === 0 ? 0 : 1) + "亿";
   if (n >= 10000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + "k";
   return String(Math.round(n));
-}
-
-function dashboardAnnualizedRate(firstValue, lastValue, months) {
-  if (firstValue <= 0 || months <= 1) return null;
-  var years = (months - 1) / 12;
-  return (Math.pow(lastValue / firstValue, 1 / years) - 1) * 100;
-}
-
-function dashboardMaxDrawdown(rows) {
-  var peak = 0;
-  var maxRate = 0;
-  rows.forEach(function (row) {
-    var value = numberValue(row.value);
-    if (value > peak) peak = value;
-    if (peak > 0) maxRate = Math.max(maxRate, (peak - value) / peak * 100);
-  });
-  return rows.length ? maxRate : null;
 }
 
 function setDashboardText(id, value) {

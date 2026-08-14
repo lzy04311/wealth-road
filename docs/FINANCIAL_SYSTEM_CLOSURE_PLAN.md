@@ -34,11 +34,12 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 
 ### Verification
 
-- 37 data safety, import-integrity, browser-fixture, and financial-invariant tests pass.
-- 23 render, interaction, auth fallback, and sync-safety smoke tests pass.
+- 41 data safety, import-integrity, browser-fixture, score-model, and financial-invariant tests pass.
+- 24 render, interaction, health-explanation, auth fallback, and sync-safety smoke tests pass.
 - 8 PWA asset and product-brand contract tests pass.
 - 9 append-only finance-ledger tests pass.
-- All 30 JavaScript files pass syntax checking.
+- All JavaScript files pass syntax checking.
+- Duplicate browser globals, missing literal DOM IDs, and CSS override growth are blocked by the project gate.
 - Local browser sanity checks pass for all primary modules and the responsive form drawer.
 
 ## Remaining Gaps
@@ -52,8 +53,9 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 ### P1: Financial And Workflow Depth
 
 1. ROI is a snapshot/principal view and monthly change is contribution-adjusted, but annualized return, drawdown, and richer performance attribution are not decision-grade.
-2. Rules, subscriptions, and goals remain mainly descriptive; they do not yet form a complete alert or recurring-action system.
-3. Historical records require manual account repair; no automated mapping should be added without explicit user-approved rules.
+2. “月度执行健康度” version 1 is locally tested, but it is an execution hint rather than a structural financial-risk model.
+3. Rules, subscriptions, and goals remain mainly descriptive; they do not yet form a complete alert or recurring-action system.
+4. Historical records require manual account repair; no automated mapping should be added without explicit user-approved rules.
 
 ### P2: Verification And Optional Sync
 

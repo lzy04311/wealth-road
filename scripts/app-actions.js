@@ -131,7 +131,6 @@ function handleFeatureToggleClick(event) {
   var shiftMonth = event.target.closest("[data-action=\"shift-month\"]");
   if (shiftMonth) { shiftCurrentMonth(parseInt(shiftMonth.dataset.monthDelta, 10) || 0); return true; }
   if (event.target.closest("[data-action=\"dismiss-feedback\"]")) { dismissActionFeedback(); return true; }
-  if (event.target.closest("[data-action=\"set-dashboard-pie\"]")) { dashboardPieMode = event.target.closest("[data-action=\"set-dashboard-pie\"]").dataset.pieMode || "budget"; renderDashboardPies(currentMonth()); return true; }
   if (event.target.closest("[data-action=\"open-snapshot-records\"]")) { openSnapshotRecords(); return true; }
   if (event.target.closest("[data-action=\"set-asset-kind\"]")) { assetKindFilter = event.target.closest("[data-action=\"set-asset-kind\"]").dataset.kind || "全部"; renderAssets(); return true; }
   if (event.target.closest("[data-action=\"set-expense-view\"]")) { expenseViewMode = event.target.closest("[data-action=\"set-expense-view\"]").dataset.viewMode || "list"; renderExpenses(); return true; }

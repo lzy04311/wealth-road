@@ -247,6 +247,17 @@ test("appConfirm resolves false on dismiss close", function () {
   });
 });
 
+test("health detail modal is derived from the active score model", function () {
+  var context = createContext();
+  var target = { closest: function () { return { dataset: { healthDetail: "score" } }; } };
+  assert.strictEqual(context.handleHealthDetailClick({ target: target }), true);
+  var html = context.document.getElementById("healthModalBody").innerHTML;
+  assert.match(html, /月度执行健康度/);
+  assert.match(html, /模型版本 <b>v1<\/b>/);
+  assert.match(html, /资产判断基线不完整/);
+  assert.doesNotMatch(html, /回撤|增长 \+4/);
+});
+
 test("activateView switches between home and module page modes", function () {
   var context = createContext();
   context.activateView("flow");

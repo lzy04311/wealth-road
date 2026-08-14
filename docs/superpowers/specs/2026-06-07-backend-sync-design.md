@@ -2,6 +2,10 @@
 
 Date: 2026-06-07
 
+Status: dormant reference. The optional modules exist, but configuration is empty and local-only mode is the current runtime. Do not treat this document as authorization to enable sync.
+
+Current CSP permits scripts from the same origin only. Any future Supabase browser client must be pinned and served from the application origin, or the CSP change must be separately reviewed and tested.
+
 ## Scope
 
 Add multi-device sync to the existing local-first personal finance app.

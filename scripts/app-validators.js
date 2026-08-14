@@ -211,7 +211,6 @@ function validateImportData(data) {
   if (errors.length) return errors;
   return errors.concat(validateImportEntities(data));
 }
-function stateValidationErrors(data) { return validateImportData(data); }
 function importedStateSummary(rawState) {
   var targets = Array.isArray(rawState.accounts) ? rawState.accounts.filter(function (account) { return numberValue(account && account.target) > 0; }).length : 0;
   return [

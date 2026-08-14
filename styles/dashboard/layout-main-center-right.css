@@ -1105,6 +1105,16 @@
   text-indent: -999px;
 }
 
+.dashboard-health-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-health-actions .dashboard-link {
+  font-size: .72rem;
+}
+
 .dashboard-goal-visual {
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);

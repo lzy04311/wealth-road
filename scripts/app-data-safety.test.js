@@ -391,6 +391,63 @@ test("assetSnapshotSummary returns expected asset values for fixture state", fun
   assert.strictEqual(summary.fallbackAccounts.length, 0);
 });
 
+test("financial health model exposes stable versioned rules", function () {
+  var context = createContext(null, { calculations: true });
+  assert.strictEqual(context.FINANCIAL_HEALTH_MODEL.version, 1);
+  assert.strictEqual(context.FINANCIAL_HEALTH_MODEL.label, "月度执行健康度");
+  assert.strictEqual(context.FINANCIAL_HEALTH_MODEL.adjustments.incompleteAssetBaseline, -8);
+  assert.strictEqual(context.FINANCIAL_HEALTH_MODEL.thresholds.stable, 82);
+});
+
+test("financial health level boundaries are explicit", function () {
+  var context = createContext(null, { calculations: true });
+  assert.strictEqual(context.financialHealthLevel(82).label, "稳定");
+  assert.strictEqual(context.financialHealthLevel(64).label, "可控");
+  assert.strictEqual(context.financialHealthLevel(45).label, "需关注");
+  assert.strictEqual(context.financialHealthLevel(44).label, "高压力");
+});
+
+test("financial health rewards a complete on-plan month", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationState());
+  var health = context.financialHealth("2026-05");
+  assert.strictEqual(health.score, 94);
+  assert.strictEqual(health.level, "稳定");
+  assert.strictEqual(health.label, "月度执行健康度");
+  assert.strictEqual(health.modelVersion, 1);
+});
+
+test("financial health applies budget, cash and snapshot adjustments", function () {
+  var context = createContext(null, { calculations: true });
+  var overBudget = calculationState();
+  overBudget.expenses = [{ id: "over", date: "2026-05-02", month: "2026-05", accountId: "living", category: "生活", amount: 700, note: "" }];
+  context.state = context.normalizeState(overBudget);
+  var stressed = context.financialHealth("2026-05");
+  assert.strictEqual(stressed.score, 46);
+  assert.strictEqual(stressed.level, "需关注");
+  assert.match(stressed.advice, /超支/);
+
+  var noSnapshot = calculationState();
+  noSnapshot.snapshots = [];
+  context.state = context.normalizeState(noSnapshot);
+  var missingBaseline = context.financialHealth("2026-05");
+  assert.strictEqual(missingBaseline.score, 86);
+  assert.strictEqual(missingBaseline.level, "稳定");
+
+  var estimatedBaseline = calculationState();
+  estimatedBaseline.accounts.push({
+    id: "estimated-asset", name: "待补净值账户", type: "长期投资", budgetPercent: 0,
+    fixedBudget: false, includeExpense: false, includeAsset: true, target: 0,
+    openingBalance: 100, openingBalanceDate: "2026-05-01", valuationMethod: "净值快照",
+    archived: false, note: ""
+  });
+  context.state = context.normalizeState(estimatedBaseline);
+  assert.strictEqual(context.assetSnapshotSummary("2026-05").completeness, "estimated");
+  var estimatedHealth = context.financialHealth("2026-05");
+  assert.strictEqual(estimatedHealth.score, 86);
+  assert.match(estimatedHealth.advice, /补齐净值更新/);
+});
+
 test("accountBalance does not subtract classification-only expenses", function () {
   var context = createContext(null, { calculations: true });
   context.state = context.normalizeState(calculationState());

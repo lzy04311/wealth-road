@@ -39,6 +39,14 @@ function check(label, fn) {
   }
 }
 function assert(condition, message) { if (!condition) throw new Error(message); }
+function browserScriptFiles() {
+  var html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var files = [];
+  var pattern = /<script\b[^>]*\bsrc="([^"]+\.js)(?:\?[^\"]*)?"[^>]*><\/script>/g;
+  var match;
+  while ((match = pattern.exec(html))) files.push(path.join(root, match[1]));
+  return files;
+}
 
 [
   ["data safety", "scripts/app-data-safety.test.js"],
@@ -54,6 +62,58 @@ check("JavaScript syntax", function () {
     assert(result.status === 0, relative(filePath) + "\n" + (result.stderr || result.stdout || "syntax check failed"));
   });
   return files.length + " files";
+});
+
+check("browser global symbols", function () {
+  var declarations = {};
+  browserScriptFiles().forEach(function (filePath) {
+    var content = fs.readFileSync(filePath, "utf8");
+    var patterns = [
+      /^(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*\(/gm,
+      /^(?:var|let|const)\s+([A-Za-z_$][A-Za-z0-9_$]*)\b/gm
+    ];
+    patterns.forEach(function (pattern) {
+      var match;
+      while ((match = pattern.exec(content))) {
+        if (!declarations[match[1]]) declarations[match[1]] = [];
+        declarations[match[1]].push(relative(filePath));
+      }
+    });
+  });
+  var duplicates = Object.keys(declarations).filter(function (name) { return declarations[name].length > 1; }).map(function (name) {
+    return name + " -> " + declarations[name].join(", ");
+  });
+  assert(duplicates.length === 0, duplicates.join("\n"));
+  return Object.keys(declarations).length + " unique declarations";
+});
+
+check("HTML DOM contract", function () {
+  var html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var ids = {};
+  var idPattern = /\bid="([^"]+)"/g;
+  var match;
+  while ((match = idPattern.exec(html))) ids[match[1]] = (ids[match[1]] || 0) + 1;
+  var duplicateIds = Object.keys(ids).filter(function (id) { return ids[id] > 1; });
+  var missing = [];
+  browserScriptFiles().forEach(function (filePath) {
+    var content = fs.readFileSync(filePath, "utf8");
+    var referencePattern = /\bbyId\("([^"]+)"\)/g;
+    while ((match = referencePattern.exec(content))) {
+      if (!ids[match[1]]) missing.push(relative(filePath) + " -> #" + match[1]);
+    }
+  });
+  assert(duplicateIds.length === 0, "duplicate ids: " + duplicateIds.join(", "));
+  assert(missing.length === 0, "missing literal ids:\n" + missing.join("\n"));
+  return Object.keys(ids).length + " unique ids";
+});
+
+check("CSS override budget", function () {
+  var cssFiles = walk(path.join(root, "styles"), function (filePath) { return path.extname(filePath) === ".css"; });
+  var count = cssFiles.reduce(function (total, filePath) {
+    return total + (fs.readFileSync(filePath, "utf8").match(/!important/g) || []).length;
+  }, 0);
+  assert(count <= 66, "!important count grew above the audited baseline: " + count + " > 66");
+  return count + "/66 !important declarations";
 });
 
 check("retired product names", function () {
