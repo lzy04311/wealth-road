@@ -39,11 +39,20 @@
 
 - `RAW_FINANCE_LEDGER.md`: 自然语言记账、追加式 CSV、校验和现有 JSON 备份迁移流程。
 - `FINANCIAL_SYSTEM_CLOSURE_PLAN.md`: 已完成能力、当前遗留风险和后续分阶段完善路线。
+- `BROWSER_E2E_VERIFICATION.md`: 隔离浏览器写入、编辑、核对、归档、导出和恢复验收证据。
 - `data/raw/wealth-events.csv`: 本机私有原始事件账本，由工具创建并写入，已排除在 Git 之外。
 
 ## 使用方式
 
 核心本地功能可以直接打开 `index.html`。需要验证 PWA、Service Worker 或缓存行为时，应通过 localhost HTTP 服务或 VS Code Live Server 打开。
+
+## 一键项目检查
+
+```powershell
+node scripts\check-project.js
+```
+
+该命令会运行全部自动化测试、JavaScript 语法、品牌残留、Markdown 链接、Git 空白错误和私密账本边界检查。
 
 ## 数据说明
 

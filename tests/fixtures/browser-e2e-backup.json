@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 5,
+  "accounts": [
+    {
+      "id": "e2e_daily",
+      "name": "恢复验证资金池",
+      "type": "生活消费",
+      "budgetPercent": 100,
+      "fixedBudget": true,
+      "includeExpense": true,
+      "includeAsset": false,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "隔离浏览器夹具"
+    }
+  ],
+  "moneyAccounts": [
+    {
+      "id": "e2e_bank",
+      "name": "恢复验证账户",
+      "type": "银行卡",
+      "openingBalance": 1000,
+      "openingBalanceDate": "2026-08-01",
+      "archived": false,
+      "note": "隔离浏览器夹具"
+    }
+  ],
+  "reconciliations": [],
+  "allocations": [],
+  "incomes": [
+    {
+      "id": "e2e_income",
+      "date": "2026-08-15",
+      "month": "2026-08",
+      "accountId": "e2e_daily",
+      "moneyAccountId": "e2e_bank",
+      "source": "其他",
+      "amount": 321,
+      "note": "恢复验证收入"
+    }
+  ],
+  "expenses": [],
+  "investments": [],
+  "transfers": [],
+  "snapshots": [],
+  "monthlyPlans": {
+    "2026-08": {
+      "plannedIncome": 321,
+      "payday": 15
+    }
+  },
+  "rules": "隔离浏览器恢复验证",
+  "assetItems": [],
+  "liabilities": []
+}

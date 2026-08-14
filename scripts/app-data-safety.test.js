@@ -254,6 +254,24 @@ test("a relationally complete v5 backup is accepted", function () {
   assert.strictEqual(result.state.schemaVersion, 5);
 });
 
+test("browser E2E recovery fixture passes the production import pipeline", function () {
+  var context = createContext();
+  var fixture = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "tests", "fixtures", "browser-e2e-backup.json"), "utf8"));
+  var result = context.prepareImportedState(fixture);
+  assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
+  assert.strictEqual(result.state.moneyAccounts[0].name, "恢复验证账户");
+  assert.strictEqual(result.state.incomes[0].amount, 321);
+});
+
+test("browser E2E cleanup fixture passes the production import pipeline", function () {
+  var context = createContext();
+  var fixture = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "tests", "fixtures", "browser-empty-backup.json"), "utf8"));
+  var result = context.prepareImportedState(fixture);
+  assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
+  assert.strictEqual(result.state.moneyAccounts.length, 0);
+  assert.strictEqual(result.state.incomes.length, 0);
+});
+
 test("valid v1 backup migrates to current schema and adds financial collections", function () {
   var context = createContext();
   var result = context.prepareImportedState(validV1Backup());

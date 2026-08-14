@@ -20,12 +20,18 @@ Last verified: 2026-08-15
 
 ### Regression Tests
 
-- `scripts/app-data-safety.test.js`: 35 data safety, import-integrity, and financial-invariant tests.
+- `scripts/app-data-safety.test.js`: 37 data safety, import-integrity, browser-fixture, and financial-invariant tests.
 - `scripts/app-render-smoke.test.js`: 23 render, interaction, local-only auth, and sync-safety smoke tests.
 - `scripts/pwa-assets.test.js`: 8 PWA and product-brand contract tests.
 - `scripts/finance-ledger.test.js`: 9 append-only ledger tests.
 - Test style: Node native `assert`, no external test framework.
 - Covered areas include entity-level import validation, unique IDs, reference integrity, schema v1-v5 migration, corrupted localStorage recovery, account conservation, liabilities, balance reconciliation, render paths, conflict safety, and PWA assets.
+
+### Browser Workflow Evidence
+
+- Real browser write, edit, transfer, archive/restore, reconciliation, export, import, and cleanup paths are locally verified with synthetic isolated-origin data.
+- Evidence and exact fixtures are recorded in `docs/BROWSER_E2E_VERIFICATION.md`.
+- CI-level browser automation remains pending; local browser verification is not a deployment claim.
 
 ### Financial Truth And Workflow
 
@@ -88,7 +94,13 @@ Last verified: 2026-08-15
 
 ## 4. Required Checks After Engineering Changes
 
-Run these after every engineering change:
+Run the complete project gate after every engineering change:
+
+```powershell
+node scripts\check-project.js
+```
+
+The gate runs the following checks:
 
 ```powershell
 node scripts\app-data-safety.test.js
@@ -97,5 +109,7 @@ node scripts\pwa-assets.test.js
 node scripts\finance-ledger.test.js
 Get-ChildItem scripts -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
 ```
+
+It also verifies retired product names, Markdown links, staged and unstaged whitespace, and the private-ledger ignore boundary.
 
 If a change only touches documentation or CSS comments, explain why behavior tests were not run.

@@ -34,7 +34,7 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 
 ### Verification
 
-- 35 data safety, import-integrity, and financial-invariant tests pass.
+- 37 data safety, import-integrity, browser-fixture, and financial-invariant tests pass.
 - 23 render, interaction, auth fallback, and sync-safety smoke tests pass.
 - 8 PWA asset and product-brand contract tests pass.
 - 9 append-only finance-ledger tests pass.
@@ -57,7 +57,7 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 
 ### P2: Verification And Optional Sync
 
-1. Browser smoke coverage does not yet exercise complete real write/edit/archive/reconciliation/import/recovery journeys.
+1. The complete browser workflow is locally verified with isolated fixtures, but durable browser automation is not yet part of CI.
 2. Dashboard pixel-level comparison remains pending even though runtime and responsive sanity checks pass.
 3. Supabase support is present but unconfigured. Before enabling it, verify authentication, RLS, redirect URLs, versioned writes, concurrent-device conflicts, and deployment configuration.
 
@@ -74,10 +74,10 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 - Schema v5, opening balances, real accounts, two-sided transfers, allocations, reconciliation, archive behavior, and historical repair are locally verified.
 - Every integration must preserve the localStorage key and run the full migration, finance-invariant, render, ledger, PWA, and syntax gates.
 
-### Phase 3: Strengthen Data Quality — `in progress`
+### Phase 3: Strengthen Data Quality — `locally verified`
 
 - Entity-level validation, unique-ID checks, referential integrity, transfer endpoint rules, and reconciliation invariants are locally verified.
-- Complete browser workflow coverage using isolated fixture data remains pending.
+- Complete browser workflow coverage using isolated fixture data is recorded in `docs/BROWSER_E2E_VERIFICATION.md`; CI automation remains a separate pending release-engineering item.
 
 ### Phase 4: Deepen Decisions — `pending`
 
