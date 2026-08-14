@@ -276,7 +276,7 @@
 
 .dashboard-strip-quote .dashboard-strip-body {
   position: relative;
-  justify-items: start !important;
+  justify-items: start;
 }
 
 .dashboard-strip-quote .dashboard-strip-body strong,

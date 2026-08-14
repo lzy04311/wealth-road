@@ -7,14 +7,15 @@ Last verified: 2026-08-15
 - Active CSS files: 14.
 - Active CSS lines after verified cleanup: approximately 5261.
 - `styles/dashboard.css` is a two-line import entry, not a monolithic stylesheet.
-- `!important` declarations: 62.
-- The project gate blocks growth above the audited baseline of 62.
+- `!important` declarations: 29.
+- The project gate blocks growth above the audited baseline of 29.
 
 ## Completed Cleanup
 
 - Removed the retired Dashboard pie renderer, mode state, event path, missing DOM references, and dedicated legacy pie CSS.
 - Removed unused cockpit, asset action-card, asset tracking, old plan/data-tip, and unused investment action-group styles.
 - Kept the shared `.positive`, `.negative`, and `.warning` utilities only in `styles/components.css`, removing identical Dashboard-nav copies.
+- Removed 33 unnecessary force overrides from the desktop bottom strip after verifying selector order and computed styles at 1600px and 1200px widths.
 - Preserved dynamic asset-kind classes because runtime builds those class names programmatically.
 - Preserved active quick-modal styles and current Dashboard responsive overrides.
 
