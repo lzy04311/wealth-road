@@ -112,8 +112,8 @@ check("CSS override budget", function () {
   var count = cssFiles.reduce(function (total, filePath) {
     return total + (fs.readFileSync(filePath, "utf8").match(/!important/g) || []).length;
   }, 0);
-  assert(count <= 66, "!important count grew above the audited baseline: " + count + " > 66");
-  return count + "/66 !important declarations";
+  assert(count <= 62, "!important count grew above the audited baseline: " + count + " > 62");
+  return count + "/62 !important declarations";
 });
 
 check("retired product names", function () {
