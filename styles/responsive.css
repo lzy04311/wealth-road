@@ -257,7 +257,7 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   background: #fff7e8;
-  color: #8a735e;
+  color: var(--tone-color, #8a735e);
   font-size: 0.76rem;
   font-weight: 700;
   white-space: nowrap;
@@ -296,7 +296,7 @@
 .role-primary strong {
   display: block;
   margin-top: 5px;
-  color: var(--account-color, var(--primary));
+  color: var(--tone-color, var(--account-color, var(--primary)));
   font-size: clamp(1.28rem, 1.7vw, 1.62rem);
   line-height: 1.1;
   font-weight: 800;

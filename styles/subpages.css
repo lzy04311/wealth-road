@@ -129,7 +129,7 @@
 .module-page-mode .invest-topbar-hero > strong,
 .module-page-mode .ap-hero strong {
   font-family: var(--font-number);
-  color: #74522a;
+  color: var(--tone-color, #74522a);
   letter-spacing: 0;
 }
 

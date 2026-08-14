@@ -94,7 +94,7 @@
 
 .dashboard-status-item strong {
   margin-top: 1px;
-  color: var(--muted);
+  color: var(--tone-color, var(--muted));
   font-family: var(--font-number);
   font-size: .60rem;
   font-weight: 700;

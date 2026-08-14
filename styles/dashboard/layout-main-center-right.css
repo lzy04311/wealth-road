@@ -140,7 +140,7 @@
 }
 
 .dashboard-change-row strong {
-  color: #2f2921;
+  color: var(--tone-color, #2f2921);
   font-family: var(--font-sans-zh);
   font-size: .94rem;
   font-weight: 650;
@@ -192,7 +192,7 @@
 .dashboard-asset-metrics strong {
   display: block;
   margin: 4px 0 2px;
-  color: #2F2921;
+  color: var(--tone-color, #2F2921);
   font-family: var(--font-number);
   font-size: 20px;
   font-weight: 700;
@@ -311,7 +311,7 @@
 
 .dashboard-trend-facts strong {
   margin-top: 2px;
-  color: var(--text);
+  color: var(--tone-color, var(--text));
   font-family: var(--font-number);
   font-size: 16px;
   font-weight: 700;
@@ -778,7 +778,7 @@
   justify-self: center;
   margin-top: 4px;
   margin-bottom: 2px;
-  color: #8E6A32;
+  color: var(--tone-color, #8E6A32);
   font-family: var(--font-number);
   font-size: .70rem;
   line-height: 1.05;
@@ -876,7 +876,7 @@
 }
 
 .dashboard-side-card strong {
-  color: var(--text);
+  color: var(--tone-color, var(--text));
   font-family: var(--font-number);
   font-size: 1.24rem;
   font-weight: 700;

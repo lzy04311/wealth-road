@@ -12,12 +12,15 @@
 .card { padding: 14px 16px; }
 .stat { min-height: 126px; padding: 16px; }
 .stat .label { color: var(--muted); font-family: var(--font-sans-zh, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif); font-size: .82rem; font-weight: 500; line-height: 1.45; }
-.stat .value { margin-top: 8px; color: var(--text); font-family: var(--font-number, "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif); font-size: clamp(1.42rem, 2.2vw, 2rem); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; overflow-wrap: anywhere; }
+.stat .value { margin-top: 8px; color: var(--tone-color, var(--text)); font-family: var(--font-number, "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif); font-size: clamp(1.42rem, 2.2vw, 2rem); font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; overflow-wrap: anywhere; }
 .stat .hint { margin-top: 8px; color: var(--muted); font-family: var(--font-sans-zh, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif); font-size: .82rem; font-weight: 500; line-height: 1.45; }
 .stat-details { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line); }
 .stat-detail { padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: rgba(248,246,241,.76); }
 .stat-detail span { display: block; color: var(--muted); font-family: var(--font-sans-zh, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Source Han Sans SC", sans-serif); font-size: .76rem; font-weight: 500; line-height: 1.45; }
-.stat-detail strong { display: block; margin-top: 4px; color: var(--text); font-family: var(--font-number, "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; overflow-wrap: anywhere; }
-.positive { color: var(--success) !important; }
-.negative { color: var(--danger) !important; }
-.warning { color: var(--warning) !important; }
+.stat-detail strong { display: block; margin-top: 4px; color: var(--tone-color, var(--text)); font-family: var(--font-number, "DIN Alternate", "DIN Condensed", "Avenir Next", "Inter", "SF Pro Display", "Segoe UI", sans-serif); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; overflow-wrap: anywhere; }
+.positive { --tone-color: var(--success); }
+.negative { --tone-color: var(--danger); }
+.warning { --tone-color: var(--warning); }
+.positive,
+.negative,
+.warning { color: var(--tone-color); }
