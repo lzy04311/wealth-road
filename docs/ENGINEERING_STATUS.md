@@ -20,12 +20,12 @@ Last verified: 2026-08-15
 
 ### Regression Tests
 
-- `scripts/app-data-safety.test.js`: 27 data safety and financial-invariant tests.
+- `scripts/app-data-safety.test.js`: 35 data safety, import-integrity, and financial-invariant tests.
 - `scripts/app-render-smoke.test.js`: 23 render, interaction, local-only auth, and sync-safety smoke tests.
 - `scripts/pwa-assets.test.js`: 8 PWA and product-brand contract tests.
 - `scripts/finance-ledger.test.js`: 9 append-only ledger tests.
 - Test style: Node native `assert`, no external test framework.
-- Covered areas include import validation, schema v1-v5 migration, corrupted localStorage recovery, account conservation, liabilities, balance reconciliation, render paths, conflict safety, and PWA assets.
+- Covered areas include entity-level import validation, unique IDs, reference integrity, schema v1-v5 migration, corrupted localStorage recovery, account conservation, liabilities, balance reconciliation, render paths, conflict safety, and PWA assets.
 
 ### Financial Truth And Workflow
 

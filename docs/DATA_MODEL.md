@@ -341,6 +341,9 @@ v1 -> v2 的迁移规则：
 - 不允许随意修改 state 字段名。
 - 不允许随意修改 localStorage 主 key。
 - 导入数据必须经过 `validateImportData()`。
+- 导入中的实体必须是对象，并具有合法且在各自集合内唯一的 ID。
+- 非空账户引用必须指向现存资金池或真实账户；历史未关联记录允许保留空引用。
+- 日期、月份、金额、比例、转账两端和余额核对差额必须通过实体级约束。
 - `loadState()` 和 `importData()` 必须统一经过 `migrateState()`。
 - `normalizeState()` 只负责补齐字段、清洗类型、约束范围和默认值。
 - `normalizeState()` 不负责版本迁移。

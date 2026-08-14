@@ -34,7 +34,7 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 
 ### Verification
 
-- 27 data safety and financial-invariant tests pass.
+- 35 data safety, import-integrity, and financial-invariant tests pass.
 - 23 render, interaction, auth fallback, and sync-safety smoke tests pass.
 - 8 PWA asset and product-brand contract tests pass.
 - 9 append-only finance-ledger tests pass.
@@ -51,10 +51,9 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 
 ### P1: Financial And Workflow Depth
 
-1. Import validation still focuses on top-level shape; duplicate IDs, referential integrity, and entity-level date/value constraints need deterministic validation.
-2. ROI is a snapshot/principal view and monthly change is contribution-adjusted, but annualized return, drawdown, and richer performance attribution are not decision-grade.
-3. Rules, subscriptions, and goals remain mainly descriptive; they do not yet form a complete alert or recurring-action system.
-4. Historical records require manual account repair; no automated mapping should be added without explicit user-approved rules.
+1. ROI is a snapshot/principal view and monthly change is contribution-adjusted, but annualized return, drawdown, and richer performance attribution are not decision-grade.
+2. Rules, subscriptions, and goals remain mainly descriptive; they do not yet form a complete alert or recurring-action system.
+3. Historical records require manual account repair; no automated mapping should be added without explicit user-approved rules.
 
 ### P2: Verification And Optional Sync
 
@@ -75,10 +74,10 @@ The current code includes real money accounts, two-sided transfers, purpose allo
 - Schema v5, opening balances, real accounts, two-sided transfers, allocations, reconciliation, archive behavior, and historical repair are locally verified.
 - Every integration must preserve the localStorage key and run the full migration, finance-invariant, render, ledger, PWA, and syntax gates.
 
-### Phase 3: Strengthen Data Quality — `pending`
+### Phase 3: Strengthen Data Quality — `in progress`
 
-- Add entity-level validation, unique-ID checks, referential integrity, and reconciliation invariants.
-- Add complete browser workflow coverage using isolated fixture data.
+- Entity-level validation, unique-ID checks, referential integrity, transfer endpoint rules, and reconciliation invariants are locally verified.
+- Complete browser workflow coverage using isolated fixture data remains pending.
 
 ### Phase 4: Deepen Decisions — `pending`
 

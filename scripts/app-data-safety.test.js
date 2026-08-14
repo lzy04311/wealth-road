@@ -62,6 +62,17 @@ function validV1Backup(overrides) {
   }, overrides || {});
 }
 
+function validV5Backup(overrides) {
+  return Object.assign(validV2Backup(), {
+    schemaVersion: 5,
+    transfers: [],
+    liabilities: [],
+    moneyAccounts: [],
+    allocations: [],
+    reconciliations: []
+  }, overrides || {});
+}
+
 function calculationState() {
   return validV2Backup({
     accounts: [
@@ -138,6 +149,109 @@ test("wrong core field type is rejected", function () {
   var result = context.prepareImportedState(validV2Backup({ investments: {} }));
   assert.strictEqual(result.ok, false);
   assert.match(result.errors.join("\n"), /investments/);
+});
+
+test("non-object entities and invalid IDs are rejected", function () {
+  var context = createContext();
+  var backup = validV5Backup({ incomes: ["not-an-object"], expenses: [{ id: "bad id", date: "2026-08-01", amount: 10 }] });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /incomes\[0\].*对象/);
+  assert.match(result.errors.join("\n"), /expenses\[0\]\.id/);
+});
+
+test("duplicate entity IDs are rejected within a collection", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    incomes: [
+      { id: "same", date: "2026-08-01", amount: 10 },
+      { id: "same", date: "2026-08-02", amount: 20 }
+    ]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /重复 ID.*same/);
+});
+
+test("invalid dates, amounts and derived months are rejected", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    incomes: [{ id: "income", date: "2026-02-30", month: "2026-03", amount: -1 }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /date.*YYYY-MM-DD/);
+  assert.match(result.errors.join("\n"), /month.*date/);
+  assert.match(result.errors.join("\n"), /amount.*有效数字/);
+});
+
+test("missing transaction amounts and out-of-range percentages are rejected", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 120 }],
+    expenses: [{ id: "expense", date: "2026-08-01", accountId: "daily" }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /budgetPercent.*0-100/);
+  assert.match(result.errors.join("\n"), /expenses\[0\]\.amount.*不能为空/);
+});
+
+test("orphan account and money-account references are rejected", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    incomes: [{ id: "income", date: "2026-08-01", accountId: "missing-pool", moneyAccountId: "missing-bank", amount: 10 }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /accountId.*不存在/);
+  assert.match(result.errors.join("\n"), /moneyAccountId.*不存在/);
+});
+
+test("partial or same-endpoint transfers are rejected", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 0 }],
+    transfers: [
+      { id: "partial", date: "2026-08-01", fromMoneyAccountId: "bank", toMoneyAccountId: "", amount: 10 },
+      { id: "same", date: "2026-08-02", fromMoneyAccountId: "bank", toMoneyAccountId: "bank", amount: 10 }
+    ]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /同时填写或同时留空/);
+  assert.match(result.errors.join("\n"), /实际转账两端必须不同/);
+});
+
+test("reconciliation differences must match their balances", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 100 }],
+    reconciliations: [{ id: "check", date: "2026-08-01", moneyAccountId: "bank", bookBalance: 100, actualBalance: 90, adjustment: 5 }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /adjustment.*actualBalance - bookBalance/);
+});
+
+test("a relationally complete v5 backup is accepted", function () {
+  var context = createContext();
+  var backup = validV5Backup({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 100, fixedBudget: true, includeExpense: true, includeAsset: false, target: 0 }],
+    moneyAccounts: [
+      { id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-08-01" },
+      { id: "wallet", name: "钱包", type: "支付账户", openingBalance: 0, openingBalanceDate: "2026-08-01" }
+    ],
+    incomes: [{ id: "income", date: "2026-08-01", month: "2026-08", accountId: "daily", moneyAccountId: "bank", amount: 100 }],
+    expenses: [{ id: "expense", date: "2026-08-02", month: "2026-08", accountId: "daily", moneyAccountId: "wallet", amount: 10 }],
+    transfers: [{ id: "transfer", date: "2026-08-02", fromMoneyAccountId: "bank", toMoneyAccountId: "wallet", amount: 50 }],
+    allocations: [{ id: "allocation", date: "2026-08-01", fromAccountId: "", toAccountId: "daily", amount: 100 }],
+    snapshots: [{ id: "snapshot", date: "2026-08-03", accountId: "daily", marketValue: 100, principal: 100 }],
+    reconciliations: [{ id: "check", date: "2026-08-04", moneyAccountId: "bank", bookBalance: 1050, actualBalance: 1048, adjustment: -2 }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
+  assert.strictEqual(result.state.schemaVersion, 5);
 });
 
 test("valid v1 backup migrates to current schema and adds financial collections", function () {
