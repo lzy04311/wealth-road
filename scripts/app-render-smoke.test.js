@@ -145,6 +145,16 @@ test("renderAll does not throw in DOM smoke context", function () {
   assert.ok(context.__elements.expenseList);
 });
 
+test("bottom strip list bullets use the semantic dot class", function () {
+  var context = createContext();
+  var emptyList = context.dashboardStripTopList([], "等待数据");
+  var populatedList = context.dashboardStripTopList([{ name: "日常", pct: 100 }], "等待数据");
+  assert.match(emptyList, /class="dashboard-strip-dot" aria-hidden="true"/);
+  assert.match(populatedList, /class="dashboard-strip-dot" aria-hidden="true"/);
+  assert.doesNotMatch(emptyList, /<i><\/i>/);
+  assert.doesNotMatch(populatedList, /<i><\/i>/);
+});
+
 test("dated record forms do not expose duplicate month inputs", function () {
   var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   [

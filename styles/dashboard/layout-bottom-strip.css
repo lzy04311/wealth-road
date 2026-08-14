@@ -55,7 +55,7 @@
   display: none;
 }
 
-.dashboard-strip-item i {
+.dashboard-strip-item > i {
   width: 20px;
   height: 20px;
   display: grid;
@@ -500,18 +500,18 @@
   text-overflow: ellipsis;
 }
 
-.dashboard-strip-list i {
-  width: 4px !important;
-  height: 4px !important;
-  min-width: 4px !important;
-  min-height: 4px !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: rgba(184,136,67,.82) !important;
-  box-shadow: none !important;
-  display: inline-block !important;
-  place-items: initial !important;
-  flex: 0 0 auto !important;
+.dashboard-strip-dot {
+  width: 4px;
+  height: 4px;
+  min-width: 4px;
+  min-height: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(184,136,67,.82);
+  box-shadow: none;
+  display: inline-block;
+  place-items: initial;
+  flex: 0 0 auto;
 }
 
 .dashboard-strip-double {
