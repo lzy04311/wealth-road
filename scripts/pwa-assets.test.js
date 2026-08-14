@@ -36,6 +36,35 @@ test("index exposes installable PWA metadata", function () {
   assert.doesNotMatch(html, /navigator\.serviceWorker\.register/);
 });
 
+test("public product name is consistently 财记", function () {
+  var html = readText("index.html");
+  var manifest = JSON.parse(readText("manifest.webmanifest"));
+  var icon = readText("icons/icon.svg");
+  var dataActions = readText("scripts/app-actions-data.js");
+  var sync = readText("scripts/app-sync.js");
+
+  assert.match(html, /<title>财记<\/title>/);
+  assert.match(html, /<footer>财记 · 本地优先版<\/footer>/);
+  assert.strictEqual(manifest.name, "财记");
+  assert.strictEqual(manifest.short_name, "财记");
+  assert.match(icon, /aria-label="财记"/);
+  assert.match(dataActions, /caiji-backup_/);
+  assert.match(sync, /caiji-backup-before-cloud-pull_/);
+
+  var retiredNames = [
+    "财富" + "志",
+    "财富自由" + "之路",
+    "财富" + "中枢",
+    "money" + "-os",
+    "wealth" + "-road"
+  ];
+  [html, JSON.stringify(manifest), icon, dataActions, sync].forEach(function (content) {
+    retiredNames.forEach(function (name) {
+      assert.strictEqual(content.indexOf(name), -1, name + " should not return");
+    });
+  });
+});
+
 test("index declares a content security policy", function () {
   var html = readText("index.html");
   assert.match(html, /<meta http-equiv="Content-Security-Policy"/);

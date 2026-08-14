@@ -150,6 +150,7 @@ test("valid v1 backup migrates to current schema and adds financial collections"
   assert.ok(Array.isArray(result.state.liabilities));
   assert.ok(Array.isArray(result.state.moneyAccounts));
   assert.ok(Array.isArray(result.state.allocations));
+  assert.ok(Array.isArray(result.state.reconciliations));
   assert.strictEqual(result.state.assetItems.length, 0);
 });
 
@@ -160,6 +161,7 @@ test("valid v2 backup migrates to current schema", function () {
   assert.strictEqual(result.state.schemaVersion, context.CURRENT_SCHEMA_VERSION);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(result.state.moneyAccounts)), []);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(result.state.allocations)), []);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(result.state.reconciliations)), []);
 });
 
 test("migrateState does not silently accept unknown future versions", function () {
@@ -172,7 +174,7 @@ test("migrateState does not silently accept unknown future versions", function (
 test("normalizeState always returns core array fields", function () {
   var context = createContext();
   var normalized = context.normalizeState({});
-  ["accounts", "moneyAccounts", "allocations", "incomes", "expenses", "investments", "transfers", "snapshots", "assetItems", "liabilities"].forEach(function (key) {
+  ["accounts", "moneyAccounts", "reconciliations", "allocations", "incomes", "expenses", "investments", "transfers", "snapshots", "assetItems", "liabilities"].forEach(function (key) {
     assert.ok(Array.isArray(normalized[key]), key + " should be an array");
   });
 });
@@ -373,7 +375,10 @@ test("real accounts and fund pools stay as separate balanced dimensions", functi
       { id: "wallet", name: "支付宝", type: "支付账户", openingBalance: 1000, openingBalanceDate: "2026-08-01" },
       { id: "broker", name: "证券账户", type: "投资账户", openingBalance: 0, openingBalanceDate: "2026-08-01" }
     ],
-    incomes: [{ id: "salary", date: "2026-08-02", moneyAccountId: "bank", accountId: "", source: "工资", amount: 10000 }],
+    incomes: [
+      { id: "old-salary", date: "2026-07-31", moneyAccountId: "bank", accountId: "", source: "工资", amount: 9999 },
+      { id: "salary", date: "2026-08-02", moneyAccountId: "bank", accountId: "", source: "工资", amount: 10000 }
+    ],
     expenses: [{ id: "lunch", date: "2026-08-03", moneyAccountId: "wallet", accountId: "daily", category: "餐饮", amount: 36 }],
     investments: [
       { id: "fund", date: "2026-08-04", sourceMoneyAccountId: "bank", targetMoneyAccountId: "broker", accountId: "long", type: "投资", amount: 2000 },
@@ -387,6 +392,7 @@ test("real accounts and fund pools stay as separate balanced dimensions", functi
     snapshots: [{ id: "broker-value", date: "2026-08-15", accountId: "long", marketValue: 1700, principal: 1500 }]
   });
   assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[0], "2026-08"), 17500);
+  assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[0], "2026-07"), 0);
   assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[1], "2026-08"), 1964);
   assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[2], "2026-08"), 1500);
   assert.strictEqual(context.moneyAccountsTotal("2026-08"), 20964);
@@ -408,4 +414,19 @@ test("expense category does not reduce an asset account without a payment accoun
   context.state = context.normalizeState(fixture);
   assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-05"), 500);
   assert.strictEqual(context.monthlySummary("2026-05").expense, 100);
+});
+
+test("balance reconciliation adjusts the ledger without changing opening balance", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState({
+    moneyAccounts: [{ id: "bank", name: "工资卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-08-01" }],
+    expenses: [{ id: "fee", date: "2026-08-05", moneyAccountId: "bank", accountId: "", category: "手续费", amount: 100 }],
+    reconciliations: [{ id: "check", date: "2026-08-10", moneyAccountId: "bank", bookBalance: 900, actualBalance: 850, adjustment: -50 }],
+    incomes: [{ id: "refund", date: "2026-08-12", moneyAccountId: "bank", accountId: "", source: "其他", amount: 200 }]
+  });
+  var account = context.state.moneyAccounts[0];
+  assert.strictEqual(account.openingBalance, 1000);
+  assert.strictEqual(context.moneyAccountBalanceUntil(account, "2026-08-10", "check"), 900);
+  assert.strictEqual(context.moneyAccountBalanceUntil(account, "2026-08-10"), 850);
+  assert.strictEqual(context.moneyAccountBalance(account, "2026-08"), 1050);
 });

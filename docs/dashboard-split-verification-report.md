@@ -58,3 +58,13 @@ Code evidence:
 ## Notes
 - Current report is code-level + structure-level verification.
 - Visual items marked `PENDING` should be confirmed in-browser on desktop and mobile widths.
+
+## 2026-08-15 Runtime Sanity Check
+
+- Local HTTP entry and all requested app-shell resources: `PASS`.
+- Dashboard plus Flow, Investments, Assets, Goals, Accounts, and Data navigation: `PASS`.
+- Browser console warnings/errors from the application: none observed.
+- Horizontal overflow at desktop and the available narrow viewport: none observed.
+- Secondary-page form drawer and no-account reconciliation guidance: `PASS`.
+
+This is a runtime sanity check, not a pixel-by-pixel comparison with the original dashboard reference. The visual items above remain `PENDING (visual)` until that comparison is completed.

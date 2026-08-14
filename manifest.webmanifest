@@ -1,7 +1,7 @@
 {
-  "name": "财富自由之路",
-  "short_name": "财富中枢",
-  "description": "本地优先的个人资金管理网页 App",
+  "name": "财记",
+  "short_name": "财记",
+  "description": "财记：本地优先的个人资金管理网页 App",
   "lang": "zh-CN",
   "start_url": "./index.html",
   "scope": "./",

@@ -8,6 +8,7 @@ function upsert(list, item) {
   else if (list === state.snapshots) item = normalizeSnapshot(item, {});
   else if (list === state.accounts) item = normalizeAccount(item, {});
   else if (list === state.moneyAccounts) item = normalizeMoneyAccount(item);
+  else if (list === state.reconciliations) item = normalizeReconciliation(item, {});
   else if (list === state.allocations) item = normalizeAllocation(item, {});
   else if (list === state.assetItems) item = normalizeAssetItem(item, {});
   else if (list === state.liabilities) item = normalizeLiability(item);
@@ -23,6 +24,35 @@ function upsert(list, item) {
   return false;
 }
 
+function linkHistoricalMoneyAccount(type, id) {
+  var map = { income: "incomes", expense: "expenses", investment: "investments", transfer: "transfers" }, key = map[type];
+  if (!key) return;
+  var record = state[key].find(function (item) { return item.id === id; });
+  if (!record) return;
+  var previous = Object.assign({}, record);
+  if (type === "income" || type === "expense") {
+    var moneyAccountId = byId("repair-" + type + "-" + id).value;
+    if (!moneyAccountId) { notify("请选择实际账户"); return; }
+    record.moneyAccountId = moneyAccountId;
+  } else if (type === "investment") {
+    record.sourceMoneyAccountId = byId("repair-investment-from-" + id).value;
+    record.targetMoneyAccountId = byId("repair-investment-to-" + id).value;
+    if (!record.sourceMoneyAccountId || !record.targetMoneyAccountId) { Object.assign(record, previous); notify("请选择投资的转出账户和转入账户"); return; }
+  } else {
+    record.fromMoneyAccountId = byId("repair-transfer-from-" + id).value;
+    record.toMoneyAccountId = byId("repair-transfer-to-" + id).value;
+    if (!record.fromMoneyAccountId || !record.toMoneyAccountId || record.fromMoneyAccountId === record.toMoneyAccountId) { Object.assign(record, previous); notify("转账必须选择两个不同的实际账户"); return; }
+  }
+  if (!save()) { Object.assign(record, previous); return; }
+  renderAll();
+  showActionFeedback("已补齐历史流水的实际账户", "撤销", function () {
+    var linkedState = Object.assign({}, record);
+    Object.assign(record, previous);
+    if (save()) { renderAll(); showActionFeedback("已撤销历史账户关联"); }
+    else Object.assign(record, linkedState);
+  });
+}
+
 function recordSaveMessage(list, item, edited) {
   var action = edited ? "已更新" : "已保存";
   if (list === state.incomes) return action + "收入 " + money(item.amount) + " · " + item.source;
@@ -35,6 +65,7 @@ function recordSaveMessage(list, item, edited) {
   if (list === state.allocations) return action + "资金分配 " + money(item.amount);
   if (list === state.assetItems) return action + "资产 · " + item.name;
   if (list === state.liabilities) return action + "负债 · " + item.name;
+  if (list === state.reconciliations) return action + "余额核对 " + money(item.adjustment);
   return action;
 }
 
@@ -49,13 +80,13 @@ function recordDeleteLabel(type, item) {
 }
 
 function removeRecord(type, id) {
-  var map = { income: "incomes", expense: "expenses", investment: "investments", transfer: "transfers", snapshot: "snapshots", account: "accounts", moneyAccount: "moneyAccounts", allocation: "allocations", assetItem: "assetItems", liability: "liabilities" };
+  var map = { income: "incomes", expense: "expenses", investment: "investments", transfer: "transfers", snapshot: "snapshots", account: "accounts", moneyAccount: "moneyAccounts", reconciliation: "reconciliations", allocation: "allocations", assetItem: "assetItems", liability: "liabilities" };
   var key = map[type];
   if (!key) return;
   appConfirm("确认删除", "确定删除这条数据吗？", "删除", "取消").then(function (ok) {
     if (!ok) return;
     if (type === "moneyAccount") {
-      var moneyUsed = state.incomes.some(function (x) { return x.moneyAccountId === id; }) || state.expenses.some(function (x) { return x.moneyAccountId === id; }) || state.investments.some(function (x) { return x.sourceMoneyAccountId === id || x.targetMoneyAccountId === id; }) || state.transfers.some(function (x) { return x.fromMoneyAccountId === id || x.toMoneyAccountId === id; });
+      var moneyUsed = state.incomes.some(function (x) { return x.moneyAccountId === id; }) || state.expenses.some(function (x) { return x.moneyAccountId === id; }) || state.investments.some(function (x) { return x.sourceMoneyAccountId === id || x.targetMoneyAccountId === id; }) || state.transfers.some(function (x) { return x.fromMoneyAccountId === id || x.toMoneyAccountId === id; }) || state.reconciliations.some(function (x) { return x.moneyAccountId === id; });
       if (moneyUsed) {
         appConfirm("实际账户仍有关联记录", "这个账户已有历史流水。为保留钱的位置记录，系统会将它归档。", "归档账户", "取消").then(function (confirmed) {
           if (!confirmed) return;
@@ -140,7 +171,7 @@ function duplicateRecord(type, id) {
 }
 
 function editRecord(type, id) {
-  var targetView = { income: "flow", expense: "flow", investment: "investments", transfer: "investments", snapshot: "investments", account: "accounts", moneyAccount: "accounts", allocation: "accounts", assetItem: "assets", liability: "assets" }[type];
+  var targetView = { income: "flow", expense: "flow", investment: "investments", transfer: "investments", snapshot: "investments", account: "accounts", moneyAccount: "accounts", reconciliation: "accounts", allocation: "accounts", assetItem: "assets", liability: "assets" }[type];
   if (targetView) activateView(targetView);
   if (type === "income" || type === "expense") switchFlowTab(type);
   if (type === "income") {
@@ -167,6 +198,17 @@ function editRecord(type, id) {
     byId("moneyAccountOpeningBalance").value = moneyAccount.openingBalance;
     byId("moneyAccountOpeningBalanceDate").value = moneyAccount.openingBalanceDate || "";
     byId("moneyAccountNote").value = moneyAccount.note || "";
+  }
+  if (type === "reconciliation") {
+    var reconciliation = state.reconciliations.find(function (x) { return x.id === id; });
+    if (!reconciliation) return;
+    openForm("reconciliation");
+    byId("reconciliationFormTitle").textContent = "编辑余额核对";
+    byId("reconciliationId").value = reconciliation.id;
+    byId("reconciliationDate").value = reconciliation.date;
+    byId("reconciliationMoneyAccount").value = reconciliation.moneyAccountId;
+    byId("reconciliationActualBalance").value = reconciliation.actualBalance;
+    byId("reconciliationNote").value = reconciliation.note || "";
   }
   if (type === "account") {
     var account = state.accounts.find(function (x) { return x.id === id; });

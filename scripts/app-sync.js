@@ -131,7 +131,7 @@ async function pushLocalStateToCloud(options) {
 async function applyCloudState(prepared) {
   var previous = state;
   if (typeof downloadStateBackup === "function") {
-    downloadStateBackup(previous, "money-os-backup-before-cloud-pull_" + backupTimestamp() + ".json");
+    downloadStateBackup(previous, "caiji-backup-before-cloud-pull_" + backupTimestamp() + ".json");
   }
   state = prepared.state;
   if (save()) {

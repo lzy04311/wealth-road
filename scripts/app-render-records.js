@@ -53,6 +53,8 @@ function renderIncome() {
 }
 function renderAccounts() {
   renderMoneyAccounts();
+  renderReconciliations();
+  renderUnlinkedMoneyRecords();
   renderAllocations();
   var status = budgetPercentMessage(), month = currentMonth(), plan = monthlyPlan(month), budgetTotal = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return item.includeExpense && !item.archived ? accountBudgetAmount(item, month) : 0; }) : null;
   if (byId("budgetPercentSummary")) { byId("budgetPercentSummary").textContent = status.text; byId("budgetPercentSummary").className = "notice " + status.className; }
@@ -140,9 +142,39 @@ function renderMoneyAccounts() {
   byId("moneyAccountSummary").innerHTML = pill("实际账户", active.length + " 个") + pill("账面余额合计", money(total)) + (active.length ? "<span class=\"summary-pill warning\">总额以已录入账户为准；遗漏账户会使净资产偏低。</span>" : "<span class=\"summary-pill warning\">先添加银行卡、支付宝或现金账户，系统才会按真实位置计算金融资产。</span>");
   byId("moneyAccountList").innerHTML = active.length ? active.map(function (item) {
     var balance = moneyAccountBalance(item, month);
-    var count = state.incomes.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.expenses.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.investments.filter(function (x) { return x.sourceMoneyAccountId === item.id || x.targetMoneyAccountId === item.id; }).length + state.transfers.filter(function (x) { return x.fromMoneyAccountId === item.id || x.toMoneyAccountId === item.id; }).length;
+    var count = state.incomes.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.expenses.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.investments.filter(function (x) { return x.sourceMoneyAccountId === item.id || x.targetMoneyAccountId === item.id; }).length + state.transfers.filter(function (x) { return x.fromMoneyAccountId === item.id || x.toMoneyAccountId === item.id; }).length + state.reconciliations.filter(function (x) { return x.moneyAccountId === item.id; }).length;
     return "<article class=\"account-card role-account-card role-card-asset\"><div class=\"role-card-head\"><div class=\"role-title\"><div class=\"role-icon\">" + (item.type === "银行卡" ? "🏦" : (item.type === "支付账户" ? "📱" : (item.type === "投资账户" ? "📈" : "💵"))) + "</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.type) + "</p></div></div><span class=\"status-pill\">" + count + " 笔流水</span></div><div class=\"role-primary\"><span>账面余额</span><strong class=\"" + (balance >= 0 ? "positive" : "negative") + "\">" + money(balance) + "</strong></div><div class=\"role-metrics compact\"><div class=\"metric-item\"><span>期初余额</span><strong>" + money(item.openingBalance) + "</strong></div><div class=\"metric-item\"><span>期初日期</span><strong>" + esc(item.openingBalanceDate || "未填写") + "</strong></div></div><div class=\"role-tip\">" + esc(item.note || "这里记录钱实际存放的位置") + "</div><div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"moneyAccount\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"moneyAccount\" data-id=\"" + esc(item.id) + "\">删除</button></div></article>";
-  }).join("") : empty("还没有实际资金账户。", "先录入银行卡、支付宝、现金或投资平台，以及开始记账当天的余额。", "", "🏦");
+  }).join("") : empty("还没有实际资金账户。", "先录入银行卡、支付宝、现金或投资平台，以及开始记账前的余额。", "", "🏦");
+}
+function renderReconciliations() {
+  if (!byId("reconciliationList")) return;
+  var records = (state.reconciliations || []).filter(function (item) { return item.month === currentMonth(); }).slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+  byId("reconciliationList").innerHTML = records.length ? records.map(function (item) {
+    var adjustmentText = (item.adjustment >= 0 ? "+" : "-") + money(Math.abs(item.adjustment));
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(moneyAccountName(item.moneyAccountId)) + "</span><span class=\"badge\">余额核对</span></div><div class=\"row-amount " + (item.adjustment >= 0 ? "positive" : "negative") + "\">" + esc(adjustmentText) + "</div>" + meta(["日期：" + item.date, "核对前：" + money(item.bookBalance), "实际余额：" + money(item.actualBalance), "备注：" + (item.note || "无")]) + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"reconciliation\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"reconciliation\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+  }).join("") : empty("本月还没有余额核对。", "建议定期按银行或投资平台显示的余额核对一次。", "", "✓");
+}
+function unlinkedMoneyRecords() {
+  var rows = [];
+  state.incomes.forEach(function (item) { if (!item.moneyAccountId) rows.push({ type: "income", item: item }); });
+  state.expenses.forEach(function (item) { if (!item.moneyAccountId) rows.push({ type: "expense", item: item }); });
+  state.investments.forEach(function (item) { if (!item.sourceMoneyAccountId || !item.targetMoneyAccountId) rows.push({ type: "investment", item: item }); });
+  state.transfers.forEach(function (item) { if (!item.fromMoneyAccountId || !item.toMoneyAccountId) rows.push({ type: "transfer", item: item }); });
+  return rows.sort(function (a, b) { return String(b.item.date).localeCompare(String(a.item.date)); });
+}
+function renderUnlinkedMoneyRecords() {
+  if (!byId("unlinkedMoneyList")) return;
+  var rows = unlinkedMoneyRecords(), visible = rows.slice(0, 100), active = (state.moneyAccounts || []).filter(function (item) { return !item.archived; });
+  byId("unlinkedMoneySummary").innerHTML = pill("待补流水", rows.length + " 条") + (rows.length > visible.length ? pill("当前显示", visible.length + " 条") : "");
+  if (!active.length) { byId("unlinkedMoneyList").innerHTML = empty("需要先建立实际账户。", "建立银行卡、支付账户或投资平台后，再回来补齐历史流水。", "", "🏦"); return; }
+  byId("unlinkedMoneyList").innerHTML = visible.length ? visible.map(function (row) {
+    var item = row.item, title = row.type === "income" ? "收入 · " + item.source : (row.type === "expense" ? "支出 · " + item.category : (row.type === "investment" ? item.type + " · " + (item.product || accountName(item.accountId)) : "账户转账"));
+    var selects = "";
+    if (row.type === "income" || row.type === "expense") selects = "<div class=\"field\"><label>实际账户</label><select id=\"repair-" + row.type + "-" + esc(item.id) + "\">" + moneyAccountOptions("", true) + "</select></div>";
+    if (row.type === "investment") selects = "<div class=\"field\"><label>转出账户</label><select id=\"repair-investment-from-" + esc(item.id) + "\">" + moneyAccountOptions(item.sourceMoneyAccountId || "", true) + "</select></div><div class=\"field\"><label>转入账户</label><select id=\"repair-investment-to-" + esc(item.id) + "\">" + moneyAccountOptions(item.targetMoneyAccountId || "", true) + "</select></div>";
+    if (row.type === "transfer") selects = "<div class=\"field\"><label>转出账户</label><select id=\"repair-transfer-from-" + esc(item.id) + "\">" + moneyAccountOptions(item.fromMoneyAccountId || "", true) + "</select></div><div class=\"field\"><label>转入账户</label><select id=\"repair-transfer-to-" + esc(item.id) + "\">" + moneyAccountOptions(item.toMoneyAccountId || "", true) + "</select></div>";
+    return "<div class=\"record-card repair-card\"><div class=\"row-title\"><span>" + esc(title) + "</span><span class=\"badge warning\">待补账户</span></div><div class=\"row-amount\">" + money(item.amount) + "</div>" + meta(["日期：" + item.date, "备注：" + (item.note || "无")]) + "<div class=\"form-grid repair-grid\">" + selects + "</div><div class=\"row-actions\"><button class=\"btn small primary\" data-action=\"link-money-account\" data-type=\"" + row.type + "\" data-id=\"" + esc(item.id) + "\">保存关联</button></div></div>";
+  }).join("") : empty("历史流水都已补齐实际账户。", "以后新增流水会在已建立真实账户时强制选择。", "", "✓");
 }
 function renderAllocations() {
   if (!byId("allocationList")) return;

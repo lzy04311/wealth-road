@@ -46,6 +46,7 @@ function openQuickEntry(type) {
 function bindQuickModalSubmit() {
   byId("quickFormIncome").addEventListener("submit", function (e) {
     e.preventDefault();
+    if (!ensureMoneyAccountsSelected(["quickIncomeMoneyAccount"], "请选择收入实际到账的账户")) return;
     if (!upsert(state.incomes, {
       id: uid(),
       date: byId("quickIncomeDate").value,
@@ -61,6 +62,7 @@ function bindQuickModalSubmit() {
   });
   byId("quickFormExpense").addEventListener("submit", function (e) {
     e.preventDefault();
+    if (!ensureMoneyAccountsSelected(["quickExpenseMoneyAccount"], "请选择支出实际扣款的账户")) return;
     if (!upsert(state.expenses, {
       id: uid(),
       date: byId("quickExpenseDate").value,
@@ -77,7 +79,7 @@ function bindQuickModalSubmit() {
   });
   byId("quickFormInvestment").addEventListener("submit", function (e) {
     e.preventDefault();
-    if (byId("quickInvestmentSourceMoneyAccount").value && byId("quickInvestmentSourceMoneyAccount").value === byId("quickInvestmentTargetMoneyAccount").value) { notify("转出账户不能和转入账户相同"); return; }
+    if (!ensureMoneyAccountsSelected(["quickInvestmentSourceMoneyAccount", "quickInvestmentTargetMoneyAccount"], "请选择投资的转出账户和转入账户")) return;
     if (!upsert(state.investments, {
       id: uid(),
       date: byId("quickInvestmentDate").value,

@@ -18,7 +18,7 @@ function fundPoolOptions(selected, allowPending, filterFn) {
   return html;
 }
 function moneyAccountOptions(selected, allowEmpty) {
-  var html = allowEmpty ? "<option value=\"\">未指定实际账户</option>" : "";
+  var html = allowEmpty ? "<option value=\"\">" + (hasMoneyAccounts() ? "请选择实际账户" : "尚未建立实际账户") + "</option>" : "";
   html += (state.moneyAccounts || []).filter(function (item) { return !item.archived || item.id === selected; }).map(function (item) { return "<option value=\"" + esc(item.id) + "\"" + (item.id === selected ? " selected" : "") + ">" + esc(item.name) + " · " + esc(item.type) + "</option>"; }).join("");
   return html;
 }
@@ -39,7 +39,9 @@ function syncSelects() {
   byId("investmentAccount").innerHTML = fundPoolOptions(selectedInvestmentAccount, false, function (acc) { return acc.includeAsset || acc.id === selectedInvestmentAccount; });
   byId("snapshotAccount").innerHTML = accountOptions(selectedSnapshotAccount, function (acc) { return acc.includeAsset || acc.id === selectedSnapshotAccount; });
   ["incomeMoneyAccount", "expenseMoneyAccount", "investmentSourceMoneyAccount", "investmentTargetMoneyAccount", "quickIncomeMoneyAccount", "quickExpenseMoneyAccount", "quickInvestmentSourceMoneyAccount", "quickInvestmentTargetMoneyAccount"].forEach(function (id) { var el = byId(id); if (el) el.innerHTML = moneyAccountOptions(el.value, true); });
+  ["incomeMoneyAccount", "expenseMoneyAccount", "investmentSourceMoneyAccount", "investmentTargetMoneyAccount", "quickIncomeMoneyAccount", "quickExpenseMoneyAccount", "quickInvestmentSourceMoneyAccount", "quickInvestmentTargetMoneyAccount"].forEach(function (id) { var el = byId(id); if (el) el.required = hasMoneyAccounts(); });
   ["transferFromAccount", "transferToAccount"].forEach(function (id) { var el = byId(id); if (el) el.innerHTML = moneyAccountOptions(el.value, false); });
+  if (byId("reconciliationMoneyAccount")) byId("reconciliationMoneyAccount").innerHTML = moneyAccountOptions(byId("reconciliationMoneyAccount").value, true);
   if (byId("allocationFromAccount")) byId("allocationFromAccount").innerHTML = fundPoolOptions(byId("allocationFromAccount").value, true);
   if (byId("allocationToAccount")) byId("allocationToAccount").innerHTML = fundPoolOptions(byId("allocationToAccount").value, false);
   syncAccountSelect("assetItemLinkedAccount", null, "不关联账户", function (acc) { return acc.includeAsset; });

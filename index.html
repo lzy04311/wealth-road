@@ -6,13 +6,13 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="theme-color" content="#C9A66B">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="财富中枢">
+  <meta name="apple-mobile-web-app-title" content="财记">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>财富自由之路</title>
+  <title>财记</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=20">
 </head>
 <body>
   <div class="app">
@@ -27,7 +27,7 @@
         </div>
       </div>
       <div class="brand-title">
-        <h1>财富自由之路</h1>
+        <h1>财记</h1>
       </div>
       <div class="month-picker">
         <div class="header-quick-actions" aria-label="快捷记录">
@@ -72,7 +72,7 @@
             <div class="field"><label>日期</label><input type="date" id="quickInvestmentDate" required></div>
             <div class="field"><label>投资策略</label><select id="quickInvestmentAccount" required></select></div>
             <div class="field"><label>转出账户</label><select id="quickInvestmentSourceMoneyAccount"></select></div>
-            <div class="field"><label>转入账户</label><select id="quickInvestmentTargetMoneyAccount"></select><small>投入时银行卡 → 投资平台；转出时反向选择</small></div>
+            <div class="field"><label>转入账户</label><select id="quickInvestmentTargetMoneyAccount"></select><small>投入时银行卡 → 投资平台；转出时反向选择；同平台交易可选择同一账户</small></div>
             <div class="field"><label>类型</label><select id="quickInvestmentType" required></select></div>
             <div class="field"><label>金额</label><input type="number" id="quickInvestmentAmount" min="0.01" step="0.01" required></div>
             <div class="field"><label>产品名称</label><input type="text" id="quickInvestmentProduct" placeholder="可选"></div>
@@ -102,13 +102,13 @@
 
     <main>
       <section id="dashboard" class="view active">
-        <section id="dashboardCockpit" class="dashboard-cockpit-page" aria-label="财富中枢驾驶舱">
+        <section id="dashboardCockpit" class="dashboard-cockpit-page" aria-label="财记驾驶舱">
           <header class="dashboard-topbar">
             <div class="dashboard-brand">
               <div class="dashboard-brand-mark">财</div>
               <div>
-                <h2>财富中枢</h2>
-                <p>财富自由之路</p>
+                <h2>财记</h2>
+                <p>本地优先资金管理</p>
               </div>
             </div>
             <div id="dashboardStatusBar" class="dashboard-status-bar"></div>
@@ -198,8 +198,8 @@
                     <circle cx="408" cy="398" r="1.2" />
                   </g>
                 </svg>
-                <div class="compass-core" aria-label="财富中枢">
-                  <span class="core-kicker">财富中枢</span>
+                <div class="compass-core" aria-label="财记">
+                  <span class="core-kicker">财记</span>
                   <strong>财</strong>
                   <span id="compassCoreStatus">正在同步资金状态</span>
                 </div>
@@ -236,13 +236,12 @@
 
       <section id="assets" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>资产舱</span>
             <h2>资产库</h2>
             <p>管理现金、投资、设备、订阅和软件资产</p>
           </div>
-          <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
         </header>
         <div class="page-toolbar asset-page-head subpage-context-bar">
           <div>
@@ -257,6 +256,7 @@
               <h2>资产清单</h2>
               <p id="assetInventorySummary"></p>
             </div>
+            <button class="btn primary small" type="button" data-open-form="assetItem">＋ 添加资产</button>
           </div>
           <div id="assetKindTabs" class="asset-kind-tabs"></div>
           <div class="card collapsible-form" id="assetItemFormCard">
@@ -311,13 +311,12 @@
 
       <section id="flow" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>现金流舱</span>
             <h2>流水</h2>
             <p>收入、支出、投资流水和本月预算节奏</p>
           </div>
-          <button class="btn primary small" type="button" id="flowAddRecordTop">＋ 添加</button>
         </header>
         <!-- Top bar: horizontal summary -->
         <section class="flow-topbar">
@@ -345,6 +344,7 @@
                 <button class="flow-tab" data-flow-tab="expense">支出</button>
                 <button class="flow-tab" data-flow-tab="investment">投资</button>
               </div>
+              <button class="btn primary small" type="button" id="flowAddRecord">＋ 添加记录</button>
             </div>
             <div class="flow-record-tools" aria-label="流水筛选">
               <div class="flow-month-nav">
@@ -485,13 +485,12 @@
 
       <section id="investments" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>投资舱</span>
             <h2>投资</h2>
             <p>持仓账户、净值更新、收益率和投资流水</p>
           </div>
-          <button class="btn primary small" type="button" data-open-form="snapshot">更新净值</button>
         </header>
         <!-- Layer 1: Cockpit -->
         <section class="invest-topbar">
@@ -522,6 +521,7 @@
             <div class="subpage-inspector-head"><span>净值状态</span><strong>投资维护</strong></div>
             <div class="invest-actions">
               <span id="investActionsHint">定期更新净值，追踪投资真实表现</span>
+              <button class="btn primary small" type="button" data-open-form="snapshot">更新净值</button>
               <button class="btn ghost small invest-history-btn" type="button" data-action="open-snapshot-records">查看更新记录</button>
             </div>
             <div class="invest-right-stats" id="investRightStats"></div>
@@ -543,7 +543,7 @@
                 <div class="field"><label>日期</label><input type="date" id="investmentDate" required></div>
                 <div class="field"><label>投资策略</label><select id="investmentAccount" required></select></div>
                 <div class="field"><label>转出账户</label><select id="investmentSourceMoneyAccount"></select></div>
-                <div class="field"><label>转入账户</label><select id="investmentTargetMoneyAccount"></select><small>投入时银行卡 → 投资平台；转出时反向选择</small></div>
+                <div class="field"><label>转入账户</label><select id="investmentTargetMoneyAccount"></select><small>投入时银行卡 → 投资平台；转出时反向选择；同平台交易可选择同一账户</small></div>
                 <div class="field"><label>类型</label><select id="investmentType" required></select></div>
                 <div class="field"><label>金额</label><input type="number" id="investmentAmount" min="0.01" step="0.01" required></div>
                 <div class="field"><label>产品名称</label><input type="text" id="investmentProduct" placeholder="可选"></div>
@@ -614,13 +614,12 @@
 
       <section id="accounts" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>资金地图</span>
             <h2>账户与分配</h2>
             <p>分别查看钱在哪里，以及这些钱准备做什么</p>
           </div>
-          <button class="btn primary small" type="button" data-open-form="moneyAccount">＋ 实际账户</button>
         </header>
         <section class="invest-records finance-secondary-section">
           <div class="invest-records-head">
@@ -629,7 +628,7 @@
           </div>
           <div class="module-summary" id="moneyAccountSummary"></div>
           <div class="card collapsible-form" id="moneyAccountFormCard">
-            <div class="section-title compact"><div><h2 id="moneyAccountFormTitle">新增实际账户</h2><p>录入开始使用系统当天可以核对的真实余额</p></div></div>
+            <div class="section-title compact"><div><h2 id="moneyAccountFormTitle">新增实际账户</h2><p>期初余额填写开始记账前的余额；期初日期当天及之后的流水会继续增减</p></div></div>
             <form id="moneyAccountForm">
               <input type="hidden" id="moneyAccountId">
               <div class="form-grid">
@@ -643,6 +642,29 @@
             </form>
           </div>
           <div class="account-grid" id="moneyAccountList"></div>
+          <div class="invest-records-head finance-inline-head">
+            <div><h2>余额核对</h2><p class="subtitle">以银行或平台显示的余额为准，差额会记录为可追溯调整，不修改期初余额</p></div>
+            <button class="btn ghost small" type="button" data-open-form="reconciliation">＋ 核对余额</button>
+          </div>
+          <div class="card collapsible-form" id="reconciliationFormCard">
+            <div class="section-title compact"><div><h2 id="reconciliationFormTitle">新增余额核对</h2><p>系统会保存核对前账面余额、实际余额和调整差额</p></div></div>
+            <form id="reconciliationForm">
+              <input type="hidden" id="reconciliationId">
+              <div class="form-grid">
+                <div class="field"><label>核对日期</label><input type="date" id="reconciliationDate" required></div>
+                <div class="field"><label>实际账户</label><select id="reconciliationMoneyAccount" required></select></div>
+                <div class="field"><label>实际余额</label><input type="number" id="reconciliationActualBalance" step="0.01" required></div>
+                <div class="field wide"><label>备注</label><input type="text" id="reconciliationNote" placeholder="例如：银行余额核对、手续费补记"></div>
+              </div>
+              <div class="actions"><button class="btn primary" type="submit">保存核对</button><button class="btn ghost" type="button" id="cancelReconciliationEdit">取消</button></div>
+            </form>
+          </div>
+          <div class="card-grid" id="reconciliationList"></div>
+          <div class="invest-records-head finance-inline-head">
+            <div><h2>历史流水待补账户</h2><p class="subtitle">只列出尚未关联真实账户的旧流水；由你确认，不自动猜测</p></div>
+          </div>
+          <div class="module-summary" id="unlinkedMoneySummary"></div>
+          <div class="card-grid" id="unlinkedMoneyList"></div>
         </section>
         <section class="invest-records finance-secondary-section">
           <div class="invest-records-head">
@@ -699,16 +721,16 @@
 
       <section id="goals" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>目标舱</span>
             <h2>目标</h2>
             <p>查看阶段目标、完成比例和剩余差额</p>
           </div>
-          <button class="btn ghost small" type="button" data-action="open-view" data-view="accounts">去资金分配</button>
         </header>
         <div class="goal-page-intro">
           <div><span class="context-label">目标路线</span><h2>阶段目标进度</h2><p>给账户设置目标金额后，这里会显示完成百分比和剩余差额</p></div>
+          <button class="btn ghost small" type="button" data-action="open-view" data-view="accounts">管理目标设置</button>
         </div>
         <div class="account-grid" id="goalList"></div>
       </section>
@@ -719,13 +741,12 @@
 
       <section id="data" class="view">
         <header class="module-page-header">
-          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财富中枢">‹</button>
+          <button class="module-back-btn" type="button" data-action="back-home" aria-label="返回财记首页">‹</button>
           <div>
             <span>安全舱</span>
             <h2>本地数据安全中心</h2>
             <p>导入、导出、备份和异常数据处理</p>
           </div>
-          <button class="btn primary small" type="button" id="exportDataTop">导出备份</button>
         </header>
         <div class="card data-center-head data-health-hero">
           <span class="context-label">数据健康</span>
@@ -775,36 +796,37 @@
       </section>
     </main>
 
-    <footer>通用个人资金管理网页 App · 本地版</footer>
+    <footer>财记 · 本地优先版</footer>
   </div>
+  <div id="formDrawerBackdrop" class="form-drawer-backdrop" data-action="close-form-drawer" aria-hidden="true"></div>
   <div id="actionFeedback" class="action-feedback" role="status" aria-live="polite" aria-hidden="true">
     <span id="actionFeedbackText"></span>
     <button id="actionFeedbackButton" type="button">撤销</button>
     <button class="action-feedback-close" type="button" data-action="dismiss-feedback" aria-label="关闭提示">×</button>
   </div>
-  <script defer src="scripts/app-state.js?v=18"></script>
-  <script defer src="scripts/app-validators.js?v=18"></script>
-  <script defer src="scripts/app-migrations.js?v=18"></script>
-  <script defer src="scripts/app-storage.js?v=18"></script>
-  <script defer src="scripts/app-backend-config.js?v=18"></script>
-  <script defer src="scripts/app-calculations.js?v=18"></script>
-  <script defer src="scripts/app-render-core.js?v=18"></script>
-  <script defer src="scripts/dashboard/dashboard-formatters.js?v=18"></script>
-  <script defer src="scripts/dashboard/render-bottom-strip.js?v=18"></script>
-  <script defer src="scripts/app-render-dashboard.js?v=18"></script>
-  <script defer src="scripts/app-render-assets.js?v=18"></script>
-  <script defer src="scripts/app-render-records.js?v=18"></script>
-  <script defer src="scripts/app-render-investments.js?v=18"></script>
-  <script defer src="scripts/app-render-monthly.js?v=18"></script>
-  <script defer src="scripts/app-render-flow.js?v=18"></script>
-  <script defer src="scripts/app-actions-data.js?v=18"></script>
-  <script defer src="scripts/app-actions-crud.js?v=18"></script>
-  <script defer src="scripts/app-actions-quick-entry.js?v=18"></script>
-  <script defer src="scripts/app-actions-modals.js?v=18"></script>
-  <script defer src="scripts/app-auth.js?v=18"></script>
-  <script defer src="scripts/app-sync.js?v=18"></script>
-  <script defer src="scripts/app-actions-navigation.js?v=18"></script>
-  <script defer src="scripts/app-actions.js?v=18"></script>
-  <script defer src="scripts/app-pwa.js?v=18"></script>
+  <script defer src="scripts/app-state.js?v=20"></script>
+  <script defer src="scripts/app-validators.js?v=20"></script>
+  <script defer src="scripts/app-migrations.js?v=20"></script>
+  <script defer src="scripts/app-storage.js?v=20"></script>
+  <script defer src="scripts/app-backend-config.js?v=20"></script>
+  <script defer src="scripts/app-calculations.js?v=20"></script>
+  <script defer src="scripts/app-render-core.js?v=20"></script>
+  <script defer src="scripts/dashboard/dashboard-formatters.js?v=20"></script>
+  <script defer src="scripts/dashboard/render-bottom-strip.js?v=20"></script>
+  <script defer src="scripts/app-render-dashboard.js?v=20"></script>
+  <script defer src="scripts/app-render-assets.js?v=20"></script>
+  <script defer src="scripts/app-render-records.js?v=20"></script>
+  <script defer src="scripts/app-render-investments.js?v=20"></script>
+  <script defer src="scripts/app-render-monthly.js?v=20"></script>
+  <script defer src="scripts/app-render-flow.js?v=20"></script>
+  <script defer src="scripts/app-actions-data.js?v=20"></script>
+  <script defer src="scripts/app-actions-crud.js?v=20"></script>
+  <script defer src="scripts/app-actions-quick-entry.js?v=20"></script>
+  <script defer src="scripts/app-actions-modals.js?v=20"></script>
+  <script defer src="scripts/app-auth.js?v=20"></script>
+  <script defer src="scripts/app-sync.js?v=20"></script>
+  <script defer src="scripts/app-actions-navigation.js?v=20"></script>
+  <script defer src="scripts/app-actions.js?v=20"></script>
+  <script defer src="scripts/app-pwa.js?v=20"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-var CURRENT_SCHEMA_VERSION = 4;
+var CURRENT_SCHEMA_VERSION = 5;
 var incomeSources = ["工资", "奖金", "副业", "其他"];
 var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储蓄", "应急金", "自由支配", "其他"];
 var moneyAccountTypes = ["银行卡", "支付账户", "现金", "投资账户", "其他"];
@@ -125,6 +125,7 @@ function safeOptionalDate(value) {
 }
 function safeMonth(value, fallbackDate) { var text = String(value || ""); return /^\d{4}-(0[1-9]|1[0-2])$/.test(text) ? text : monthOf(fallbackDate || today()); }
 function safeAmount(value) { return Math.max(0, Math.min(999999999, numberValue(value))); }
+function safeSignedAmount(value) { return Math.max(-999999999, Math.min(999999999, numberValue(value))); }
 function safePercent(value) { return Math.max(0, Math.min(100, numberValue(value))); }
 function safeEnum(value, list, fallback) { return list.indexOf(value) >= 0 ? value : fallback; }
 function ensureId(item) { if (!item || typeof item !== "object") return item; item.id = safeId(item.id); return item; }
@@ -139,6 +140,7 @@ function normalizeState(data) {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     accounts: accounts,
     moneyAccounts: Array.isArray(base.moneyAccounts) ? base.moneyAccounts.map(function (item) { return normalizeMoneyAccount(item, moneyIdMap); }) : [],
+    reconciliations: Array.isArray(base.reconciliations) ? base.reconciliations.map(function (item) { return normalizeReconciliation(item, moneyIdMap); }) : [],
     allocations: Array.isArray(base.allocations) ? base.allocations.map(function (item) { return normalizeAllocation(item, idMap); }) : [],
     incomes: Array.isArray(base.incomes) ? base.incomes.map(function (item) { return normalizeIncome(item, idMap, moneyIdMap); }) : [],
     expenses: Array.isArray(base.expenses) ? base.expenses.map(function (item) { return normalizeExpense(item, idMap, moneyIdMap); }) : [],
@@ -165,6 +167,11 @@ function normalizeMoneyAccount(item, idMap) {
     archived: !!item.archived,
     note: cleanText(item.note, MAX_NOTE_LENGTH)
   };
+}
+function normalizeReconciliation(item, moneyIdMap) {
+  item = item && typeof item === "object" ? item : {};
+  var date = safeDate(item.date);
+  return { id: safeId(item.id), date: date, month: monthOf(date), moneyAccountId: normalizeAccountId(item.moneyAccountId, moneyIdMap || {}), bookBalance: safeSignedAmount(item.bookBalance), actualBalance: safeSignedAmount(item.actualBalance), adjustment: safeSignedAmount(item.adjustment), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
 function normalizeAccount(account, idMap) {
   account = account && typeof account === "object" ? account : {};
