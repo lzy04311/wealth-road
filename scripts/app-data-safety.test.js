@@ -148,6 +148,8 @@ test("valid v1 backup migrates to current schema and adds financial collections"
   assert.ok(Array.isArray(result.state.assetItems));
   assert.ok(Array.isArray(result.state.transfers));
   assert.ok(Array.isArray(result.state.liabilities));
+  assert.ok(Array.isArray(result.state.moneyAccounts));
+  assert.ok(Array.isArray(result.state.allocations));
   assert.strictEqual(result.state.assetItems.length, 0);
 });
 
@@ -156,6 +158,8 @@ test("valid v2 backup migrates to current schema", function () {
   var result = context.prepareImportedState(validV2Backup());
   assert.strictEqual(result.ok, true, (result.errors || []).join(", "));
   assert.strictEqual(result.state.schemaVersion, context.CURRENT_SCHEMA_VERSION);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(result.state.moneyAccounts)), []);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(result.state.allocations)), []);
 });
 
 test("migrateState does not silently accept unknown future versions", function () {
@@ -168,7 +172,7 @@ test("migrateState does not silently accept unknown future versions", function (
 test("normalizeState always returns core array fields", function () {
   var context = createContext();
   var normalized = context.normalizeState({});
-  ["accounts", "incomes", "expenses", "investments", "transfers", "snapshots", "assetItems", "liabilities"].forEach(function (key) {
+  ["accounts", "moneyAccounts", "allocations", "incomes", "expenses", "investments", "transfers", "snapshots", "assetItems", "liabilities"].forEach(function (key) {
     assert.ok(Array.isArray(normalized[key]), key + " should be an array");
   });
 });
@@ -354,6 +358,43 @@ test("income allocation and funded investment conserve owned cash", function () 
   assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-05"), 600);
   assert.strictEqual(context.accountBalance(context.state.accounts[1], "2026-05"), 400);
   assert.strictEqual(context.wealthSummary("2026-05").accountAssets, 1000);
+});
+
+test("real accounts and fund pools stay as separate balanced dimensions", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState({
+    accounts: [
+      { id: "daily", name: "日常开支", type: "生活消费", includeExpense: true, includeAsset: false, valuationMethod: "流水余额" },
+      { id: "emergency", name: "应急金", type: "应急金", includeExpense: false, includeAsset: true, valuationMethod: "流水余额" },
+      { id: "long", name: "长期投资", type: "长期投资", includeExpense: false, includeAsset: true, valuationMethod: "净值快照" }
+    ],
+    moneyAccounts: [
+      { id: "bank", name: "招商工资卡", type: "银行卡", openingBalance: 10000, openingBalanceDate: "2026-08-01" },
+      { id: "wallet", name: "支付宝", type: "支付账户", openingBalance: 1000, openingBalanceDate: "2026-08-01" },
+      { id: "broker", name: "证券账户", type: "投资账户", openingBalance: 0, openingBalanceDate: "2026-08-01" }
+    ],
+    incomes: [{ id: "salary", date: "2026-08-02", moneyAccountId: "bank", accountId: "", source: "工资", amount: 10000 }],
+    expenses: [{ id: "lunch", date: "2026-08-03", moneyAccountId: "wallet", accountId: "daily", category: "餐饮", amount: 36 }],
+    investments: [
+      { id: "fund", date: "2026-08-04", sourceMoneyAccountId: "bank", targetMoneyAccountId: "broker", accountId: "long", type: "投资", amount: 2000 },
+      { id: "redeem", date: "2026-08-06", sourceMoneyAccountId: "broker", targetMoneyAccountId: "bank", accountId: "long", type: "转出", amount: 500 }
+    ],
+    transfers: [{ id: "move", date: "2026-08-05", fromMoneyAccountId: "bank", toMoneyAccountId: "wallet", amount: 1000 }],
+    allocations: [
+      { id: "daily-plan", date: "2026-08-02", fromAccountId: "", toAccountId: "daily", amount: 1000 },
+      { id: "safe-plan", date: "2026-08-02", fromAccountId: "", toAccountId: "emergency", amount: 3000 }
+    ],
+    snapshots: [{ id: "broker-value", date: "2026-08-15", accountId: "long", marketValue: 1700, principal: 1500 }]
+  });
+  assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[0], "2026-08"), 17500);
+  assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[1], "2026-08"), 1964);
+  assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[2], "2026-08"), 1500);
+  assert.strictEqual(context.moneyAccountsTotal("2026-08"), 20964);
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-08"), 964);
+  assert.strictEqual(context.accountBalance(context.state.accounts[1], "2026-08"), 3000);
+  assert.strictEqual(context.accountBalance(context.state.accounts[2], "2026-08"), 1500);
+  assert.strictEqual(context.unallocatedCashSummary("2026-08").value, 15500);
+  assert.strictEqual(context.wealthSummary("2026-08").financialAssets, 21164);
 });
 
 test("expense category does not reduce an asset account without a payment account", function () {

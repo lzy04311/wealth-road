@@ -5,7 +5,9 @@ var backendSyncState = {
   status: "local-only",
   error: "",
   unresolvedConflict: false,
-  pendingCloudState: null
+  pendingCloudState: null,
+  pendingCloudPush: false,
+  cloudPushScheduled: false
 };
 
 function isoTimeValue(value) {
@@ -89,16 +91,22 @@ async function pushLocalStateToCloud(options) {
     setBackendSyncStatus("conflict");
     return false;
   }
+  if (backendSyncState.busy) {
+    backendSyncState.pendingCloudPush = true;
+    return false;
+  }
+  backendSyncState.pendingCloudPush = false;
   backendSyncState.busy = true;
   renderBackendSyncStatus();
   try {
     var updatedAt = new Date().toISOString();
+    var stateSnapshot = JSON.parse(JSON.stringify(state));
     var result = await ctx.client
       .from(BACKEND_CONFIG.tableName)
       .upsert({
         user_id: ctx.user.id,
         schema_version: CURRENT_SCHEMA_VERSION,
-        state: state,
+        state: stateSnapshot,
         updated_at: updatedAt
       }, { onConflict: "user_id" })
       .select("updated_at")
@@ -116,6 +124,7 @@ async function pushLocalStateToCloud(options) {
   } finally {
     backendSyncState.busy = false;
     renderBackendSyncStatus();
+    if (backendSyncState.pendingCloudPush && !backendSyncState.unresolvedConflict) scheduleCloudPushAfterLocalSave();
   }
 }
 
@@ -198,10 +207,17 @@ async function pullCloudState(manual) {
 }
 
 function scheduleCloudPushAfterLocalSave() {
-  if (backendSyncState.busy || backendSyncState.unresolvedConflict) return;
+  if (backendSyncState.unresolvedConflict) return;
   var ctx = getSyncClientAndUser();
   if (!ctx) return;
-  setTimeout(function () { pushLocalStateToCloud(); }, 0);
+  backendSyncState.pendingCloudPush = true;
+  if (backendSyncState.busy || backendSyncState.cloudPushScheduled) return;
+  backendSyncState.cloudPushScheduled = true;
+  setTimeout(function () {
+    backendSyncState.cloudPushScheduled = false;
+    if (!backendSyncState.pendingCloudPush || backendSyncState.busy || backendSyncState.unresolvedConflict) return;
+    pushLocalStateToCloud();
+  }, 0);
 }
 
 function syncOnAuthReady() {

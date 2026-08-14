@@ -1,25 +1,26 @@
 ﻿function recordList(records, type) {
   if (!records.length) {
+    if (arguments[2]) return empty("没有找到匹配记录。", "换一个金额、类别、账户或备注关键词试试。", "", "⌕");
     if (type === "income") return empty("这个月还没有记录收入。", "先记下第一笔收入，让系统知道这个月的起点。", "", "🪙");
     if (type === "expense") return empty("这个月还没有花销记录。", "还没有支出记录，这个月的边界还很干净。", "", "🧺");
     return empty("这个月还没有投资记录。", "还没有投资记录，给未来自己的第一笔钱可以从这里开始。", "", "📈");
   }
   return records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
     var title = "", details = "", amountClass = "";
-    if (type === "income") { title = item.source; details = meta(["到账：" + accountName(item.accountId), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "positive"; }
-    else if (type === "expense") { title = accountName(item.accountId); details = meta(["付款：" + accountName(item.sourceAccountId), "类别：" + item.category, "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "negative"; }
-    else { title = accountName(item.accountId); details = meta(["付款：" + accountName(item.sourceAccountId), "类型：" + item.type, "产品：" + (item.product || "无"), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = item.type === "转出" ? "negative" : "positive"; }
-    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(title) + "</span><span class=\"badge\">" + esc(type === "income" ? "收入" : (type === "expense" ? item.category : item.type)) + "</span></div><div class=\"row-amount " + amountClass + "\">" + (type === "expense" || item.type === "转出" ? "-" : "+") + money(item.amount) + "</div>" + details + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+    if (type === "income") { title = item.source; details = meta(["到账账户：" + moneyAccountName(item.moneyAccountId), "收入归属：" + fundingAccountName(item.accountId), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "positive"; }
+    else if (type === "expense") { title = accountName(item.accountId); details = meta(["付款账户：" + (item.moneyAccountId ? moneyAccountName(item.moneyAccountId) : fundingAccountName(item.sourceAccountId)), "资金池：" + accountName(item.accountId), "类别：" + item.category, "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "negative"; }
+    else { title = accountName(item.accountId); details = meta(["付款账户：" + (item.sourceMoneyAccountId ? moneyAccountName(item.sourceMoneyAccountId) : fundingAccountName(item.sourceAccountId)), "投资账户：" + moneyAccountName(item.targetMoneyAccountId), "投资策略：" + accountName(item.accountId), "类型：" + item.type, "产品：" + (item.product || "无"), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = item.type === "转出" ? "negative" : "positive"; }
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(title) + "</span><span class=\"badge\">" + esc(type === "income" ? "收入" : (type === "expense" ? item.category : item.type)) + "</span></div><div class=\"row-amount " + amountClass + "\">" + (type === "expense" || item.type === "转出" ? "-" : "+") + money(item.amount) + "</div>" + details + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"duplicate\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">再记一笔</button><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
   }).join("");
 }
 function renderMonthlyPlanForm() { var month = currentMonth(), plan = monthlyPlan(month); byId("planMonth").value = month; byId("plannedIncome").value = plan.hasPlannedIncome ? plan.plannedIncome : ""; byId("plannedPayday").value = plan.payday || 15; }
 function renderIncome() {
-  var month = currentMonth(), records = state.incomes.filter(function (item) { return item.month === month; }), total = sum(records, function (item) { return item.amount; }), plan = monthlyPlan(month);
+  var month = currentMonth(), allRecords = state.incomes.filter(function (item) { return item.month === month; }), records = filterFlowRecords(allRecords, "income"), total = sum(records, function (item) { return item.amount; }), monthTotal = sum(allRecords, function (item) { return item.amount; }), plan = monthlyPlan(month);
   renderMonthlyPlanForm();
-  byId("incomeModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("实际收入", money(total)) + pill("计划收入", plan.hasPlannedIncome ? money(plan.plannedIncome) : "未填写");
+  byId("incomeModuleSummary").innerHTML = pill("本月记录", allRecords.length + " 条") + pill("实际收入", money(monthTotal)) + pill("计划收入", plan.hasPlannedIncome ? money(plan.plannedIncome) : "未填写");
   if (!plan.hasPlannedIncome) byId("incomeModuleSummary").innerHTML += "<span class=\"summary-pill warning\">请先填写本月计划收入，系统才能计算预算金额。</span><span class=\"summary-pill\">去填写计划收入</span>";
-  byId("incomeSummary").textContent = month + " 共 " + records.length + " 条，合计 " + money(total);
-  byId("incomeList").innerHTML = recordList(records, "income");
+  byId("incomeSummary").textContent = flowRecordSummary(allRecords, records, total, "合计");
+  byId("incomeList").innerHTML = recordList(records, "income", !!flowRecordSearch);
 
   var year = month.slice(0, 4), months = Array.from({ length: 12 }, function (_, i) { return i + 1; });
   var rows = months.map(function (m) {
@@ -51,9 +52,11 @@ function renderIncome() {
     + "</div></div>";
 }
 function renderAccounts() {
+  renderMoneyAccounts();
+  renderAllocations();
   var status = budgetPercentMessage(), month = currentMonth(), plan = monthlyPlan(month), budgetTotal = plan.hasPlannedIncome ? sum(state.accounts, function (item) { return item.includeExpense && !item.archived ? accountBudgetAmount(item, month) : 0; }) : null;
   if (byId("budgetPercentSummary")) { byId("budgetPercentSummary").textContent = status.text; byId("budgetPercentSummary").className = "notice " + status.className; }
-  if (byId("accountModuleSummary")) byId("accountModuleSummary").innerHTML = pill("账户数量", state.accounts.filter(function (a) { return !a.archived; }).length + " 个") + pill("分配比例", totalBudgetPercent().toFixed(1) + "%") + pill("消费预算", budgetTotal == null ? "待填写计划收入" : money(budgetTotal));
+  if (byId("accountModuleSummary")) byId("accountModuleSummary").innerHTML = pill("资金池", state.accounts.filter(function (a) { return !a.archived; }).length + " 个") + pill("计划比例", totalBudgetPercent().toFixed(1) + "%") + pill("消费预算", budgetTotal == null ? "待填写计划收入" : money(budgetTotal));
 
   var displayAccounts = state.accounts.filter(function (account) { return !account.archived; });
   var idxEmergency = displayAccounts.findIndex(function (a) { return a.name === "应急金"; });
@@ -130,14 +133,32 @@ function renderAccounts() {
       + "</article>";
   }).join("") : empty("还没有账户。", "先建立几个资金账户，比如日常开支、应急金、娱乐消费。", "", "🧱");
 }
+function renderMoneyAccounts() {
+  if (!byId("moneyAccountList")) return;
+  var month = currentMonth(), active = (state.moneyAccounts || []).filter(function (item) { return !item.archived; });
+  var total = sum(active, function (item) { return moneyAccountBalance(item, month); });
+  byId("moneyAccountSummary").innerHTML = pill("实际账户", active.length + " 个") + pill("账面余额合计", money(total)) + (active.length ? "<span class=\"summary-pill warning\">总额以已录入账户为准；遗漏账户会使净资产偏低。</span>" : "<span class=\"summary-pill warning\">先添加银行卡、支付宝或现金账户，系统才会按真实位置计算金融资产。</span>");
+  byId("moneyAccountList").innerHTML = active.length ? active.map(function (item) {
+    var balance = moneyAccountBalance(item, month);
+    var count = state.incomes.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.expenses.filter(function (x) { return x.moneyAccountId === item.id; }).length + state.investments.filter(function (x) { return x.sourceMoneyAccountId === item.id || x.targetMoneyAccountId === item.id; }).length + state.transfers.filter(function (x) { return x.fromMoneyAccountId === item.id || x.toMoneyAccountId === item.id; }).length;
+    return "<article class=\"account-card role-account-card role-card-asset\"><div class=\"role-card-head\"><div class=\"role-title\"><div class=\"role-icon\">" + (item.type === "银行卡" ? "🏦" : (item.type === "支付账户" ? "📱" : (item.type === "投资账户" ? "📈" : "💵"))) + "</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.type) + "</p></div></div><span class=\"status-pill\">" + count + " 笔流水</span></div><div class=\"role-primary\"><span>账面余额</span><strong class=\"" + (balance >= 0 ? "positive" : "negative") + "\">" + money(balance) + "</strong></div><div class=\"role-metrics compact\"><div class=\"metric-item\"><span>期初余额</span><strong>" + money(item.openingBalance) + "</strong></div><div class=\"metric-item\"><span>期初日期</span><strong>" + esc(item.openingBalanceDate || "未填写") + "</strong></div></div><div class=\"role-tip\">" + esc(item.note || "这里记录钱实际存放的位置") + "</div><div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"moneyAccount\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"moneyAccount\" data-id=\"" + esc(item.id) + "\">删除</button></div></article>";
+  }).join("") : empty("还没有实际资金账户。", "先录入银行卡、支付宝、现金或投资平台，以及开始记账当天的余额。", "", "🏦");
+}
+function renderAllocations() {
+  if (!byId("allocationList")) return;
+  var records = (state.allocations || []).filter(function (item) { return item.month === currentMonth(); }).slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); });
+  byId("allocationList").innerHTML = records.length ? records.map(function (item) {
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(item.fromAccountId ? accountName(item.fromAccountId) : "待分配资金") + " → " + esc(accountName(item.toAccountId)) + "</span><span class=\"badge\">用途调整</span></div><div class=\"row-amount\">" + money(item.amount) + "</div>" + meta(["日期：" + item.date, "备注：" + (item.note || "无"), "不影响实际账户和净资产"]) + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"allocation\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"allocation\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+  }).join("") : empty("本月还没有调整资金用途。", "需要时可以把待分配资金转入应急金、备用现金等资金池。", "", "⇄");
+}
 function renderExpenses(ctx) {
-  var month = currentMonth(), records = state.expenses.filter(function (item) { return item.month === month; }), total = sum(records, function (item) { return item.amount; });
+  var month = currentMonth(), allRecords = state.expenses.filter(function (item) { return item.month === month; }), records = filterFlowRecords(allRecords, "expense"), total = sum(records, function (item) { return item.amount; }), monthTotal = sum(allRecords, function (item) { return item.amount; });
   var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var s = renderCtx.summary;
-  byId("expenseModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("支出合计", money(total)) + pill("预算状态", s.overBudget ? "已超支" : "正常");
+  byId("expenseModuleSummary").innerHTML = pill("本月记录", allRecords.length + " 条") + pill("支出合计", money(monthTotal)) + pill("预算状态", s.overBudget ? "已超支" : "正常");
   if (s.orphanExpenseCount > 0) byId("expenseModuleSummary").innerHTML += "<span class=\"summary-pill warning\">发现 " + s.orphanExpenseCount + " 条孤立支出（" + money(s.orphanExpenseTotal) + "），已计入总支出，需修复分类账户。</span>";
-  byId("expenseSummary").textContent = month + " 共 " + records.length + " 条，合计 " + money(total);
-  byId("expenseList").innerHTML = recordList(records, "expense");
+  byId("expenseSummary").textContent = flowRecordSummary(allRecords, records, total, "合计");
+  byId("expenseList").innerHTML = recordList(records, "expense", !!flowRecordSearch);
 
   var switchEl = byId("expenseViewSwitch");
   if (switchEl) switchEl.querySelectorAll("[data-view-mode]").forEach(function (btn) { btn.classList.toggle("active", btn.dataset.viewMode === expenseViewMode); });

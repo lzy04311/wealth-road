@@ -53,6 +53,7 @@ MockElement.prototype.click = function () {
   handlers.forEach(function (fn) { fn(); });
 };
 MockElement.prototype.reset = function () {};
+MockElement.prototype.scrollIntoView = function () {};
 
 function createContext() {
   var elements = {};
@@ -202,6 +203,107 @@ test("activateView switches between home and module page modes", function () {
   context.activateView("dashboard");
   assert.strictEqual(context.document.body.classList.contains("dashboard-home-mode"), true);
   assert.strictEqual(context.document.body.classList.contains("module-page-mode"), false);
+});
+
+test("month navigation clamps dates at shorter month end", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = "2026-03";
+  context.__elements.dashboardDate.value = "2026-03-31";
+  context.shiftCurrentMonth(-1);
+  assert.strictEqual(context.__elements.currentMonth.value, "2026-02");
+  assert.strictEqual(context.__elements.dashboardDate.value, "2026-02-28");
+});
+
+test("flow search matches account, category, note and amount", function () {
+  var context = createContext();
+  context.state = context.normalizeState({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", includeExpense: true }],
+    expenses: [
+      { id: "a", date: "2026-08-01", accountId: "daily", category: "餐饮", amount: 36, note: "午饭" },
+      { id: "b", date: "2026-08-02", accountId: "daily", category: "交通", amount: 18, note: "地铁" }
+    ]
+  });
+  context.flowRecordSearch = "午饭";
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(context.filterFlowRecords(context.state.expenses, "expense").map(function (item) { return item.id; }))), ["a"]);
+  context.flowRecordSearch = "18";
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(context.filterFlowRecords(context.state.expenses, "expense").map(function (item) { return item.id; }))), ["b"]);
+});
+
+test("unassigned funding account is presented as pending allocation", function () {
+  var context = createContext();
+  assert.strictEqual(context.fundingAccountName(""), "待分配资金");
+  assert.strictEqual(context.recordList([{ id: "i", date: "2026-08-13", source: "工资", amount: 123, note: "" }], "income").includes("收入归属：待分配资金"), true);
+  context.flowRecordSearch = "待分配";
+  assert.strictEqual(context.filterFlowRecords([{ id: "i", date: "2026-08-13", source: "工资", amount: 123, note: "" }], "income").length, 1);
+});
+
+test("deleted record can be restored from action feedback", function () {
+  var context = createContext();
+  context.setTimeout = function () { return 1; };
+  context.state.incomes = [{ id: "income-a", date: "2026-08-01", month: "2026-08", accountId: "", source: "工资", amount: 100, note: "" }];
+  context.removeRecordFinal("income", "income-a", "incomes");
+  assert.strictEqual(context.state.incomes.length, 0);
+  context.runActionFeedback();
+  assert.strictEqual(context.state.incomes.length, 1);
+  assert.strictEqual(context.state.incomes[0].id, "income-a");
+});
+
+test("failed undo save rolls the restored record back out of memory", function () {
+  var context = createContext();
+  var saveCalls = 0;
+  context.setTimeout = function () { return 1; };
+  context.save = function () { saveCalls += 1; return saveCalls === 1; };
+  context.state.incomes = [{ id: "income-a", date: "2026-08-01", month: "2026-08", accountId: "", source: "工资", amount: 100, note: "" }];
+  context.removeRecordFinal("income", "income-a", "incomes");
+  assert.strictEqual(context.state.incomes.length, 0);
+  context.runActionFeedback();
+  assert.strictEqual(context.state.incomes.length, 0);
+});
+
+test("a local save during cloud sync queues a snapshot of the latest state", function () {
+  var context = createContext();
+  var requests = [];
+  var resolvers = [];
+  context.setTimeout = function (fn) { fn(); return 1; };
+  context.getSyncClientAndUser = function () {
+    return {
+      user: { id: "user-a" },
+      client: {
+        from: function () {
+          return {
+            upsert: function (payload) {
+              requests.push(payload.state);
+              return {
+                select: function () {
+                  return {
+                    single: function () {
+                      return new Promise(function (resolve) { resolvers.push(resolve); });
+                    }
+                  };
+                }
+              };
+            }
+          };
+        }
+      }
+    };
+  };
+
+  context.state.rules = "first";
+  var firstPush = context.pushLocalStateToCloud();
+  assert.strictEqual(requests.length, 1);
+  context.state.rules = "second";
+  context.scheduleCloudPushAfterLocalSave();
+  assert.strictEqual(context.backendSyncState.pendingCloudPush, true);
+  assert.strictEqual(requests[0].rules, "first");
+
+  resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:00.000Z" }, error: null });
+  return firstPush.then(function () {
+    assert.strictEqual(requests.length, 2);
+    assert.strictEqual(requests[1].rules, "second");
+    resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:01.000Z" }, error: null });
+    return Promise.resolve();
+  });
 });
 
 test("backend auth stays local-only when Supabase client is unavailable", function () {

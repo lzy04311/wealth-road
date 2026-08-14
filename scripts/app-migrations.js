@@ -30,6 +30,25 @@ function v2ToV3(rawState) {
   next.schemaVersion = 3;
   return next;
 }
+function v3ToV4(rawState) {
+  var next = clonePlain(rawState);
+  next.moneyAccounts = Array.isArray(next.moneyAccounts) ? next.moneyAccounts : [];
+  next.allocations = Array.isArray(next.allocations) ? next.allocations : [];
+  next.incomes = (next.incomes || []).map(function (item) { item.moneyAccountId = item.moneyAccountId || ""; return item; });
+  next.expenses = (next.expenses || []).map(function (item) { item.moneyAccountId = item.moneyAccountId || ""; return item; });
+  next.investments = (next.investments || []).map(function (item) {
+    item.sourceMoneyAccountId = item.sourceMoneyAccountId || "";
+    item.targetMoneyAccountId = item.targetMoneyAccountId || "";
+    return item;
+  });
+  next.transfers = (next.transfers || []).map(function (item) {
+    item.fromMoneyAccountId = item.fromMoneyAccountId || "";
+    item.toMoneyAccountId = item.toMoneyAccountId || "";
+    return item;
+  });
+  next.schemaVersion = 4;
+  return next;
+}
 function migrateState(rawState) {
   var errors = validateImportData(rawState);
   if (errors.length) throw new Error(errors.join("\n"));
@@ -42,6 +61,10 @@ function migrateState(rawState) {
   if (version === 2) {
     next = v2ToV3(next);
     version = 3;
+  }
+  if (version === 3) {
+    next = v3ToV4(next);
+    version = 4;
   }
   if (version !== CURRENT_SCHEMA_VERSION) throw new Error("不支持的备份版本：" + rawState.schemaVersion + "。");
   return next;

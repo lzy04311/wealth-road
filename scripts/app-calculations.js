@@ -7,6 +7,24 @@ function monthlyExpense(accountId, month) { return sum(state.expenses, function 
 function monthlyInvestment(accountId, month) { return sum(state.investments, function (item) { if (item.accountId !== accountId || item.month !== month) return 0; return item.type === "转出" ? -item.amount : item.amount; }); }
 function investmentDirection(item) { return item.type === "转出" ? -1 : 1; }
 function transactionDateWithin(item, month) { return String(item.date || "") <= monthEndDate(month); }
+function hasMoneyAccounts() { return Array.isArray(state.moneyAccounts) && state.moneyAccounts.some(function (item) { return !item.archived; }); }
+function moneyAccountName(id) { var item = (state.moneyAccounts || []).find(function (account) { return account.id === id; }); return item ? item.name : (id ? "已删除资金账户" : "未指定实际账户"); }
+function moneyAccountOpeningBalance(account, month) {
+  if (!account || !account.openingBalance) return 0;
+  if (account.openingBalanceDate && account.openingBalanceDate > monthEndDate(month)) return 0;
+  return numberValue(account.openingBalance);
+}
+function moneyAccountBalance(account, month) {
+  var opening = moneyAccountOpeningBalance(account, month);
+  var income = sum(state.incomes, function (item) { return item.moneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { return item.moneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var investmentIn = sum(state.investments, function (item) { return item.targetMoneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var investmentOut = sum(state.investments, function (item) { return item.sourceMoneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var transferIn = sum(state.transfers || [], function (item) { return item.toMoneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var transferOut = sum(state.transfers || [], function (item) { return item.fromMoneyAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  return numberValue(opening + income - expense + investmentIn - investmentOut + transferIn - transferOut);
+}
+function moneyAccountsTotal(month) { return sum(state.moneyAccounts || [], function (account) { return account.archived ? 0 : moneyAccountBalance(account, month); }); }
 function openingBalanceForMonth(account, month) {
   if (!account.openingBalance) return 0;
   if (account.openingBalanceDate && account.openingBalanceDate > monthEndDate(month)) return 0;
@@ -15,12 +33,14 @@ function openingBalanceForMonth(account, month) {
 function accountBalance(account, month) {
   var opening = openingBalanceForMonth(account, month);
   var income = sum(state.incomes, function (item) { return item.accountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { return item.sourceAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return linkedId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
   var investment = sum(state.investments, function (item) { if (item.accountId !== account.id || !transactionDateWithin(item, month)) return 0; return investmentDirection(item) * item.amount; });
-  var investmentFunding = sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && transactionDateWithin(item, month) ? investmentDirection(item) * item.amount : 0; });
-  var transferIn = sum(state.transfers || [], function (item) { return item.toAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var transferOut = sum(state.transfers || [], function (item) { return item.fromAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  return numberValue(opening + income - expense + investment - investmentFunding + transferIn - transferOut);
+  var investmentFunding = hasMoneyAccounts() ? 0 : sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && transactionDateWithin(item, month) ? investmentDirection(item) * item.amount : 0; });
+  var transferIn = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.toAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var transferOut = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.fromAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var allocationIn = sum(state.allocations || [], function (item) { return item.toAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var allocationOut = sum(state.allocations || [], function (item) { return item.fromAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  return numberValue(opening + income - expense + investment - investmentFunding + transferIn - transferOut + allocationIn - allocationOut);
 }
 function totalBudgetPercent() { return sum(state.accounts, function (item) { return item.archived ? 0 : item.budgetPercent || 0; }); }
 function spendingBudgetPercent() { return sum(state.accounts, function (item) { return !item.archived && item.includeExpense ? item.budgetPercent || 0 : 0; }); }
@@ -153,9 +173,15 @@ function valueKnownByMonth(date, month) { return date ? date <= monthEndDate(mon
 function independentAssetItems(month) { return (state.assetItems || []).filter(function (item) { return item.valuationMode === "独立计入" && item.kind !== "电子订阅" && item.status !== "已停用" && valueKnownByMonth(item.valuationDate, month || monthOf(today())); }); }
 function liabilityTotal(month) { return sum(state.liabilities || [], function (item) { return item.status === "已结清" || !valueKnownByMonth(item.balanceDate, month || monthOf(today())) ? 0 : item.currentBalance; }); }
 function unallocatedCashSummary(month) {
+  if (hasMoneyAccounts()) {
+    var assigned = sum(state.accounts, function (account) { return account.archived ? 0 : accountBalance(account, month); });
+    var difference = numberValue(moneyAccountsTotal(month) - assigned);
+    return { value: numberValue(Math.max(0, difference)), gap: numberValue(Math.max(0, -difference)) };
+  }
   var value = sum(state.incomes, function (item) { return !item.accountId && transactionDateWithin(item, month) ? item.amount : 0; });
   value -= sum(state.expenses, function (item) { return !item.sourceAccountId && transactionDateWithin(item, month) ? item.amount : 0; });
   value -= sum(state.investments, function (item) { return !item.sourceAccountId && transactionDateWithin(item, month) ? investmentDirection(item) * item.amount : 0; });
+  value += sum(state.allocations || [], function (item) { return !item.fromAccountId && transactionDateWithin(item, month) ? -item.amount : (!item.toAccountId && transactionDateWithin(item, month) ? item.amount : 0); });
   return { value: numberValue(Math.max(0, value)), gap: numberValue(Math.max(0, -value)) };
 }
 function wealthSummary(month) {
@@ -163,12 +189,13 @@ function wealthSummary(month) {
   var unallocated = unallocatedCashSummary(month);
   var independentAssets = sum(independentAssetItems(month), function (item) { return item.currentValue; });
   var liabilities = liabilityTotal(month);
-  var financialAssets = numberValue(portfolio.totalAsset + unallocated.value);
+  var financialAssets = hasMoneyAccounts() ? numberValue(moneyAccountsTotal(month) + portfolio.pnl) : numberValue(portfolio.totalAsset + unallocated.value);
   var grossAssets = numberValue(financialAssets + independentAssets);
   var unresolvedAssets = (state.assetItems || []).filter(function (item) { return item.valuationMode === "待确认" && item.currentValue > 0; });
-  return { financialAssets: financialAssets, accountAssets: portfolio.totalAsset, unallocatedCash: unallocated.value, unallocatedGap: unallocated.gap, independentAssets: independentAssets, grossAssets: grossAssets, liabilities: liabilities, netWorth: numberValue(grossAssets - liabilities), unresolvedAssets: unresolvedAssets, portfolio: portfolio };
+  return { financialAssets: financialAssets, accountAssets: hasMoneyAccounts() ? financialAssets : portfolio.totalAsset, unallocatedCash: unallocated.value, unallocatedGap: unallocated.gap, independentAssets: independentAssets, grossAssets: grossAssets, liabilities: liabilities, netWorth: numberValue(grossAssets - liabilities), unresolvedAssets: unresolvedAssets, portfolio: portfolio };
 }
 function accountName(id) { var a = state.accounts.find(function (item) { return item.id === id; }); return a ? a.name : (id ? "已删除账户" : "未指定账户"); }
+function fundingAccountName(id) { return id ? accountName(id) : "待分配资金"; }
 function accountRole(account) {
   var roleMap = {
     "日常开支": { emoji: "🍚", desc: "吃饭、交通、居住和日用品", color: "#B9B8B2", tip: "优先守住必要开支" },

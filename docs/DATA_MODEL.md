@@ -6,7 +6,7 @@
 
 ### 当前版本
 
-- 当前 `schemaVersion`: `3`
+- 当前 `schemaVersion`: `4`
 - 定义位置：`scripts/app-state.js` 中的 `CURRENT_SCHEMA_VERSION`
 
 ### v1 到 v2 迁移
@@ -27,6 +27,15 @@ v1 -> v2 的迁移规则：
 - 为资产清单补齐估值口径、关联账户和估值日期。
 - 保留所有旧记录、ID 和 localStorage 键，不推断或重写历史金额。
 
+### v3 到 v4 迁移
+
+- 新增 `moneyAccounts`，表示银行卡、支付账户、现金和投资平台等真实资金位置。
+- 新增 `allocations`，表示资金池之间的用途调整；不计入收入、支出或净资产变化。
+- 收入和支出新增 `moneyAccountId`。
+- 投资新增 `sourceMoneyAccountId` 与 `targetMoneyAccountId`。
+- 转账新增 `fromMoneyAccountId` 与 `toMoneyAccountId`。
+- 不根据旧资金池名称猜测真实账户，所有历史真实账户引用默认留空。
+
 ### 未来版本升级原则
 
 - 新增字段必须通过 migration 补齐默认值。
@@ -40,8 +49,10 @@ v1 -> v2 的迁移规则：
 
 ```js
 {
-  schemaVersion: 3,
+  schemaVersion: 4,
   accounts: [],
+  moneyAccounts: [],
+  allocations: [],
   incomes: [],
   expenses: [],
   investments: [],
@@ -57,7 +68,9 @@ v1 -> v2 的迁移规则：
 ### 顶层字段说明
 
 - `schemaVersion`: number。当前备份和 state 的数据结构版本。
-- `accounts`: array。资金账户、预算账户、资产账户、目标账户配置。
+- `accounts`: array。资金池、预算用途、投资策略和目标配置；界面统一称为“资金池”。
+- `moneyAccounts`: array。银行卡、支付账户、现金和投资平台等真实资金位置。
+- `allocations`: array。资金池之间的用途调整记录。
 - `incomes`: array。收入记录。
 - `expenses`: array。支出记录。
 - `investments`: array。投资、储蓄、转入、转出记录。
@@ -68,18 +81,21 @@ v1 -> v2 的迁移规则：
 - `transfers`: array。账户之间的双边内部调拨，不计入收入、支出或净资产变化。
 - `liabilities`: array。信用卡、贷款和借款等当前未偿还余额。
 
-### v3 统一财务口径
+### v4 双维度财务口径
 
 - `accounts.openingBalance` / `openingBalanceDate`: 建账前已经存在的账户余额和生效日期。
 - `accounts.valuationMethod`: `流水余额` 由交易流水推导；`净值快照` 使用最近快照并补计快照后的资金变动。
-- `incomes.accountId`: 实际到账账户；为空时进入待归集现金。
-- `expenses.accountId`: 支出分类账户；`sourceAccountId` 才是实际付款账户。
-- `investments.accountId`: 投资目标账户；`sourceAccountId` 是实际付款账户。
+- `incomes.accountId`: 收入归属资金池；为空时进入待分配资金。
+- `incomes.moneyAccountId`: 实际到账的银行卡、支付宝等资金账户。
+- `expenses.accountId`: 使用的消费资金池；`moneyAccountId` 是实际付款账户。
+- `investments.accountId`: 长期投资、高风险投资等策略资金池。
+- `investments.sourceMoneyAccountId` / `targetMoneyAccountId`: 实际付款位置和投资资金位置。
+- 旧 `sourceAccountId`、`fromAccountId`、`toAccountId` 只用于兼容历史数据，不再由新表单写入。
 - `assetItems.valuationMode`: `独立计入`、`关联账户`、`不计入` 或 `待确认`。现金和投资类旧清单默认待确认，避免重复计入。
 - `assetItems.valuationDate`: 当前估值的生效日期。
 - `liabilities.balanceDate`: 当前负债余额的生效日期。
 
-统一公式：`净资产 = 金融资产 + 独立计入资产 - 未结清负债`。内部转账只改变账户分布，不改变净资产。
+统一公式：`净资产 = 金融资产 + 独立计入资产 - 未结清负债`。建立真实账户后，`金融资产 = 真实账户账面余额合计 + 投资浮动盈亏`；内部转账和资金用途分配只改变分布，不改变净资产。
 
 ## 3. Entity Fields
 
@@ -98,6 +114,34 @@ v1 -> v2 的迁移规则：
 | `includeAsset` | boolean | 是否计入资产统计。 |
 | `target` | number | 账户目标金额，范围 `0-999999999`。 |
 | `note` | string | 备注，最大长度受 `MAX_NOTE_LENGTH` 限制。 |
+
+### moneyAccounts
+
+真实资金账户字段：
+
+| 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `id` | string | 实际账户唯一 id。 |
+| `name` | string | 工资卡、支付宝、现金、证券账户等名称。 |
+| `type` | string | `银行卡`、`支付账户`、`现金`、`投资账户` 或 `其他`。 |
+| `openingBalance` | number | 开始使用系统时可以核对的真实余额。 |
+| `openingBalanceDate` | string | 期初余额生效日期。 |
+| `archived` | boolean | 是否停止用于新流水。 |
+| `note` | string | 备注。 |
+
+### allocations
+
+资金用途调整字段：
+
+| 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `id` | string | 分配记录唯一 id。 |
+| `date` | string | 调整日期。 |
+| `month` | string | 由日期自动派生的月份。 |
+| `fromAccountId` | string | 转出资金池；为空表示从待分配资金转出。 |
+| `toAccountId` | string | 转入资金池。 |
+| `amount` | number | 调整金额。 |
+| `note` | string | 备注。 |
 
 ### incomes
 
