@@ -1,11 +1,12 @@
 ﻿"use strict";
 
-var CURRENT_SCHEMA_VERSION = 3;
+var CURRENT_SCHEMA_VERSION = 4;
 var incomeSources = ["工资", "奖金", "副业", "其他"];
 var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储蓄", "应急金", "自由支配", "其他"];
+var moneyAccountTypes = ["银行卡", "支付账户", "现金", "投资账户", "其他"];
 var accountValuationMethods = ["流水余额", "净值快照"];
 var investmentTypes = ["投资", "储蓄", "转入", "转出"];
-var investmentEntryTypes = ["投资", "储蓄"];
+var investmentEntryTypes = ["投资", "储蓄", "转出"];
 var assetKinds = ["现金", "投资", "电子产品", "贵重物品", "电子订阅", "买断软件", "数字资产", "其他"];
 var assetStatuses = ["在用", "闲置", "观察", "保留", "准备卖出", "已停用"];
 var assetValuationModes = ["独立计入", "关联账户", "不计入", "待确认"];
@@ -31,8 +32,11 @@ var selectedExpenseDate = "";
 var dashboardPieMode = "budget";
 var assetKindFilter = "全部";
 var activeQuickType = "";
+var flowRecordSearch = "";
 var lastSavedAt = null;
 var statusNoticeTimer = null;
+var actionFeedbackTimer = null;
+var actionFeedbackHandler = null;
 var renderContextCache = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
@@ -56,6 +60,32 @@ function notify(message) {
     topEl.textContent = "已保存";
     statusNoticeTimer = null;
   }, 2600);
+}
+function dismissActionFeedback() {
+  var bar = byId("actionFeedback");
+  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
+  actionFeedbackTimer = null;
+  actionFeedbackHandler = null;
+  if (!bar) return;
+  bar.classList.remove("open");
+  bar.setAttribute("aria-hidden", "true");
+}
+function showActionFeedback(message, actionLabel, actionHandler, duration) {
+  var bar = byId("actionFeedback"), textEl = byId("actionFeedbackText"), actionBtn = byId("actionFeedbackButton");
+  if (!bar || !textEl || !actionBtn) { notify(message); return; }
+  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
+  textEl.textContent = cleanText(message, 140) || "操作已完成";
+  actionFeedbackHandler = typeof actionHandler === "function" ? actionHandler : null;
+  actionBtn.textContent = cleanText(actionLabel, 20) || "";
+  actionBtn.style.display = actionFeedbackHandler ? "" : "none";
+  bar.classList.add("open");
+  bar.setAttribute("aria-hidden", "false");
+  actionFeedbackTimer = setTimeout(dismissActionFeedback, duration || (actionFeedbackHandler ? 6500 : 3600));
+}
+function runActionFeedback() {
+  var handler = actionFeedbackHandler;
+  dismissActionFeedback();
+  if (handler) handler();
 }
 function buildRenderContext(month) {
   var targetMonth = month || currentMonth();
@@ -103,19 +133,37 @@ function monthEndDate(month) { var y = parseInt(String(month).slice(0, 4), 10), 
 function normalizeState(data) {
   var base = data && typeof data === "object" ? data : {};
   var idMap = {};
+  var moneyIdMap = {};
   var accounts = Array.isArray(base.accounts) && base.accounts.length ? base.accounts.map(function (account) { return normalizeAccount(account, idMap); }) : defaultAccounts();
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     accounts: accounts,
-    incomes: Array.isArray(base.incomes) ? base.incomes.map(function (item) { return normalizeIncome(item, idMap); }) : [],
-    expenses: Array.isArray(base.expenses) ? base.expenses.map(function (item) { return normalizeExpense(item, idMap); }) : [],
-    investments: Array.isArray(base.investments) ? base.investments.map(function (item) { return normalizeInvestment(item, idMap); }) : [],
-    transfers: Array.isArray(base.transfers) ? base.transfers.map(function (item) { return normalizeTransfer(item, idMap); }) : [],
+    moneyAccounts: Array.isArray(base.moneyAccounts) ? base.moneyAccounts.map(function (item) { return normalizeMoneyAccount(item, moneyIdMap); }) : [],
+    allocations: Array.isArray(base.allocations) ? base.allocations.map(function (item) { return normalizeAllocation(item, idMap); }) : [],
+    incomes: Array.isArray(base.incomes) ? base.incomes.map(function (item) { return normalizeIncome(item, idMap, moneyIdMap); }) : [],
+    expenses: Array.isArray(base.expenses) ? base.expenses.map(function (item) { return normalizeExpense(item, idMap, moneyIdMap); }) : [],
+    investments: Array.isArray(base.investments) ? base.investments.map(function (item) { return normalizeInvestment(item, idMap, moneyIdMap); }) : [],
+    transfers: Array.isArray(base.transfers) ? base.transfers.map(function (item) { return normalizeTransfer(item, idMap, moneyIdMap); }) : [],
     snapshots: Array.isArray(base.snapshots) ? base.snapshots.map(function (item) { return normalizeSnapshot(item, idMap); }) : [],
     assetItems: Array.isArray(base.assetItems) ? base.assetItems.map(function (item) { return normalizeAssetItem(item, idMap); }) : [],
     liabilities: Array.isArray(base.liabilities) ? base.liabilities.map(normalizeLiability) : [],
     monthlyPlans: normalizeMonthlyPlans(base.monthlyPlans),
     rules: typeof base.rules === "string" ? cleanText(base.rules, 5000) : defaultRules
+  };
+}
+function normalizeMoneyAccount(item, idMap) {
+  item = item && typeof item === "object" ? item : {};
+  var originalId = String(item.id || "");
+  var id = safeId(item.id);
+  if (originalId && idMap) idMap[originalId] = id;
+  return {
+    id: id,
+    name: cleanText(item.name) || "未命名资金账户",
+    type: safeEnum(item.type, moneyAccountTypes, "其他"),
+    openingBalance: safeAmount(item.openingBalance),
+    openingBalanceDate: safeOptionalDate(item.openingBalanceDate),
+    archived: !!item.archived,
+    note: cleanText(item.note, MAX_NOTE_LENGTH)
   };
 }
 function normalizeAccount(account, idMap) {
@@ -133,26 +181,37 @@ function normalizeAccount(account, idMap) {
   return { id: id, name: normalizedName || "未命名账户", type: accountType, budgetPercent: safePercent(budgetPercent), fixedBudget: !!account.fixedBudget, includeExpense: !!account.includeExpense, includeAsset: !!account.includeAsset, target: safeAmount(account.target), openingBalance: safeAmount(account.openingBalance), openingBalanceDate: safeOptionalDate(account.openingBalanceDate), valuationMethod: safeEnum(account.valuationMethod, accountValuationMethods, defaultValuation), archived: !!account.archived, note: cleanText(account.note, MAX_NOTE_LENGTH) };
 }
 function normalizeAccountId(id, idMap) { var raw = String(id || ""); return idMap[raw] || (/^[A-Za-z0-9_-]{1,80}$/.test(raw) ? raw : ""); }
-function normalizeIncome(item, idMap) {
+function normalizeIncome(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap || {}), source: safeEnum(item.source, incomeSources, "其他"), amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap || {}), moneyAccountId: normalizeAccountId(item.moneyAccountId, moneyIdMap || {}), source: safeEnum(item.source, incomeSources, "其他"), amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
-function normalizeExpense(item, idMap) {
+function normalizeExpense(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), moneyAccountId: normalizeAccountId(item.moneyAccountId, moneyIdMap || {}), category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
-function normalizeInvestment(item, idMap) {
+function normalizeInvestment(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), type: safeEnum(item.type, investmentTypes, "投资"), amount: safeAmount(item.amount), product: cleanText(item.product), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), sourceMoneyAccountId: normalizeAccountId(item.sourceMoneyAccountId, moneyIdMap || {}), targetMoneyAccountId: normalizeAccountId(item.targetMoneyAccountId, moneyIdMap || {}), type: safeEnum(item.type, investmentTypes, "投资"), amount: safeAmount(item.amount), product: cleanText(item.product), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
-function normalizeTransfer(item, idMap) {
+function normalizeTransfer(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
   var fromAccountId = normalizeAccountId(item.fromAccountId, idMap);
   var toAccountId = normalizeAccountId(item.toAccountId, idMap);
+  if (fromAccountId && fromAccountId === toAccountId) toAccountId = "";
+  var fromMoneyAccountId = normalizeAccountId(item.fromMoneyAccountId, moneyIdMap || {});
+  var toMoneyAccountId = normalizeAccountId(item.toMoneyAccountId, moneyIdMap || {});
+  if (fromMoneyAccountId && fromMoneyAccountId === toMoneyAccountId) toMoneyAccountId = "";
+  return { id: safeId(item.id), date: date, month: monthOf(date), fromAccountId: fromAccountId, toAccountId: toAccountId, fromMoneyAccountId: fromMoneyAccountId, toMoneyAccountId: toMoneyAccountId, amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+}
+function normalizeAllocation(item, idMap) {
+  item = item && typeof item === "object" ? item : {};
+  var date = safeDate(item.date);
+  var fromAccountId = normalizeAccountId(item.fromAccountId, idMap || {});
+  var toAccountId = normalizeAccountId(item.toAccountId, idMap || {});
   if (fromAccountId && fromAccountId === toAccountId) toAccountId = "";
   return { id: safeId(item.id), date: date, month: monthOf(date), fromAccountId: fromAccountId, toAccountId: toAccountId, amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }

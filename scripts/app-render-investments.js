@@ -49,7 +49,7 @@ function renderInvestments(ctx) {
       + "</div>"
       + "<div class=\"ip-card-foot\"><span>" + (hasSnapshot ? "最近更新：" + av.snapshotDate : "暂无净值快照") + "</span></div>"
       + "</div>";
-  }).join("") : empty("还没有资产账户。", "在「计划」页把投资账户标记为「计入资产」，这里就会出现持仓卡片。", "", "📊");
+  }).join("") : empty("还没有投资资金池。", "在「账户与分配」页配置长期投资或高风险投资资金池，这里就会出现策略卡片。", "", "📊");
 
   // Layer 3: actions hint
   if (lastDates.length) {
@@ -75,7 +75,7 @@ function renderInvestments(ctx) {
   // Layer 4: Records
   byId("investmentModuleSummary").innerHTML = pill("本月记录", records.length + " 条") + pill("转入/储蓄/投资", money(inTotal)) + pill("净额", money(net));
   byId("investmentSummary").textContent = month + " 共 " + records.length + " 条，净额 " + money(net);
-  byId("investmentList").innerHTML = recordList(records, "investment");
+  byId("investmentList").innerHTML = recordList(records, "investment", false);
   renderTransfers(month);
 }
 
@@ -85,6 +85,8 @@ function renderTransfers(month) {
   if (byId("transferSummary")) byId("transferSummary").textContent = month + " 共 " + records.length + " 笔内部调拨，合计 " + money(total) + "，不影响净资产";
   if (!byId("transferList")) return;
   byId("transferList").innerHTML = records.length ? records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
-    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(accountName(item.fromAccountId)) + " → " + esc(accountName(item.toAccountId)) + "</span><span class=\"badge\">内部转账</span></div><div class=\"row-amount\">" + money(item.amount) + "</div>" + meta(["日期：" + item.date, "备注：" + (item.note || "无")]) + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
+    var fromName = item.fromMoneyAccountId ? moneyAccountName(item.fromMoneyAccountId) : accountName(item.fromAccountId);
+    var toName = item.toMoneyAccountId ? moneyAccountName(item.toMoneyAccountId) : accountName(item.toAccountId);
+    return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(fromName) + " → " + esc(toName) + "</span><span class=\"badge\">实际账户转账</span></div><div class=\"row-amount\">" + money(item.amount) + "</div>" + meta(["日期：" + item.date, "资金用途不变", "备注：" + (item.note || "无")]) + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"transfer\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
   }).join("") : empty("本月没有账户间转账。", "账户内部调拨应记录在这里，不要记成收入或支出。", "", "↔");
 }

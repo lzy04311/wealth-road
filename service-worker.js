@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "wealth-road-pwa-v15";
+var CACHE_NAME = "wealth-road-pwa-v18";
 var APP_SHELL = [
   "./",
   "./index.html",

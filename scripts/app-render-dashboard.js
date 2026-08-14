@@ -56,7 +56,7 @@ function renderDashboardAssetCard(month, s, assetSnap, health, totalAsset, savin
   byId("dashboardAssetChange").innerHTML = "<span>金融资产较上月</span><strong class=\"" + changeClass + "\">" + esc(changeText) + "</strong>";
   byId("dashboardAssetMetrics").innerHTML = [
     dashboardMetric("待分配资金", money(s.freeCash), s.freeCash >= 0 ? "positive" : "negative", "收入减支出和投入"),
-    dashboardMetric("金融资产", money(wealth.financialAssets), "", "账户及待归集现金"),
+    dashboardMetric("金融资产", money(wealth.financialAssets), "", hasMoneyAccounts() ? "实际账户账面余额及投资浮动盈亏" : "资金池及待分配资金"),
     dashboardMetric("投资收益率", assetSnap.roi == null ? "数据不足" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), assetSnap.roi == null ? "需补齐投资账户净值" : "浮动盈亏 " + money(assetSnap.pnl)),
     dashboardMetric("负债", money(wealth.liabilities), wealth.liabilities > 0 ? "negative" : "", wealth.unresolvedAssets.length ? wealth.unresolvedAssets.length + " 项资产待确认" : "已从净资产扣除")
   ].join("");
@@ -70,7 +70,7 @@ function renderDashboardCompass(s, assetSnap, health, totalAsset, targetAccounts
     { key: "flow", view: "flow", name: "流水", desc: "待分配资金", value: s.freeCash >= 0 ? "+" + money(s.freeCash) : "-" + money(Math.abs(s.freeCash)), className: s.freeCash >= 0 ? "positive" : "negative", level: "core" },
     { key: "invest", view: "investments", name: "投资", desc: "收益率", value: roiText, className: assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"), level: "core" },
     { key: "assets", view: "assets", name: "资产", desc: "当前净资产", value: money(totalAsset), className: totalAsset < 0 ? "negative" : "", level: "core" },
-    { key: "accounts", view: "accounts", name: "计划", desc: "预算比例", value: totalBudgetPercent().toFixed(1) + "%", className: totalBudgetPercent() > 100 ? "negative" : "positive", level: "aux" },
+    { key: "accounts", view: "accounts", name: "账户", desc: "位置与用途", value: (state.moneyAccounts || []).filter(function (item) { return !item.archived; }).length + " 个实际账户", className: hasMoneyAccounts() ? "positive" : "warning", level: "aux" },
     { key: "goals", view: "goals", name: "目标", desc: "阶段目标", value: targetText, className: targetAccounts.length ? "positive" : "warning", level: "aux" },
     { key: "data", view: "data", name: "备份", desc: "数据安全", value: backupText, className: "positive", level: "aux" }
   ];

@@ -85,7 +85,7 @@ function renderAssetInventory(wealth) {
       + "<div class=\"ap-head\"><div><h2>资产全景</h2><p>金融资产、独立资产与负债采用统一口径</p></div><span class=\"status-pill " + esc(status.level) + "\">" + esc(status.label) + "</span></div>"
       + "<div class=\"ap-hero\"><strong class=\"" + (netWorth >= 0 ? "positive" : "negative") + "\">" + money(netWorth) + "</strong><span>当前净资产</span></div>"
       + "<div class=\"ap-metrics\">"
-      + "<div class=\"ap-metric\"><span>金融资产</span><strong>" + money(wealth.financialAssets) + "</strong><small>含待归集 " + money(wealth.unallocatedCash) + "</small></div>"
+      + "<div class=\"ap-metric\"><span>金融资产</span><strong>" + money(wealth.financialAssets) + "</strong><small>含待分配 " + money(wealth.unallocatedCash) + "</small></div>"
       + "<div class=\"ap-metric\"><span>独立资产</span><strong>" + money(wealth.independentAssets) + "</strong><small>不与账户重复</small></div>"
       + "<div class=\"ap-metric\"><span>负债</span><strong class=\"" + (wealth.liabilities > 0 ? "negative" : "") + "\">" + money(wealth.liabilities) + "</strong><small>总资产 " + money(totalAsset) + "</small></div>"
       + "<div class=\"ap-metric\"><span>每月订阅</span><strong class=\"" + (subscriptionCost > 0 ? "warning" : "") + "\">" + money(subscriptionCost) + "</strong><small>年 " + money(subscriptionCost * 12) + "</small></div>"
