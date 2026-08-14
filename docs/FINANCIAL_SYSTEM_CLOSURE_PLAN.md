@@ -1,72 +1,91 @@
 # Financial System Closure Plan
 
+Last verified: 2026-08-15
+
 ## Current Assessment
 
-The current App is usable as a local manual-recording MVP. Its reliable loop is:
+The App is a locally verified, local-first personal finance system. Its current reliable loop is:
 
-`manual entry -> localStorage save -> monthly display -> JSON export/import`
+`manual entry -> validated schema v5 state -> localStorage save -> monthly/wealth views -> JSON export/import`
 
-It is not yet a decision-grade wealth system because account balances, transfers, asset valuation, returns, goals, subscriptions, and multi-device state do not share one authoritative model.
+The current code includes real money accounts, two-sided transfers, purpose allocations, balance reconciliation, historical account-link repair, and responsive form drawers. This document records local engineering evidence only; commit, merge, deployment, and live status must be verified from their own systems.
 
-## Confirmed Gaps
+## Verified Current Capabilities
 
-### P0: Financial Correctness
+### Financial Correctness
 
-1. Account balance is calculated as cumulative investment minus cumulative expense. It has no opening balance or income allocation and clamps negative balances to zero.
-2. Transfers are one-sided investment records, so money is not conserved and a transfer-out can increase reported surplus.
-3. Dashboard return, annualized return, and drawdown use asset-size changes without adjusting for contributions or withdrawals.
-4. Existing accounts have no edit, archive, or delete entry in the actual UI.
+- Fund pools (`accounts`) and real money locations (`moneyAccounts`) are separate dimensions.
+- Opening balances and effective dates are included in balance calculations.
+- Income, expense, investment, and transfer records can reference their actual money locations.
+- Real-account transfers are two-sided and conserve total owned cash.
+- Referenced fund pools and real accounts are archived instead of deleted.
+- Balance reconciliation records an auditable adjustment without rewriting the opening balance.
+- Month is derived from record date during normalization.
+- Liabilities reduce net worth; unresolved cash/investment asset items are excluded to avoid double counting.
+- Snapshot-based monthly change adjusts for ledger contributions between snapshot dates.
 
-### P1: Workflow Closure
+### Workflow Closure
 
-1. Deleting an account leaves orphan records and removes those expenses from historical totals.
-2. Account snapshots and asset inventory can double-count cash and investments; total-asset definitions differ by page.
-3. `fixedBudget` is stored but unused, and a default account cannot retain a zero budget percentage.
-4. Rules, subscriptions, and goals are mostly descriptive and do not produce executable actions or alerts.
-5. Cloud sync is visible but unconfigured; its current push path lacks strong concurrent-write protection.
+- Existing fund pools and real accounts can be edited, archived, and restored.
+- Historical records missing real-account links are listed for explicit user repair.
+- New income, expense, and investment records require real-account selection once real accounts exist.
+- JSON import backs up current state before applying validated migrated data.
+- Cloud-pull conflict handling backs up local state before replacement and does not auto-overwrite conflicting local changes.
 
-### P2: Data Quality And Tests
+### Verification
 
-1. Import validation checks top-level shape but not duplicate IDs, relationships, or date/month consistency.
-2. Historical health scoring uses today's calendar day.
-3. Quick-entry date changes do not automatically update the event month.
-4. Existing tests cover crash safety and top-level data safety, not financial invariants or complete browser workflows.
+- 27 data safety and financial-invariant tests pass.
+- 23 render, interaction, auth fallback, and sync-safety smoke tests pass.
+- 8 PWA asset and product-brand contract tests pass.
+- 9 append-only finance-ledger tests pass.
+- All 30 JavaScript files pass syntax checking.
+- Local browser sanity checks pass for all primary modules and the responsive form drawer.
+
+## Remaining Gaps
+
+### P0: Release And Recovery Evidence
+
+1. No canonical deployed/live surface or release marker is documented, so local verification cannot be promoted to a deployment claim.
+2. The actual private ledger and real browser data are intentionally outside repository tests; user-data correctness is not implied by fixture results.
+3. Schema migrations are covered by synthetic backups, but acceptance against a user-controlled real export still requires an explicit, privacy-preserving test.
+
+### P1: Financial And Workflow Depth
+
+1. Import validation still focuses on top-level shape; duplicate IDs, referential integrity, and entity-level date/value constraints need deterministic validation.
+2. ROI is a snapshot/principal view and monthly change is contribution-adjusted, but annualized return, drawdown, and richer performance attribution are not decision-grade.
+3. Rules, subscriptions, and goals remain mainly descriptive; they do not yet form a complete alert or recurring-action system.
+4. Historical records require manual account repair; no automated mapping should be added without explicit user-approved rules.
+
+### P2: Verification And Optional Sync
+
+1. Browser smoke coverage does not yet exercise complete real write/edit/archive/reconciliation/import/recovery journeys.
+2. Dashboard pixel-level comparison remains pending even though runtime and responsive sanity checks pass.
+3. Supabase support is present but unconfigured. Before enabling it, verify authentication, RLS, redirect URLs, versioned writes, concurrent-device conflicts, and deployment configuration.
 
 ## Delivery Sequence
 
-### Phase 1: Preserve Raw Facts
+### Phase 1: Preserve Raw Facts — `verified-current`
 
-- Use `data/raw/wealth-events.csv` as the append-only source ledger.
-- Preserve exact natural-language source text, imported JSON payloads, IDs, timestamps, and integrity hashes.
+- Keep `data/raw/wealth-events.csv` append-only and private.
+- Preserve exact source text, imported payloads, IDs, timestamps, and integrity hashes.
 - Record corrections as new events instead of rewriting history.
 
-### Phase 2: Establish One Financial Truth
+### Phase 2: Establish One Financial Truth — `locally verified`
 
-- Add opening balances and explicit income allocation.
-- Introduce a two-sided transfer model.
-- Archive accounts instead of deleting referenced accounts.
-- Derive month from effective date and enforce relationship invariants.
-- Add an additive v2 -> v3 migration without renaming existing fields or changing the localStorage key.
+- Schema v5, opening balances, real accounts, two-sided transfers, allocations, reconciliation, archive behavior, and historical repair are locally verified.
+- Every integration must preserve the localStorage key and run the full migration, finance-invariant, render, ledger, PWA, and syntax gates.
 
-### Phase 3: Unify Valuation And Performance
+### Phase 3: Strengthen Data Quality — `pending`
 
-- Link inventory items to account assets or mark them as independently valued.
-- Carry forward snapshots per account, not per partial portfolio date.
-- Calculate contribution-adjusted investment returns.
-- Use one total-asset definition across Dashboard, Investments, Assets, and Goals.
+- Add entity-level validation, unique-ID checks, referential integrity, and reconciliation invariants.
+- Add complete browser workflow coverage using isolated fixture data.
 
-### Phase 4: Close User Workflows
+### Phase 4: Deepen Decisions — `pending`
 
-- Add account edit and archive interactions.
-- Make fixed and variable budget behavior explicit.
-- Add goal deadlines, planned monthly contribution, and next-action guidance.
-- Convert subscriptions into recurring expenses or reminders.
-- Turn selected rules into validations and actionable warnings.
-- Add a repair flow for orphan records.
+- Define the required performance metrics before implementing annualized return or drawdown.
+- Turn selected goals, rules, and subscriptions into explicit actions only when their product behavior is agreed.
 
-### Phase 5: Reliability And Optional Sync
+### Phase 5: Optional Sync And Release — `pending`
 
-- Add entity-level validation, unique-ID checks, referential integrity, and finance invariant tests.
-- Add real-browser E2E coverage for record, edit, archive, correction, import, and recovery workflows.
-- Keep sync hidden while local-only is the product decision.
-- If multi-device use becomes a goal, add authenticated storage, RLS, versioned writes, conflict handling, and deployment configuration before exposing sync controls.
+- Keep sync in local-only fallback until deployment configuration and multi-device conflict behavior are verified.
+- Distinguish committed, pushed, merged, deployed, live verified, knowledge closed, and cleaned states in every release closeout.

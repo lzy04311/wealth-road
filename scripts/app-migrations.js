@@ -49,6 +49,12 @@ function v3ToV4(rawState) {
   next.schemaVersion = 4;
   return next;
 }
+function v4ToV5(rawState) {
+  var next = clonePlain(rawState);
+  next.reconciliations = Array.isArray(next.reconciliations) ? next.reconciliations : [];
+  next.schemaVersion = 5;
+  return next;
+}
 function migrateState(rawState) {
   var errors = validateImportData(rawState);
   if (errors.length) throw new Error(errors.join("\n"));
@@ -65,6 +71,10 @@ function migrateState(rawState) {
   if (version === 3) {
     next = v3ToV4(next);
     version = 4;
+  }
+  if (version === 4) {
+    next = v4ToV5(next);
+    version = 5;
   }
   if (version !== CURRENT_SCHEMA_VERSION) throw new Error("不支持的备份版本：" + rawState.schemaVersion + "。");
   return next;

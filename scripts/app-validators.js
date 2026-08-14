@@ -38,6 +38,10 @@ function validateStateShape(data) {
       else if (!Array.isArray(data[key])) errors.push("核心字段 " + key + " 必须是数组。");
     });
   }
+  if (Number(data.schemaVersion) >= 5) {
+    if (!Object.prototype.hasOwnProperty.call(data, "reconciliations")) errors.push("缺少核心字段 reconciliations。");
+    else if (!Array.isArray(data.reconciliations)) errors.push("核心字段 reconciliations 必须是数组。");
+  }
   return errors;
 }
 function validateImportData(data) { return validateStateShape(data); }
@@ -53,6 +57,7 @@ function importedStateSummary(rawState) {
     "转账数量：" + (Array.isArray(rawState.transfers) ? rawState.transfers.length : 0),
     "真实账户：" + (Array.isArray(rawState.moneyAccounts) ? rawState.moneyAccounts.length : 0),
     "资金分配：" + (Array.isArray(rawState.allocations) ? rawState.allocations.length : 0),
+    "余额核对：" + (Array.isArray(rawState.reconciliations) ? rawState.reconciliations.length : 0),
     "负债数量：" + (Array.isArray(rawState.liabilities) ? rawState.liabilities.length : 0),
     "目标数量：" + targets,
     "快照数量：" + (Array.isArray(rawState.snapshots) ? rawState.snapshots.length : 0)

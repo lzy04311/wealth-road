@@ -4,7 +4,7 @@
 
 ## 1. 系统定位
 
-财富志是本地优先的私人资金管理网页应用，服务个人现金流、投资、资产、分配和目标管理。
+财记是本地优先的私人资金管理网页应用，服务个人现金流、投资、资产、分配和目标管理。
 
 它不是通用 SaaS，不是标准记账 App，也不是后台管理系统。
 
@@ -41,7 +41,7 @@
 
 - `scripts/app-migrations.js`
   - `CURRENT_SCHEMA_VERSION` 对应的迁移管线。
-  - 当前支持 v1 -> v2 -> v3。
+  - 当前支持 v1 -> v2 -> v3 -> v4 -> v5。
   - 不认识的未来版本必须拒绝。
 
 - `scripts/app-storage.js`
@@ -54,8 +54,8 @@
 ### Calculations
 
 - `scripts/app-calculations.js`
-  - 月度收入、支出、预算、余额。
-  - 资产快照汇总。
+  - 月度收入、支出、预算、资金池余额和真实账户余额。
+  - 余额核对、资产快照与统一净资产汇总。
   - 财务健康分、预测、账户状态。
 
 ### Render Layer
@@ -76,7 +76,7 @@
   - Assets 页面、资产清单、净值记录渲染。
 
 - `scripts/app-render-records.js`
-  - 收入、支出、账户区域相关渲染。
+  - 收入、支出、资金池、真实账户、余额核对和历史待补账户渲染。
 
 - `scripts/app-render-monthly.js`
   - 月报、目标和统一 `renderAll` 入口。
@@ -95,6 +95,7 @@
   - `upsert`
   - `removeRecord`
   - `editRecord`
+  - 历史流水真实账户关联与撤销。
 
 - `scripts/app-actions-quick-entry.js`
   - 快捷录入弹窗打开/关闭。
@@ -109,8 +110,8 @@
   - `handleViewSwitchClick`
 
 - `scripts/app-actions.js`
-  - form helpers。
-  - form submit binding。
+  - 表单抽屉生命周期与 form helpers。
+  - form submit binding，包括余额核对。
   - feature toggles。
   - `bindClicks`。
   - `init`。
@@ -133,6 +134,9 @@
 - `styles/pages.css`
   - Assets、Accounts、Forms、Buttons、Records、Data、Flow、Monthly 等页面样式。
 
+- `styles/subpages.css`
+  - 二级页面层级、侧栏检查区、上下文操作和响应式表单抽屉。
+
 - `styles/responsive.css`
   - 响应式规则。
   - 当前已标记旧 dashboard responsive selector 风险。
@@ -148,6 +152,8 @@
 - 导入必须经过 `validateImportData`。
 - `loadState` 和 `importData` 必须经过 `migrateState`。
 - `normalizeState` 只负责补齐和清洗，不负责版本迁移。
+- `moneyAccounts` 表示钱实际存放的位置，`accounts` 表示钱的用途；二者不得混为同一维度。
+- `reconciliations` 是可追溯差额事件，不修改真实账户期初余额。
 
 ## 5. 视觉规则
 

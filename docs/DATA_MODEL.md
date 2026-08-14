@@ -1,12 +1,12 @@
 # Data Model
 
-本文档记录财富志当前本地 state 数据模型，用于后续维护、迁移、云同步和商业化准备。
+本文档记录财记当前本地 state 数据模型，用于后续维护、迁移、云同步和商业化准备。
 
 ## 1. Schema Version
 
 ### 当前版本
 
-- 当前 `schemaVersion`: `4`
+- 当前 `schemaVersion`: `5`
 - 定义位置：`scripts/app-state.js` 中的 `CURRENT_SCHEMA_VERSION`
 
 ### v1 到 v2 迁移
@@ -36,6 +36,12 @@ v1 -> v2 的迁移规则：
 - 转账新增 `fromMoneyAccountId` 与 `toMoneyAccountId`。
 - 不根据旧资金池名称猜测真实账户，所有历史真实账户引用默认留空。
 
+### v4 到 v5 迁移
+
+- 新增 `reconciliations`，记录真实账户余额核对及差额调整。
+- 历史备份迁移时该字段补为 `[]`，不会修改期初余额或旧流水。
+- 缺少真实账户引用的历史流水继续保留空引用，由用户在“历史流水待补账户”中确认。
+
 ### 未来版本升级原则
 
 - 新增字段必须通过 migration 补齐默认值。
@@ -49,9 +55,10 @@ v1 -> v2 的迁移规则：
 
 ```js
 {
-  schemaVersion: 4,
+  schemaVersion: 5,
   accounts: [],
   moneyAccounts: [],
+  reconciliations: [],
   allocations: [],
   incomes: [],
   expenses: [],
@@ -70,6 +77,7 @@ v1 -> v2 的迁移规则：
 - `schemaVersion`: number。当前备份和 state 的数据结构版本。
 - `accounts`: array。资金池、预算用途、投资策略和目标配置；界面统一称为“资金池”。
 - `moneyAccounts`: array。银行卡、支付账户、现金和投资平台等真实资金位置。
+- `reconciliations`: array。真实账户余额核对及差额调整记录。
 - `allocations`: array。资金池之间的用途调整记录。
 - `incomes`: array。收入记录。
 - `expenses`: array。支出记录。
@@ -113,6 +121,10 @@ v1 -> v2 的迁移规则：
 | `includeExpense` | boolean | 是否计入支出预算统计。 |
 | `includeAsset` | boolean | 是否计入资产统计。 |
 | `target` | number | 账户目标金额，范围 `0-999999999`。 |
+| `openingBalance` | number | 建账前已有的资金池余额。 |
+| `openingBalanceDate` | string | 期初余额生效日期。 |
+| `valuationMethod` | string | `流水余额` 或 `净值快照`。 |
+| `archived` | boolean | 是否停止用于新记录。 |
 | `note` | string | 备注，最大长度受 `MAX_NOTE_LENGTH` 限制。 |
 
 ### moneyAccounts
@@ -124,10 +136,27 @@ v1 -> v2 的迁移规则：
 | `id` | string | 实际账户唯一 id。 |
 | `name` | string | 工资卡、支付宝、现金、证券账户等名称。 |
 | `type` | string | `银行卡`、`支付账户`、`现金`、`投资账户` 或 `其他`。 |
-| `openingBalance` | number | 开始使用系统时可以核对的真实余额。 |
-| `openingBalanceDate` | string | 期初余额生效日期。 |
+| `openingBalance` | number | 开始记账前可以核对的真实余额。 |
+| `openingBalanceDate` | string | 期初余额生效日期；更早的关联流水不参与该账户余额计算。 |
 | `archived` | boolean | 是否停止用于新流水。 |
 | `note` | string | 备注。 |
+
+### reconciliations
+
+余额核对与差额调整字段：
+
+| 字段 | 类型 | 含义 |
+| --- | --- | --- |
+| `id` | string | 核对记录唯一 id。 |
+| `date` | string | 核对日期。 |
+| `month` | string | 由日期自动派生的月份。 |
+| `moneyAccountId` | string | 被核对的真实账户。 |
+| `bookBalance` | number | 核对前系统账面余额。 |
+| `actualBalance` | number | 银行或平台显示的实际余额。 |
+| `adjustment` | number | `actualBalance - bookBalance`，作为可追溯差额事件计入后续余额。 |
+| `note` | string | 差额原因或核对备注。 |
+
+删除核对记录会撤销该差额影响；系统不会通过核对修改真实账户的期初余额。
 
 ### allocations
 
@@ -152,6 +181,8 @@ v1 -> v2 的迁移规则：
 | `id` | string | 收入记录唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
 | `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
+| `accountId` | string | 收入归属的资金池；为空表示待分配资金。 |
+| `moneyAccountId` | string | 收入实际到账的真实账户。 |
 | `source` | string | 收入来源，必须属于 `incomeSources`，否则归一化为 `其他`。 |
 | `amount` | number | 收入金额，范围 `0-999999999`。 |
 | `note` | string | 备注。 |
@@ -166,6 +197,8 @@ v1 -> v2 的迁移规则：
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
 | `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `accountId` | string | 关联的 `accounts[].id`。 |
+| `moneyAccountId` | string | 实际扣款的真实账户。 |
+| `sourceAccountId` | string | 旧数据兼容字段；建立真实账户后不再作为实际付款位置写入。 |
 | `category` | string | 支出分类，为空时归一化为 `未分类`。 |
 | `amount` | number | 支出金额，范围 `0-999999999`。 |
 | `note` | string | 备注。 |
@@ -180,6 +213,9 @@ v1 -> v2 的迁移规则：
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
 | `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
 | `accountId` | string | 关联的 `accounts[].id`。 |
+| `sourceMoneyAccountId` | string | 投资动作的实际转出账户。 |
+| `targetMoneyAccountId` | string | 投资动作的实际转入账户；同平台交易可与转出账户相同。 |
+| `sourceAccountId` | string | 旧数据兼容字段。 |
 | `type` | string | 投资类型，必须属于 `investmentTypes`，否则归一化为 `投资`。 |
 | `amount` | number | 金额，范围 `0-999999999`。 |
 | `product` | string | 产品名称或标的名称。 |
@@ -199,8 +235,10 @@ v1 -> v2 的迁移规则：
 | `id` | string | 转账记录唯一 id。 |
 | `date` | string | 日期，格式 `YYYY-MM-DD`。 |
 | `month` | string | 月份，格式 `YYYY-MM`；由 `date` 自动派生，不单独录入。 |
-| `fromAccountId` | string | 转出账户的 `accounts[].id`。 |
-| `toAccountId` | string | 转入账户的 `accounts[].id`。 |
+| `fromMoneyAccountId` | string | 转出真实账户的 `moneyAccounts[].id`。 |
+| `toMoneyAccountId` | string | 转入真实账户的 `moneyAccounts[].id`；必须与转出账户不同。 |
+| `fromAccountId` | string | 旧资金池转账兼容字段；新表单不再写入。 |
+| `toAccountId` | string | 旧资金池转账兼容字段；新表单不再写入。 |
 | `amount` | number | 转账金额，范围 `0-999999999`。 |
 | `note` | string | 备注。 |
 
@@ -265,27 +303,22 @@ v1 -> v2 的迁移规则：
 
 ### Account References
 
-- `expenses[].accountId` 关联 `accounts[].id`。
-- `investments[].accountId` 关联 `accounts[].id`。
-- `snapshots[].accountId` 关联 `accounts[].id`。
+- 资金池引用：`incomes[].accountId`、`expenses[].accountId`、`investments[].accountId`、`snapshots[].accountId`、`allocations[].fromAccountId/toAccountId` 关联 `accounts[].id`。
+- 真实账户引用：收入和支出的 `moneyAccountId`、投资的 `sourceMoneyAccountId/targetMoneyAccountId`、转账的 `fromMoneyAccountId/toMoneyAccountId`、余额核对的 `moneyAccountId` 关联 `moneyAccounts[].id`。
 
 当前代码中渲染账户名时，如果找不到账户，会显示 `已删除账户`。
 
 ### 删除账户为什么要谨慎
 
-账户被以下记录引用时，删除会导致历史记录失去账户配置上下文：
+资金池或真实账户被历史记录引用时，直接删除会使记录失去配置上下文。当前界面会将这类账户归档并停止用于新记录；只有没有任何引用的账户才允许删除。
 
-- 支出记录：`expenses`
-- 投资/储蓄记录：`investments`
-- 净值快照：`snapshots`
-
-因此删除账户时需要二次确认。删除后历史记录不会自动删除，但相关账户名称会退化为 `已删除账户`。
+历史引用覆盖收入、支出、投资、转账、净值快照、资金分配和余额核对。归档不会删除这些历史记录，并支持撤销恢复。
 
 ### 页面和计算依赖
 
 - Dashboard
-  - 依赖 `accounts`, `incomes`, `expenses`, `investments`, `snapshots`, `monthlyPlans`。
-  - 关键计算：`monthlySummary`, `financialHealth`, `monthlyForecast`, `assetSnapshotSummary`。
+  - 依赖 `accounts`, `moneyAccounts`, `reconciliations`, `incomes`, `expenses`, `investments`, `snapshots`, `liabilities`, `monthlyPlans`。
+  - 关键计算：`monthlySummary`, `financialHealth`, `monthlyForecast`, `assetSnapshotSummary`, `wealthSummary`。
 
 - Assets
   - 依赖 `accounts.includeAsset`, `investments`, `snapshots`, `assetItems`。
@@ -299,6 +332,10 @@ v1 -> v2 的迁移规则：
   - 依赖 `incomes`, `expenses`, `investments`, `monthlyPlans`。
   - 用于流水、月度节奏、预算消耗和现金流判断。
 
+- Accounts
+  - 依赖 `moneyAccounts`, `reconciliations`, `allocations`, `accounts` 和各类历史流水。
+  - 用于真实余额核对、历史账户补全和资金用途调整。
+
 ## 5. Data Safety Rules
 
 - 不允许随意修改 state 字段名。
@@ -311,9 +348,9 @@ v1 -> v2 的迁移规则：
 - 数据导入前必须生成当前 state 自动备份。
 - 校验失败时不得覆盖当前 state。
 
-## 6. Cloud Sync Preparation
+## 6. Cloud Sync Boundary
 
-如果未来接入 Supabase 或其他云数据库，第一阶段建议仍然把完整 state 作为一个 `jsonb` 文档保存，而不是一开始拆成多张关系表。
+仓库已有可选 Supabase 同步模块和完整 state `jsonb` 方案，但默认配置为空，当前现役模式仍是本地 `localStorage`。启用前必须配置认证、RLS、重定向地址并完成真实多设备冲突验收。
 
 建议第一阶段云端结构：
 
@@ -333,4 +370,4 @@ user_finance_states (
 - 可以复用当前 `validateImportData -> migrateState -> normalizeState` 管线。
 - 避免过早拆表导致 schema 频繁变更、同步冲突和迁移成本上升。
 
-未来当字段和业务边界稳定后，再考虑把账户、流水、快照、资产清单拆成独立表。
+只有当字段和业务边界稳定、且多设备同步成为明确产品目标后，才考虑把账户、流水、快照、资产清单拆成独立表。

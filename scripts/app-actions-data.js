@@ -13,7 +13,7 @@ function downloadStateBackup(payload, fileName) {
 }
 
 function exportData() {
-  downloadStateBackup(state, "money-os-backup_" + backupTimestamp() + ".json");
+  downloadStateBackup(state, "caiji-backup_" + backupTimestamp() + ".json");
   notify("已导出备份文件");
 }
 
@@ -45,7 +45,7 @@ function importData() {
       return;
     }
 
-    downloadStateBackup(state, "money-os-backup-before-import_" + backupTimestamp() + ".json");
+    downloadStateBackup(state, "caiji-backup-before-import_" + backupTimestamp() + ".json");
     appConfirm("确认导入", "系统已先导出当前数据作为安全备份。\n\n" + prepared.summary + "\n\n确认继续导入并覆盖当前本地数据吗？", "继续导入", "取消").then(function (confirmed) {
       if (!confirmed) return;
       var previous = state;

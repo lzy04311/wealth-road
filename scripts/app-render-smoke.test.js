@@ -172,6 +172,58 @@ test("core render functions reuse provided month context", function () {
   assert.doesNotThrow(function () { context.renderFlow(renderCtx); });
 });
 
+test("actual account selectors become required after real accounts are enabled", function () {
+  var context = createContext();
+  var ids = ["incomeMoneyAccount", "expenseMoneyAccount", "investmentSourceMoneyAccount", "investmentTargetMoneyAccount", "quickIncomeMoneyAccount", "quickExpenseMoneyAccount", "quickInvestmentSourceMoneyAccount", "quickInvestmentTargetMoneyAccount"];
+  context.state = context.normalizeState({ moneyAccounts: [{ id: "bank", name: "测试银行卡", type: "银行卡", openingBalance: 0, openingBalanceDate: "2026-08-15" }] });
+  context.syncSelects();
+  ids.forEach(function (id) {
+    assert.strictEqual(context.__elements[id].required, true, id + " should be required");
+    assert.match(context.__elements[id].innerHTML, /请选择实际账户/);
+  });
+  assert.strictEqual(context.ensureMoneyAccountsSelected(["incomeMoneyAccount"]), false);
+  context.__elements.incomeMoneyAccount.value = "bank";
+  assert.strictEqual(context.ensureMoneyAccountsSelected(["incomeMoneyAccount"]), true);
+});
+
+test("transfer entry guides users to create two real accounts first", function () {
+  var context = createContext();
+  var event = { target: { closest: function (selector) { return selector === "[data-open-form]" ? { dataset: { openForm: "transfer" } } : null; } } };
+  assert.strictEqual(context.handleFormAndModalClick(event), true);
+  assert.strictEqual(context.__elements.accounts.classList.contains("active"), true);
+  assert.strictEqual(context.__elements.moneyAccountFormCard.classList.contains("open"), true);
+
+  context = createContext();
+  context.state = context.normalizeState({ moneyAccounts: [
+    { id: "a", name: "账户 A", type: "银行卡", openingBalance: 0, openingBalanceDate: "2026-08-15" },
+    { id: "b", name: "账户 B", type: "支付账户", openingBalance: 0, openingBalanceDate: "2026-08-15" }
+  ] });
+  assert.strictEqual(context.handleFormAndModalClick(event), true);
+  assert.strictEqual(context.__elements.transferFormCard.classList.contains("open"), true);
+});
+
+test("reconciliation entry guides users to create a real account first", function () {
+  var context = createContext();
+  var event = { target: { closest: function (selector) { return selector === "[data-open-form]" ? { dataset: { openForm: "reconciliation" } } : null; } } };
+  assert.strictEqual(context.handleFormAndModalClick(event), true);
+  assert.strictEqual(context.__elements.moneyAccountFormCard.classList.contains("open"), true);
+  assert.strictEqual(context.document.getElementById("reconciliationFormCard").classList.contains("open"), false);
+});
+
+test("historical unlinked income can be assigned to a real account", function () {
+  var context = createContext();
+  context.state = context.normalizeState({
+    moneyAccounts: [{ id: "bank", name: "测试银行卡", type: "银行卡", openingBalance: 0, openingBalanceDate: "2026-08-15" }],
+    incomes: [{ id: "old", date: "2026-08-15", source: "工资", amount: 100, accountId: "", moneyAccountId: "" }]
+  });
+  context.renderUnlinkedMoneyRecords();
+  assert.match(context.__elements.unlinkedMoneySummary.innerHTML, /1/);
+  context.document.getElementById("repair-income-old").value = "bank";
+  context.linkHistoricalMoneyAccount("income", "old");
+  assert.strictEqual(context.state.incomes[0].moneyAccountId, "bank");
+  assert.strictEqual(context.unlinkedMoneyRecords().length, 0);
+});
+
 test("appConfirm resolves true when clicking ok", function () {
   var context = createContext();
   var result = null;
@@ -203,6 +255,25 @@ test("activateView switches between home and module page modes", function () {
   context.activateView("dashboard");
   assert.strictEqual(context.document.body.classList.contains("dashboard-home-mode"), true);
   assert.strictEqual(context.document.body.classList.contains("module-page-mode"), false);
+});
+
+test("module forms open in a dismissible drawer instead of expanding the page", function () {
+  var context = createContext();
+  context.openForm("income");
+  assert.strictEqual(context.__elements.incomeFormCard.classList.contains("open"), true);
+  assert.strictEqual(context.document.body.classList.contains("form-drawer-open"), true);
+  assert.strictEqual(context.activeFormPrefix, "income");
+  context.closeActiveFormDrawer(true);
+  assert.strictEqual(context.__elements.incomeFormCard.classList.contains("open"), false);
+  assert.strictEqual(context.document.body.classList.contains("form-drawer-open"), false);
+});
+
+test("module-level actions have a single contextual entry point", function () {
+  var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.strictEqual((html.match(/data-open-form=["']moneyAccount["']/g) || []).length, 1);
+  assert.strictEqual((html.match(/id=["']flowAddRecord["']/g) || []).length, 1);
+  assert.doesNotMatch(html, /id=["']flowAddRecordTop["']/);
+  assert.doesNotMatch(html, /id=["']exportDataTop["']/);
 });
 
 test("month navigation clamps dates at shorter month end", function () {
@@ -364,7 +435,7 @@ test("applying cloud state exports local backup first", function () {
   }).then(function (result) {
     assert.strictEqual(result, true);
     assert.strictEqual(backups.length, 1);
-    assert.match(backups[0].fileName, /^money-os-backup-before-cloud-pull_/);
+    assert.match(backups[0].fileName, /^caiji-backup-before-cloud-pull_/);
     assert.strictEqual(backups[0].payload.rules, "local rules");
     assert.strictEqual(context.state.rules, "cloud rules");
   });

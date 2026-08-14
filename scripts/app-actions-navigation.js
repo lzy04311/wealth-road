@@ -9,6 +9,7 @@ function setDashboardHomeMode(viewName) {
 }
 function activateView(viewName) {
   if (!viewName || !byId(viewName)) return false;
+  if (typeof closeActiveFormDrawer === "function") closeActiveFormDrawer(false);
   document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
   document.querySelectorAll(".view").forEach(function (x) { x.classList.remove("active"); });
   var targetTab = document.querySelector(".tab[data-view=\"" + viewName + "\"]");

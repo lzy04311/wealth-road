@@ -82,7 +82,7 @@ function renderInvestments(ctx) {
 function renderTransfers(month) {
   var records = (state.transfers || []).filter(function (item) { return item.month === month; });
   var total = sum(records, function (item) { return item.amount; });
-  if (byId("transferSummary")) byId("transferSummary").textContent = month + " 共 " + records.length + " 笔内部调拨，合计 " + money(total) + "，不影响净资产";
+  if (byId("transferSummary")) byId("transferSummary").textContent = (state.moneyAccounts || []).filter(function (item) { return !item.archived; }).length < 2 ? "至少建立两个实际账户后，才能记录账户之间的移动" : month + " 共 " + records.length + " 笔内部调拨，合计 " + money(total) + "，不影响净资产";
   if (!byId("transferList")) return;
   byId("transferList").innerHTML = records.length ? records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
     var fromName = item.fromMoneyAccountId ? moneyAccountName(item.fromMoneyAccountId) : accountName(item.fromAccountId);
