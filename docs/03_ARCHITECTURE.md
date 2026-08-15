@@ -1,6 +1,6 @@
 # Architecture
 
-本文件记录当前项目结构和模块职责。若与 `docs/ENGINEERING_STATUS.md`、`docs/DATA_MODEL.md`、`docs/DESIGN_SYSTEM.md` 冲突，以 `docs/` 下的新文档为准。
+本文件记录当前项目结构和模块职责。工程状态以 `docs/ENGINEERING_STATUS.md` 为准，数据结构以 `docs/DATA_MODEL.md` 为准，视觉规则以 `docs/DESIGN_SYSTEM.md` 为准；现役代码优先于历史资料。
 
 ## 1. 系统定位
 
@@ -33,6 +33,10 @@
   - 常量、枚举、基础工具函数。
   - 默认 state、默认账户、normalize 系列函数。
 
+- `scripts/app-ui-feedback.js`
+  - 保存状态提示、操作反馈和可撤销操作反馈条。
+  - 只负责 UI 反馈，不持有业务数据结构。
+
 - `scripts/app-validators.js`
   - `validateImportData`
   - `validateStateShape`
@@ -51,6 +55,19 @@
   - `save`
   - localStorage 损坏数据保护。
 
+### Optional Backend Layer
+
+- `scripts/app-backend-config.js`
+  - 可选 Supabase 配置和本地模式判断。
+  - 默认配置为空，不加载外部客户端。
+
+- `scripts/app-auth.js`
+  - 可选认证会话和本地模式回退。
+
+- `scripts/app-sync.js`
+  - 可选云端读写、冲突判断和覆盖前本地备份。
+  - 启用边界以 `docs/OPTIONAL_SYNC.md` 为准。
+
 ### Calculations
 
 - `scripts/app-calculations.js`
@@ -63,6 +80,7 @@
 
 - `scripts/app-render-core.js`
   - 通用选项、状态卡、空状态和摘要渲染工具。
+  - 月度渲染上下文的创建与缓存。
 
 - `scripts/app-render-dashboard.js`
   - Dashboard 首页驾驶舱渲染。
@@ -103,16 +121,29 @@
   - 净值记录弹窗。
   - 健康评分说明弹窗。
 
+- `scripts/app-actions-forms.js`
+  - 各领域表单的提交绑定和 DOM 数据收集。
+  - 保存成功后的统一关闭、重置和重渲染流程。
+
 - `scripts/app-actions-navigation.js`
   - `setDashboardHomeMode`
   - `handleViewSwitchClick`
 
 - `scripts/app-actions.js`
   - 表单抽屉生命周期与 form helpers。
-  - form submit binding，包括余额核对。
-  - feature toggles。
-  - `bindClicks`。
-  - `init`。
+  - 页面级事件委托和 feature toggles。
+  - `bindClicks` 与唯一 `init` 启动入口。
+
+### PWA Layer
+
+- `scripts/app-pwa.js`
+  - Service Worker 注册和安装入口。
+
+- `service-worker.js`
+  - 同源应用外壳预缓存和运行时缓存边界。
+
+- `manifest.webmanifest`
+  - 应用名称、启动入口、主题和图标声明。
 
 ### Styles
 
@@ -125,14 +156,60 @@
 - `styles/components.css`
   - 通用 cards/stats。
 
+- `styles/controls.css`
+  - 全局表单、输入控件、按钮和操作行。
+  - 页面文件不得重新定义这些基础职责。
+
 - `styles/dashboard.css`
-  - Dashboard 首页视觉和座舱布局。
+  - Dashboard 样式入口，仅导入布局和响应式入口，不写具体组件样式。
+
+- `styles/dashboard/layout-topbar.css`
+  - 顶部标题、状态条和快捷按钮。
+
+- `styles/dashboard/layout-main-center-right.css`
+  - 左侧资产卡、中枢和右侧状态卡。
+
+- `styles/dashboard/layout-bottom-strip.css`
+  - Dashboard 底部数据带。
+
+- `styles/dashboard/layout-bottom-nav.css`
+  - 底部状态与导航条。
+
+- `styles/dashboard/responsive.css`
+  - Dashboard 手机和平板布局。
 
 - `styles/pages.css`
-  - Assets、Accounts、Forms、Buttons、Records、Data、Flow、Monthly 等页面样式。
+  - 一级业务页面样式入口，只按固定顺序导入页面模块，不承载具体规则。
+
+- `styles/pages/assets.css`
+  - 资产总览和资产配置页面。
+
+- `styles/pages/accounts.css`
+  - 账户列表、账户卡片和账户页操作。
+
+- `styles/pages/records.css`
+  - 流水记录列表和记录页状态。
+
+- `styles/pages/data.css`
+  - 数据管理页面。
+
+- `styles/pages/flow.css`
+  - 现金流、月度视图和对应页面组件。
+
+- `styles/pages/investments.css`
+  - 投资页面和投资相关组件。
 
 - `styles/subpages.css`
-  - 二级页面层级、侧栏检查区、上下文操作和响应式表单抽屉。
+  - 二级工作区样式入口，只按固定顺序导入工作区模块，不承载具体规则。
+
+- `styles/subpages/workspace-base.css`
+  - 二级页面工作区、侧栏检查区和上下文操作的基础布局。
+
+- `styles/subpages/hierarchy.css`
+  - 二级页面的视觉层级和局部覆盖。
+
+- `styles/subpages/form-drawer.css`
+  - 响应式表单抽屉及其状态。
 
 - `styles/responsive.css`
   - 响应式规则。
@@ -141,7 +218,7 @@
 
 - `scripts/check-project.js`
   - 运行全部 Node 回归测试与 JavaScript 语法检查。
-  - 检查浏览器全局符号、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
+  - 检查浏览器全局符号、脚本加载顺序、层级职责、页面 CSS 导入顺序、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
 
 ## 4. 数据结构
 

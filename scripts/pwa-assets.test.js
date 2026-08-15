@@ -104,7 +104,19 @@ test("service worker precaches core shell assets", function () {
   [
     "./index.html",
     "./styles.css",
+    "./styles/controls.css",
+    "./styles/pages/assets.css",
+    "./styles/pages/accounts.css",
+    "./styles/pages/records.css",
+    "./styles/pages/data.css",
+    "./styles/pages/flow.css",
+    "./styles/pages/investments.css",
+    "./styles/subpages/workspace-base.css",
+    "./styles/subpages/hierarchy.css",
+    "./styles/subpages/form-drawer.css",
     "./scripts/app-state.js",
+    "./scripts/app-ui-feedback.js",
+    "./scripts/app-actions-forms.js",
     "./scripts/app-actions.js",
     "./manifest.webmanifest"
   ].forEach(function (asset) {

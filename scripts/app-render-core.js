@@ -54,3 +54,20 @@ function empty(title, desc, action, emoji) {
 }
 function meta(items) { return items.map(function (x) { return "<div class=\"row-meta\">" + esc(x) + "</div>"; }).join(""); }
 function pill(label, value) { return "<span class=\"summary-pill\">" + esc(label) + " <strong>" + esc(value) + "</strong></span>"; }
+
+var renderContextCache = null;
+
+function buildRenderContext(month) {
+  var targetMonth = month || currentMonth();
+  return {
+    month: targetMonth,
+    summary: monthlySummary(targetMonth),
+    snapshot: assetSnapshotSummary(targetMonth)
+  };
+}
+
+function getRenderContext(month) {
+  var targetMonth = month || currentMonth();
+  if (!renderContextCache || renderContextCache.month !== targetMonth) renderContextCache = buildRenderContext(targetMonth);
+  return renderContextCache;
+}

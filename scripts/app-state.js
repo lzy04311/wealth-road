@@ -33,72 +33,12 @@ var assetKindFilter = "全部";
 var activeQuickType = "";
 var flowRecordSearch = "";
 var lastSavedAt = null;
-var statusNoticeTimer = null;
-var actionFeedbackTimer = null;
-var actionFeedbackHandler = null;
-var renderContextCache = null;
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function byId(id) { return document.getElementById(id); }
 function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 function backupTimestamp() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + "_" + String(d.getHours()).padStart(2, "0") + String(d.getMinutes()).padStart(2, "0"); }
 function savedTimeText(d) { if (!d) return "--"; return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0"); }
-function updateSaveStatusUI() {
-  var text = savedTimeText(lastSavedAt);
-  var topEl = byId("saveStatusText");
-  var dataEl = byId("dataLastSavedText");
-  if (topEl) topEl.textContent = "已保存";
-  if (dataEl) dataEl.textContent = text;
-}
-function notify(message) {
-  var topEl = byId("saveStatusText");
-  if (!topEl) return;
-  topEl.textContent = cleanText(message, 80) || "已保存";
-  if (statusNoticeTimer) clearTimeout(statusNoticeTimer);
-  statusNoticeTimer = setTimeout(function () {
-    topEl.textContent = "已保存";
-    statusNoticeTimer = null;
-  }, 2600);
-}
-function dismissActionFeedback() {
-  var bar = byId("actionFeedback");
-  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
-  actionFeedbackTimer = null;
-  actionFeedbackHandler = null;
-  if (!bar) return;
-  bar.classList.remove("open");
-  bar.setAttribute("aria-hidden", "true");
-}
-function showActionFeedback(message, actionLabel, actionHandler, duration) {
-  var bar = byId("actionFeedback"), textEl = byId("actionFeedbackText"), actionBtn = byId("actionFeedbackButton");
-  if (!bar || !textEl || !actionBtn) { notify(message); return; }
-  if (actionFeedbackTimer) clearTimeout(actionFeedbackTimer);
-  textEl.textContent = cleanText(message, 140) || "操作已完成";
-  actionFeedbackHandler = typeof actionHandler === "function" ? actionHandler : null;
-  actionBtn.textContent = cleanText(actionLabel, 20) || "";
-  actionBtn.style.display = actionFeedbackHandler ? "" : "none";
-  bar.classList.add("open");
-  bar.setAttribute("aria-hidden", "false");
-  actionFeedbackTimer = setTimeout(dismissActionFeedback, duration || (actionFeedbackHandler ? 6500 : 3600));
-}
-function runActionFeedback() {
-  var handler = actionFeedbackHandler;
-  dismissActionFeedback();
-  if (handler) handler();
-}
-function buildRenderContext(month) {
-  var targetMonth = month || currentMonth();
-  return {
-    month: targetMonth,
-    summary: monthlySummary(targetMonth),
-    snapshot: assetSnapshotSummary(targetMonth)
-  };
-}
-function getRenderContext(month) {
-  var targetMonth = month || currentMonth();
-  if (!renderContextCache || renderContextCache.month !== targetMonth) renderContextCache = buildRenderContext(targetMonth);
-  return renderContextCache;
-}
 function monthOf(date) { return String(date || today()).slice(0, 7); }
 function currentMonth() { return byId("currentMonth").value || monthOf(today()); }
 function monthText(month) { var parts = String(month || currentMonth()).split("-"); return (parts[0] || "----") + "年" + (parts[1] || "--") + "月"; }

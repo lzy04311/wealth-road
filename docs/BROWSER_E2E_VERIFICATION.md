@@ -30,6 +30,25 @@ Last verified: 2026-08-15
 - The tested viewport had `clientWidth = 668` and `scrollWidth = 668`, so no page-level horizontal overflow was present.
 - The project gate validates both browser fixtures through the production import pipeline before browser testing.
 
+## Dashboard Runtime Sanity
+
+- Local HTTP entry and all requested app-shell resources loaded successfully.
+- Dashboard plus Flow, Investments, Assets, Goals, Accounts, and Data navigation worked.
+- No application console warnings or errors were observed.
+- No page-level horizontal overflow was observed at the tested desktop and narrow viewports.
+- The secondary-page form drawer and no-account reconciliation guidance worked.
+
+## Boundary Refactor Regression
+
+- All 26 ordered browser scripts loaded after separating UI feedback and form submission bindings.
+- `styles/controls.css` loaded through the root stylesheet; visible inputs retained a 44px minimum height and primary buttons retained a 40px minimum height.
+- `styles/pages.css` and `styles/subpages.css` loaded as import-only entries, and all six business-page plus three secondary-workspace modules were present in the active stylesheet graph.
+- Flow and Accounts navigation, quick entry, and the real-account form drawer opened correctly.
+- Desktop and narrow viewport checks showed no page-level horizontal overflow, including while the form drawer was open.
+- No application console warnings or errors were observed, and no form was submitted during this structural verification.
+
+This evidence verifies runtime structure, not pixel parity. The remaining visual comparison uses [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) and must cover the top bar, three-column body, bottom data strip, status/navigation row, text clipping, and responsive breakpoints.
+
 ## Remaining Boundary
 
-This workflow is repeatable with the committed fixtures, but the browser interaction itself is not yet executed by CI. The one-command project gate covers deterministic Node tests, syntax, documents, branding, Git whitespace, and the private-ledger boundary.
+This workflow is repeatable with the committed fixtures, but the browser interaction and Dashboard pixel comparison are not yet executed by CI. The one-command project gate covers deterministic Node tests, syntax, documents, branding, Git whitespace, and the private-ledger boundary.

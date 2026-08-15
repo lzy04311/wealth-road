@@ -93,6 +93,7 @@ function createContext() {
   vm.createContext(context);
   [
     "app-state.js",
+    "app-ui-feedback.js",
     "app-validators.js",
     "app-migrations.js",
     "app-storage.js",
@@ -111,6 +112,7 @@ function createContext() {
     "app-actions-crud.js",
     "app-actions-quick-entry.js",
     "app-actions-modals.js",
+    "app-actions-forms.js",
     "app-auth.js",
     "app-sync.js",
     "app-actions-navigation.js",

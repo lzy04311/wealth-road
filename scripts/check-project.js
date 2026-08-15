@@ -87,6 +87,57 @@ check("browser global symbols", function () {
   return Object.keys(declarations).length + " unique declarations";
 });
 
+check("browser layer boundaries", function () {
+  var scripts = browserScriptFiles().map(relative);
+  function position(file) {
+    var index = scripts.indexOf(file);
+    assert(index >= 0, file + " is missing from index.html");
+    return index;
+  }
+  assert(position("scripts/app-state.js") < position("scripts/app-ui-feedback.js"), "state must load before UI feedback");
+  assert(position("scripts/app-ui-feedback.js") < position("scripts/app-storage.js"), "UI feedback must exist before storage save paths run");
+  assert(position("scripts/app-calculations.js") < position("scripts/app-render-core.js"), "calculations must load before render context");
+  assert(position("scripts/app-actions-modals.js") < position("scripts/app-actions-forms.js"), "form lifecycle must load before form bindings");
+  assert(position("scripts/app-actions-forms.js") < position("scripts/app-actions.js"), "form bindings must load before app initialization");
+
+  var stateSource = fs.readFileSync(path.join(root, "scripts/app-state.js"), "utf8");
+  var feedbackSource = fs.readFileSync(path.join(root, "scripts/app-ui-feedback.js"), "utf8");
+  var renderCoreSource = fs.readFileSync(path.join(root, "scripts/app-render-core.js"), "utf8");
+  var actionsSource = fs.readFileSync(path.join(root, "scripts/app-actions.js"), "utf8");
+  var formActionsSource = fs.readFileSync(path.join(root, "scripts/app-actions-forms.js"), "utf8");
+  assert(stateSource.indexOf("function notify(") === -1, "UI feedback must not return to app-state.js");
+  assert(stateSource.indexOf("renderContextCache") === -1, "render context must not return to app-state.js");
+  assert(feedbackSource.indexOf("function notify(") >= 0, "app-ui-feedback.js must own notifications");
+  assert(renderCoreSource.indexOf("renderContextCache") >= 0, "app-render-core.js must own render context");
+  assert(actionsSource.indexOf("addEventListener(\"submit\"") === -1, "form submit bindings must not return to app-actions.js");
+  assert(formActionsSource.indexOf("function bindFormSubmits(") >= 0, "app-actions-forms.js must expose the form binding entry");
+
+  var stylesEntry = fs.readFileSync(path.join(root, "styles.css"), "utf8");
+  var pagesSource = fs.readFileSync(path.join(root, "styles/pages.css"), "utf8");
+  var subpagesSource = fs.readFileSync(path.join(root, "styles/subpages.css"), "utf8");
+  var controlsSource = fs.readFileSync(path.join(root, "styles/controls.css"), "utf8");
+  function cssImportTargets(source) {
+    var targets = [];
+    var pattern = /@import\s+url\("([^"]+)"\);/g;
+    var match;
+    while ((match = pattern.exec(source))) targets.push(match[1].replace(/\?v=\d+$/, ""));
+    return targets;
+  }
+  var expectedPageImports = ["./pages/assets.css", "./pages/accounts.css", "./pages/records.css", "./pages/data.css", "./pages/flow.css", "./pages/investments.css"];
+  var expectedSubpageImports = ["./subpages/workspace-base.css", "./subpages/hierarchy.css", "./subpages/form-drawer.css"];
+  assert(stylesEntry.indexOf("styles/controls.css") >= 0, "styles.css must load the controls layer");
+  assert(stylesEntry.indexOf("styles/controls.css") < stylesEntry.indexOf("styles/pages.css"), "shared controls must load before page-specific styles");
+  assert(JSON.stringify(cssImportTargets(pagesSource)) === JSON.stringify(expectedPageImports), "styles/pages.css import order changed");
+  assert(JSON.stringify(cssImportTargets(subpagesSource)) === JSON.stringify(expectedSubpageImports), "styles/subpages.css import order changed");
+  assert(pagesSource.replace(/@import[^;]+;/g, "").trim() === "", "styles/pages.css must remain import-only");
+  assert(subpagesSource.replace(/@import[^;]+;/g, "").trim() === "", "styles/subpages.css must remain import-only");
+  expectedPageImports.concat(expectedSubpageImports).forEach(function (target) {
+    assert(fs.existsSync(path.resolve(path.join(root, "styles"), target)), target + " is missing");
+  });
+  assert(controlsSource.indexOf(".form-grid") >= 0 && controlsSource.indexOf(".btn.primary") >= 0, "styles/controls.css must own shared forms and buttons");
+  return scripts.length + " ordered scripts · 9 ordered page CSS modules · state/UI/actions/CSS ownership enforced";
+});
+
 check("HTML DOM contract", function () {
   var html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   var ids = {};

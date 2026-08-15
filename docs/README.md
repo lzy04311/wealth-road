@@ -17,11 +17,11 @@
 专项证据：
 
 - `RAW_FINANCE_LEDGER.md`：自然语言记账与私有追加式账本协议。
-- `FINANCIAL_SYSTEM_CLOSURE_PLAN.md`：财务闭环能力和仍未达到决策级的部分。
 - `BROWSER_E2E_VERIFICATION.md`：隔离浏览器写入、编辑、核对、归档、导出和恢复证据。
-- `dashboard-split-verification-report.md`：Dashboard 拆分后的结构与视觉待验项。
+- `OPTIONAL_SYNC.md`：可选 Supabase 模块的当前禁用状态、启用门槛和回退边界。
+- `assets/reference-dashboard.png`：Dashboard 视觉比较基准。
 
-`docs/superpowers/` 下的同步设计资料是未启用能力的参考，不代表当前运行配置。Git 历史负责保存已经完成的实施计划和旧规则，不再让它们冒充现役指令。
+Git 历史负责保存已经完成的实施计划、Dashboard 拆分过程和旧规则，不再让它们冒充现役指令。
 
 ## 当前结构
 
