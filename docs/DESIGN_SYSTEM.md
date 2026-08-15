@@ -99,7 +99,8 @@ Dashboard 是“财记”的主界面，结构保持稳定：
 - `styles.css` 是全局样式入口；`styles/controls.css` 负责全局表单和按钮，`styles/dashboard.css`、`styles/dashboard/layout.css`、`styles/pages.css` 和 `styles/subpages.css` 只负责导入，不承载具体组件规则。
 - Dashboard 的顶部、主体、底部数据带、底部导航和响应式规则分别归属对应的 `styles/dashboard/` 模块，文件职责见 `03_ARCHITECTURE.md`。
 - 一级页面和二级工作区分别归属 `styles/pages/` 与 `styles/subpages/` 模块；入口文件的导入清单和顺序由项目门禁固定。
+- 二级工作区的外壳、顶部统计、侧栏、内容卡片和响应式层级统一归属 `styles/subpages/workspace-base.css`；不再增加后置覆盖层。
 - `.hidden-view { display: none !important; }` 是当前唯一允许的 `!important`；项目门禁拒绝其他声明。
 - 状态色由组件消费 `--tone-color`，不恢复全局强制颜色覆盖。
-- 修改缓存中的 Dashboard CSS 时，顶层和嵌套导入版本必须一起更新，并完成桌面与窄屏截图回归。
+- 修改缓存中的模块 CSS 时，对应入口和嵌套导入版本必须一起更新，根样式版本必须与 Service Worker 缓存版本一致，并完成桌面与窄屏回归。
 - 页面模块继续按业务域小步收紧；迁移规则时必须保持选择器语义和入口加载顺序。

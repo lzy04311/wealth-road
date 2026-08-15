@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body>
   <div class="app">
@@ -792,6 +792,17 @@
             <input type="file" id="importFile" accept="application/json,.json">
             <div class="actions"><button class="btn ghost" id="importData">导入 JSON 数据</button></div>
           </div>
+          <div class="card data-card idb-backup-card">
+            <h2>自动备份</h2>
+            <p class="subtitle" id="idbBackupStatus">读取自动备份状态中…</p>
+            <div class="notice data-save-note">最新自动备份：<strong id="idbBackupLatest">--</strong></div>
+            <div class="actions"><button class="btn ghost" type="button" id="idbRestoreLatest">从最新备份恢复</button></div>
+          </div>
+          <div class="card data-card idb-audit-card">
+            <h2>操作记录</h2>
+            <p class="subtitle">最近的本机操作审计，便于追溯</p>
+            <div id="idbAuditList" class="idb-audit-list"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -808,6 +819,7 @@
   <script defer src="scripts/app-ui-feedback.js?v=27"></script>
   <script defer src="scripts/app-validators.js?v=26"></script>
   <script defer src="scripts/app-migrations.js?v=26"></script>
+  <script defer src="scripts/app-idb.js?v=27"></script>
   <script defer src="scripts/app-storage.js?v=26"></script>
   <script defer src="scripts/app-backend-config.js?v=26"></script>
   <script defer src="scripts/app-calculations.js?v=26"></script>

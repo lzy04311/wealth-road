@@ -26,6 +26,12 @@
   - 页面结构、视图容器、表单 DOM、脚本加载顺序。
   - 不承载业务计算。
 
+### Browser Script Contract
+
+- 浏览器运行时使用 26 个 `defer` 经典脚本，不依赖构建工具或运行时模块加载器。
+- 固定方向是 state / validation / storage -> calculations -> render -> actions -> optional auth and sync -> navigation / init / PWA。
+- 完整文件顺序和顶层声明唯一性由 `scripts/check-project.js` 精确校验；新增跨文件接口必须先确定所属层，不能依赖偶然加载顺序。
+
 ### State / Storage Layer
 
 - `scripts/app-state.js`
@@ -203,10 +209,8 @@
   - 二级工作区样式入口，只按固定顺序导入工作区模块，不承载具体规则。
 
 - `styles/subpages/workspace-base.css`
-  - 二级页面工作区、侧栏检查区和上下文操作的基础布局。
-
-- `styles/subpages/hierarchy.css`
-  - 二级页面的视觉层级和局部覆盖。
+  - 二级页面外壳、标题栏、返回按钮、上下文条、顶部统计、侧栏检查区、内容卡片和响应式工作区规则。
+  - 是二级工作区的唯一基础与层级规则文件，不再叠加后置覆盖层。
 
 - `styles/subpages/form-drawer.css`
   - 响应式表单抽屉及其状态。
@@ -218,7 +222,7 @@
 
 - `scripts/check-project.js`
   - 运行全部 Node 回归测试与 JavaScript 语法检查。
-  - 检查浏览器全局符号、脚本加载顺序、层级职责、页面 CSS 导入顺序、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
+  - 精确检查全部浏览器脚本加载顺序、全局符号、层级职责、页面 CSS 导入顺序与缓存版本、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
 
 ## 4. 数据结构
 

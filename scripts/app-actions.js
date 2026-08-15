@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 function resetForm(prefix) { byId(prefix + "Form").reset(); byId(prefix + "Id").value = ""; if (byId(prefix + "Date")) byId(prefix + "Date").value = today(); if (prefix === "account" && byId("accountOpeningBalanceDate")) byId("accountOpeningBalanceDate").value = today(); if (prefix === "moneyAccount" && byId("moneyAccountOpeningBalanceDate")) byId("moneyAccountOpeningBalanceDate").value = today(); if (prefix === "assetItem" && byId("assetItemValuationDate")) byId("assetItemValuationDate").value = today(); if (prefix === "liability" && byId("liabilityBalanceDate")) byId("liabilityBalanceDate").value = today(); var title = byId(prefix + "FormTitle"); if (title) title.textContent = prefix === "snapshot" ? "净值更新" : title.textContent.replace("编辑", "新增"); }
 function formCard(prefix) { return byId(prefix + "FormCard"); }
@@ -123,6 +123,7 @@ function bindClicks() {
     if (btn.dataset.action === "edit") editRecord(btn.dataset.type, btn.dataset.id);
     if (btn.dataset.action === "duplicate") duplicateRecord(btn.dataset.type, btn.dataset.id);
     if (btn.dataset.action === "link-money-account") linkHistoricalMoneyAccount(btn.dataset.type, btn.dataset.id);
+    if (btn.dataset.action === "audit-open") openAuditEntity(btn.dataset.collection, btn.dataset.id);
   });
   byId("currentMonth").addEventListener("change", renderAll);
   byId("dashboardDate").addEventListener("change", function () { if (!this.value) return; byId("currentMonth").value = monthOf(this.value); renderTodayWidget(); renderAll(); });
@@ -130,9 +131,10 @@ function bindClicks() {
   byId("cancelAccountEdit").addEventListener("click", function () { resetForm("account"); closeForm("account"); });
   byId("cancelAssetItemEdit").addEventListener("click", function () { resetForm("assetItem"); closeForm("assetItem"); });
   byId("cancelLiabilityEdit").addEventListener("click", function () { resetForm("liability"); closeForm("liability"); });
-  byId("saveRules").addEventListener("click", function () { var previous = state.rules; state.rules = cleanText(byId("rulesText").value, 5000); if (save()) { renderAll(); notify("规则已保存"); } else { state.rules = previous; } });
-  byId("saveMonthlyPlan").addEventListener("click", function () { var month = currentMonth(), incomeRaw = byId("plannedIncome").value.trim(), payday = parseInt(byId("plannedPayday").value, 10) || 15, previousPlans = Object.assign({}, state.monthlyPlans || {}); if (!state.monthlyPlans) state.monthlyPlans = {}; state.monthlyPlans[month] = { plannedIncome: incomeRaw === "" ? "" : safeAmount(incomeRaw), payday: Math.min(31, Math.max(1, payday)) }; if (save()) { renderAll(); notify("本月计划已保存"); } else { state.monthlyPlans = previousPlans; } });
+  byId("saveRules").addEventListener("click", function () { var previous = state.rules; state.rules = cleanText(byId("rulesText").value, 5000); if (save()) { if (typeof auditLog === "function") auditLog({ operation: "update", collection: "rules", entityId: "", summary: "更新资金规则" }); renderAll(); notify("规则已保存"); } else { state.rules = previous; } });
+  byId("saveMonthlyPlan").addEventListener("click", function () { var month = currentMonth(), incomeRaw = byId("plannedIncome").value.trim(), payday = parseInt(byId("plannedPayday").value, 10) || 15, previousPlans = Object.assign({}, state.monthlyPlans || {}); if (!state.monthlyPlans) state.monthlyPlans = {}; state.monthlyPlans[month] = { plannedIncome: incomeRaw === "" ? "" : safeAmount(incomeRaw), payday: Math.min(31, Math.max(1, payday)) }; if (save()) { if (typeof auditLog === "function") auditLog({ operation: "update", collection: "monthlyPlans", entityId: month, summary: "更新 " + month + " 月度计划" }); renderAll(); notify("本月计划已保存"); } else { state.monthlyPlans = previousPlans; } });
   byId("exportData").addEventListener("click", exportData); byId("importData").addEventListener("click", importData);
+  if (byId("idbRestoreLatest")) byId("idbRestoreLatest").addEventListener("click", restoreIdbBackup);
   byId("flowRecordSearch").addEventListener("input", function () { flowRecordSearch = cleanText(this.value, 80); refreshFlowRecordSearch(); });
   byId("flowRecordClear").addEventListener("click", function () { flowRecordSearch = ""; refreshFlowRecordSearch(); byId("flowRecordSearch").focus(); });
   byId("actionFeedbackButton").addEventListener("click", runActionFeedback);

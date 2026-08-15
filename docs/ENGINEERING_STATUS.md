@@ -5,7 +5,7 @@ Last verified: 2026-08-15
 ## 1. Current Project Stage
 
 - Project: 财记, a local-first private personal finance web app.
-- Current phase: locally verified financial correctness and maintenance hardening.
+- Current phase: locally verified financial correctness with stabilized maintenance boundaries.
 - Runtime stack: static HTML, CSS, and plain JavaScript; no build step and no external runtime dependency by default.
 - Dashboard-wide pixel comparison remains a separately scoped visual task.
 - This document records local engineering evidence only. It does not imply push, merge, deployment, or live verification.
@@ -21,6 +21,7 @@ Last verified: 2026-08-15
 - Real-account transfers are two-sided; referenced accounts are archived instead of deleted.
 - Reconciliation is an auditable adjustment and does not rewrite opening balances.
 - Private natural-language finance events remain in an ignored append-only ledger.
+- Every save mirrors state into an IndexedDB safety net: versioned automatic backups (latest 30 kept) plus an append-only operation audit log, with graceful no-op fallback when IndexedDB is unavailable. The Data page exposes one-tap restore from the latest backup and a recent-operations audit view.
 
 ### Monthly Execution Health
 
@@ -31,22 +32,24 @@ Last verified: 2026-08-15
 
 ### Runtime Structure
 
-- `index.html` loads 26 ordered browser scripts.
+- `index.html` loads 27 ordered browser scripts.
+- The dependency-free classic-script runtime is an explicit contract: the complete 27-file order and every top-level declaration are checked deterministically.
 - State normalization, UI feedback, validators, migrations, storage, calculations, rendering, form bindings, orchestration, optional sync, and PWA responsibilities are split into focused files.
-- The project gate enforces the load order and prevents UI feedback, render context, form submission, and shared controls from drifting back into the wrong files.
+- The project gate enforces the load order and prevents UI feedback, render context, form submission, shared controls, and secondary-workspace shell selectors from drifting back into the wrong files.
 - Dashboard bottom-strip helpers have one active definition; retired pie/trend renderers and their stale DOM paths are removed.
-- `styles/pages.css` and `styles/subpages.css` are import-only entries backed by six business-page modules and three secondary-workspace modules; the remaining workspace base is a scoped refinement target rather than a mixed global stylesheet.
+- `styles/pages.css` and `styles/subpages.css` are import-only entries backed by six business-page modules and two secondary-workspace modules. The retired hierarchy override layer is gone; workspace structure and component hierarchy have one owner in `workspace-base.css`.
 
 ## 3. Verification Evidence
 
 - `scripts/app-data-safety.test.js`: 41 tests.
-- `scripts/app-render-smoke.test.js`: 24 tests.
+- `scripts/app-render-smoke.test.js`: 25 tests.
 - `scripts/pwa-assets.test.js`: 8 tests.
 - `scripts/finance-ledger.test.js`: 9 tests.
-- Total deterministic tests: 82.
+- `scripts/app-idb.test.js`: 5 tests.
+- Total deterministic tests: 88.
 - All JavaScript files pass syntax checking.
-- The project gate rejects duplicate browser globals, script or page-CSS order drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
-- Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`; the interaction itself is not yet CI-automated.
+- The project gate rejects duplicate browser globals, script or page-CSS order drift, CSS cache-version drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
+- Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`. It remains a manual release check while the repository intentionally has no browser-automation dependency.
 
 ## 4. Current Boundaries
 
@@ -64,11 +67,11 @@ Run after every engineering change:
 node scripts\check-project.js
 ```
 
-GitHub Actions runs the same dependency-free gate on pushes and pull requests. Browser automation remains pending because the repository currently avoids adding an external browser-test dependency.
+GitHub Actions runs the same dependency-free gate on pushes and pull requests. Browser automation is not part of the current no-external-dependency contract; enabling it requires a separately authorized tooling change.
 
 ## 6. Release State
 
 - Local implementation: verified.
-- Current branch remote: not yet synchronized with the latest local commits.
+- Current branch remote: local commits are not yet pushed.
 - CI result for these unpushed changes: pending.
 - Merge, deployment, and live verification: not claimed.

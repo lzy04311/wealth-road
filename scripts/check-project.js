@@ -52,7 +52,8 @@ function browserScriptFiles() {
   ["data safety", "scripts/app-data-safety.test.js"],
   ["render and sync smoke", "scripts/app-render-smoke.test.js"],
   ["PWA and brand", "scripts/pwa-assets.test.js"],
-  ["private finance ledger", "scripts/finance-ledger.test.js"]
+  ["private finance ledger", "scripts/finance-ledger.test.js"],
+  ["indexeddb persistence", "scripts/app-idb.test.js"]
 ].forEach(function (entry) { run(entry[0], process.execPath, [entry[1]]); });
 
 check("JavaScript syntax", function () {
@@ -89,6 +90,36 @@ check("browser global symbols", function () {
 
 check("browser layer boundaries", function () {
   var scripts = browserScriptFiles().map(relative);
+  var expectedScripts = [
+    "scripts/app-state.js",
+    "scripts/app-ui-feedback.js",
+    "scripts/app-validators.js",
+    "scripts/app-migrations.js",
+    "scripts/app-idb.js",
+    "scripts/app-storage.js",
+    "scripts/app-backend-config.js",
+    "scripts/app-calculations.js",
+    "scripts/app-render-core.js",
+    "scripts/dashboard/dashboard-formatters.js",
+    "scripts/dashboard/render-bottom-strip.js",
+    "scripts/app-render-dashboard.js",
+    "scripts/app-render-assets.js",
+    "scripts/app-render-records.js",
+    "scripts/app-render-investments.js",
+    "scripts/app-render-monthly.js",
+    "scripts/app-render-flow.js",
+    "scripts/app-actions-data.js",
+    "scripts/app-actions-crud.js",
+    "scripts/app-actions-quick-entry.js",
+    "scripts/app-actions-modals.js",
+    "scripts/app-actions-forms.js",
+    "scripts/app-auth.js",
+    "scripts/app-sync.js",
+    "scripts/app-actions-navigation.js",
+    "scripts/app-actions.js",
+    "scripts/app-pwa.js"
+  ];
+  assert(JSON.stringify(scripts) === JSON.stringify(expectedScripts), "index.html browser script order changed");
   function position(file) {
     var index = scripts.indexOf(file);
     assert(index >= 0, file + " is missing from index.html");
@@ -116,26 +147,56 @@ check("browser layer boundaries", function () {
   var pagesSource = fs.readFileSync(path.join(root, "styles/pages.css"), "utf8");
   var subpagesSource = fs.readFileSync(path.join(root, "styles/subpages.css"), "utf8");
   var controlsSource = fs.readFileSync(path.join(root, "styles/controls.css"), "utf8");
-  function cssImportTargets(source) {
-    var targets = [];
-    var pattern = /@import\s+url\("([^"]+)"\);/g;
+  var workspaceBaseSource = fs.readFileSync(path.join(root, "styles/subpages/workspace-base.css"), "utf8");
+  var indexSource = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var serviceWorkerSource = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
+  function cssImportRecords(source) {
+    var records = [];
+    var pattern = /@import\s+url\("([^"?]+)(?:\?v=(\d+))?"\);/g;
     var match;
-    while ((match = pattern.exec(source))) targets.push(match[1].replace(/\?v=\d+$/, ""));
-    return targets;
+    while ((match = pattern.exec(source))) records.push({ target: match[1], version: match[2] || "" });
+    return records;
+  }
+  function cssImportTargets(source) { return cssImportRecords(source).map(function (record) { return record.target; }); }
+  function importedVersion(source, target) {
+    var record = cssImportRecords(source).find(function (candidate) { return candidate.target === target; });
+    assert(record && record.version, target + " must have a cache version");
+    return record.version;
   }
   var expectedPageImports = ["./pages/assets.css", "./pages/accounts.css", "./pages/records.css", "./pages/data.css", "./pages/flow.css", "./pages/investments.css"];
-  var expectedSubpageImports = ["./subpages/workspace-base.css", "./subpages/hierarchy.css", "./subpages/form-drawer.css"];
+  var expectedSubpageImports = ["./subpages/workspace-base.css", "./subpages/form-drawer.css"];
   assert(stylesEntry.indexOf("styles/controls.css") >= 0, "styles.css must load the controls layer");
   assert(stylesEntry.indexOf("styles/controls.css") < stylesEntry.indexOf("styles/pages.css"), "shared controls must load before page-specific styles");
   assert(JSON.stringify(cssImportTargets(pagesSource)) === JSON.stringify(expectedPageImports), "styles/pages.css import order changed");
   assert(JSON.stringify(cssImportTargets(subpagesSource)) === JSON.stringify(expectedSubpageImports), "styles/subpages.css import order changed");
   assert(pagesSource.replace(/@import[^;]+;/g, "").trim() === "", "styles/pages.css must remain import-only");
   assert(subpagesSource.replace(/@import[^;]+;/g, "").trim() === "", "styles/subpages.css must remain import-only");
+  var pageEntryVersion = importedVersion(stylesEntry, "./styles/pages.css");
+  var subpageEntryVersion = importedVersion(stylesEntry, "./styles/subpages.css");
+  assert(cssImportRecords(pagesSource).every(function (record) { return record.version === pageEntryVersion; }), "page CSS module cache versions must match styles/pages.css");
+  assert(cssImportRecords(subpagesSource).every(function (record) { return record.version === subpageEntryVersion; }), "subpage CSS module cache versions must match styles/subpages.css");
+  var rootStylesVersion = (indexSource.match(/styles\.css\?v=(\d+)/) || [])[1];
+  var serviceWorkerVersion = (serviceWorkerSource.match(/caiji-pwa-v(\d+)/) || [])[1];
+  assert(rootStylesVersion && rootStylesVersion === serviceWorkerVersion, "index stylesheet and service-worker cache versions must match");
   expectedPageImports.concat(expectedSubpageImports).forEach(function (target) {
     assert(fs.existsSync(path.resolve(path.join(root, "styles"), target)), target + " is missing");
   });
   assert(controlsSource.indexOf(".form-grid") >= 0 && controlsSource.indexOf(".btn.primary") >= 0, "styles/controls.css must own shared forms and buttons");
-  return scripts.length + " ordered scripts · 9 ordered page CSS modules · state/UI/actions/CSS ownership enforced";
+  var workspaceShellSelectors = [
+    ".module-page-mode .app",
+    ".module-page-mode .module-page-header",
+    ".module-page-mode .module-page-header::after",
+    ".module-page-mode .module-back-btn",
+    ".module-page-mode .module-page-header h2",
+    ".module-page-mode .module-page-header p",
+    ".subpage-context-bar",
+    ".subpage-context-bar p"
+  ];
+  workspaceShellSelectors.forEach(function (selector) {
+    assert(workspaceBaseSource.indexOf(selector) >= 0, "workspace shell selector is missing from workspace-base.css: " + selector);
+  });
+  assert(!fs.existsSync(path.join(root, "styles/subpages/hierarchy.css")), "retired hierarchy.css override layer must not return");
+  return scripts.length + " ordered scripts · 8 ordered page CSS modules · state/UI/actions/CSS shell/cache ownership enforced";
 });
 
 check("HTML DOM contract", function () {

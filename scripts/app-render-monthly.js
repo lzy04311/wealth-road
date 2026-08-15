@@ -54,4 +54,5 @@ function renderAll() {
   renderGoals();
   renderFlow(renderContextCache);
   byId("rulesText").value = state.rules;
+  if (typeof renderIdbPanel === "function") renderIdbPanel();
 }

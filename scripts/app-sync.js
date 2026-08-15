@@ -143,6 +143,7 @@ async function applyCloudState(prepared) {
     backendSyncState.unresolvedConflict = false;
     backendSyncState.pendingCloudState = null;
     renderAll();
+    if (typeof auditLog === "function") auditLog({ operation: "cloud_pull", collection: "state", entityId: "", summary: "使用云端数据覆盖本机" });
     setBackendSyncStatus("synced");
     notify("已使用云端数据");
     return true;

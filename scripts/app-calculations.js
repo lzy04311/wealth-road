@@ -258,3 +258,59 @@ function accountStatus(account, month) {
   if (investNet > 0) return { text: "已投入", className: "positive" };
   return { text: "继续积累", className: "" };
 }
+function daysUntilDate(dateText) {
+  if (!dateText || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateText))) return null;
+  var parts = String(dateText).split("-").map(Number);
+  var now = new Date();
+  var todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+  return Math.round((targetDate.getTime() - todayDate.getTime()) / 86400000);
+}
+function upcomingReminders(horizonDays) {
+  var horizon = horizonDays == null ? 7 : horizonDays;
+  var month = currentMonth();
+  var plan = monthlyPlan(month);
+  var s = monthlySummary(month);
+  var reminders = [];
+  if (plan.hasPlannedIncome) {
+    var salaryReceived = s.plannedIncome > 0 ? s.income / s.plannedIncome >= 0.9 : false;
+    if (!salaryReceived) {
+      var payday = plan.payday || 15;
+      var paydayDate = month + "-" + String(payday).padStart(2, "0");
+      var paydayDays = daysUntilDate(paydayDate);
+      if (paydayDays != null && paydayDays <= horizon && paydayDays >= -3) {
+        reminders.push({
+          type: "payday", title: "发薪日 " + payday + " 号", date: paydayDate, daysLeft: paydayDays,
+          className: paydayDays < 0 ? "negative" : "warning",
+          description: paydayDays < 0 ? "工资尚未到账，已过发薪日" : (paydayDays === 0 ? "今天发薪，请确认到账" : paydayDays + " 天后发薪"),
+          view: "flow"
+        });
+      }
+    }
+  }
+  (state.assetItems || []).forEach(function (item) {
+    if (item.kind !== "电子订阅" || item.status === "已停用" || !item.renewalDate) return;
+    var days = daysUntilDate(item.renewalDate);
+    if (days != null && days <= horizon) {
+      reminders.push({
+        type: "renewal", title: item.name + " 续费", date: item.renewalDate, daysLeft: days,
+        className: days < 0 ? "negative" : "warning",
+        description: days < 0 ? "已过期 " + (-days) + " 天，月成本 " + money(item.monthlyCost) : (days === 0 ? "今天到期，月成本 " + money(item.monthlyCost) : days + " 天后到期，月成本 " + money(item.monthlyCost)),
+        view: "assets"
+      });
+    }
+  });
+  (state.liabilities || []).forEach(function (item) {
+    if (item.status !== "还款中" || !item.dueDate) return;
+    var days = daysUntilDate(item.dueDate);
+    if (days != null && days <= horizon) {
+      reminders.push({
+        type: "due", title: item.name + " 还款", date: item.dueDate, daysLeft: days,
+        className: days < 0 ? "negative" : "warning",
+        description: days < 0 ? "已逾期 " + (-days) + " 天，最低还款 " + money(item.minimumPayment) : (days === 0 ? "今天到期，最低还款 " + money(item.minimumPayment) : days + " 天后到期，最低还款 " + money(item.minimumPayment)),
+        view: "assets"
+      });
+    }
+  });
+  return reminders.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+}

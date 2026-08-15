@@ -1,23 +1,27 @@
 "use strict";
 
 function upsert(list, item) {
-  if (list === state.incomes) item = normalizeIncome(item, {});
-  else if (list === state.expenses) item = normalizeExpense(item, {});
-  else if (list === state.investments) item = normalizeInvestment(item, {});
-  else if (list === state.transfers) item = normalizeTransfer(item, {});
-  else if (list === state.snapshots) item = normalizeSnapshot(item, {});
-  else if (list === state.accounts) item = normalizeAccount(item, {});
-  else if (list === state.moneyAccounts) item = normalizeMoneyAccount(item);
-  else if (list === state.reconciliations) item = normalizeReconciliation(item, {});
-  else if (list === state.allocations) item = normalizeAllocation(item, {});
-  else if (list === state.assetItems) item = normalizeAssetItem(item, {});
-  else if (list === state.liabilities) item = normalizeLiability(item);
+  var collection = "";
+  if (list === state.incomes) { collection = "incomes"; item = normalizeIncome(item, {}); }
+  else if (list === state.expenses) { collection = "expenses"; item = normalizeExpense(item, {}); }
+  else if (list === state.investments) { collection = "investments"; item = normalizeInvestment(item, {}); }
+  else if (list === state.transfers) { collection = "transfers"; item = normalizeTransfer(item, {}); }
+  else if (list === state.snapshots) { collection = "snapshots"; item = normalizeSnapshot(item, {}); }
+  else if (list === state.accounts) { collection = "accounts"; item = normalizeAccount(item, {}); }
+  else if (list === state.moneyAccounts) { collection = "moneyAccounts"; item = normalizeMoneyAccount(item); }
+  else if (list === state.reconciliations) { collection = "reconciliations"; item = normalizeReconciliation(item, {}); }
+  else if (list === state.allocations) { collection = "allocations"; item = normalizeAllocation(item, {}); }
+  else if (list === state.assetItems) { collection = "assetItems"; item = normalizeAssetItem(item, {}); }
+  else if (list === state.liabilities) { collection = "liabilities"; item = normalizeLiability(item); }
 
   var index = list.findIndex(function (row) { return row.id === item.id; });
   var previous = index >= 0 ? list[index] : null;
+  var edited = index >= 0;
   if (index >= 0) list[index] = item; else list.push(item);
   if (save()) {
-    showActionFeedback(recordSaveMessage(list, item, index >= 0));
+    var message = recordSaveMessage(list, item, edited);
+    if (typeof auditLog === "function") auditLog({ operation: edited ? "update" : "create", collection: collection, entityId: item.id, summary: message });
+    showActionFeedback(message);
     return true;
   }
   if (index >= 0) list[index] = previous; else list.pop();
@@ -45,6 +49,7 @@ function linkHistoricalMoneyAccount(type, id) {
   }
   if (!save()) { Object.assign(record, previous); return; }
   renderAll();
+  if (typeof auditLog === "function") auditLog({ operation: "link_money_account", collection: key, entityId: id, summary: "补齐历史流水实际账户" });
   showActionFeedback("已补齐历史流水的实际账户", "撤销", function () {
     var linkedState = Object.assign({}, record);
     Object.assign(record, previous);
@@ -79,6 +84,19 @@ function recordDeleteLabel(type, item) {
   return item.name || "记录";
 }
 
+function auditCollectionType(collection) {
+  var map = { incomes: "income", expenses: "expense", investments: "investment", transfers: "transfer", snapshots: "snapshot", accounts: "account", moneyAccounts: "moneyAccount", reconciliations: "reconciliation", allocations: "allocation", assetItems: "assetItem", liabilities: "liability" };
+  return map[collection] || "";
+}
+function openAuditEntity(collection, id) {
+  var type = auditCollectionType(collection);
+  if (!type || !id) return;
+  var key = { income: "incomes", expense: "expenses", investment: "investments", transfer: "transfers", snapshot: "snapshots", account: "accounts", moneyAccount: "moneyAccounts", reconciliation: "reconciliations", allocation: "allocations", assetItem: "assetItems", liability: "liabilities" }[type];
+  if (!key || !state[key]) return;
+  var exists = state[key].some(function (item) { return item.id === id; });
+  if (!exists) { notify("该记录已被删除或不存在"); return; }
+  editRecord(type, id);
+}
 function removeRecord(type, id) {
   var map = { income: "incomes", expense: "expenses", investment: "investments", transfer: "transfers", snapshot: "snapshots", account: "accounts", moneyAccount: "moneyAccounts", reconciliation: "reconciliations", allocation: "allocations", assetItem: "assetItems", liability: "liabilities" };
   var key = map[type];
@@ -95,6 +113,7 @@ function removeRecord(type, id) {
           moneyAccount.archived = true;
           if (save()) {
             syncSelects(); renderAll();
+            if (typeof auditLog === "function") auditLog({ operation: "archive", collection: "moneyAccounts", entityId: id, summary: "归档实际账户 · " + moneyAccount.name });
             showActionFeedback("已归档实际账户 · " + moneyAccount.name, "撤销", function () {
               moneyAccount.archived = false;
               if (save()) { syncSelects(); renderAll(); showActionFeedback("已恢复实际账户 · " + moneyAccount.name); }
@@ -116,6 +135,7 @@ function removeRecord(type, id) {
           if (save()) {
             syncSelects();
             renderAll();
+            if (typeof auditLog === "function") auditLog({ operation: "archive", collection: "accounts", entityId: id, summary: "归档账户 · " + account.name });
             showActionFeedback("已归档账户 · " + account.name, "撤销", function () {
               account.archived = false;
               if (save()) {
@@ -141,6 +161,7 @@ function removeRecordFinal(type, id, key) {
   state[key] = state[key].filter(function (item) { return item.id !== id; });
   if (save()) {
     renderAll();
+    if (typeof auditLog === "function") auditLog({ operation: "delete", collection: key, entityId: id, summary: "已删除" + recordDeleteLabel(type, removedItem) });
     showActionFeedback("已删除" + recordDeleteLabel(type, removedItem), "撤销", function () {
       if (state[key].some(function (item) { return item.id === removedItem.id; })) return;
       var restoreIndex = Math.min(removedIndex, state[key].length);

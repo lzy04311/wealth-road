@@ -1,4 +1,4 @@
-﻿.dashboard-main-grid {
+.dashboard-main-grid {
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(350px, .9fr) minmax(520px, 1.2fr) minmax(350px, .9fr);
@@ -1191,5 +1191,35 @@
   font-size: .84rem;
   font-weight: 500;
   line-height: 1.45;
+}
+
+.dashboard-reminder-card h3 { margin-bottom: 6px; }
+.dashboard-reminder-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.dashboard-reminder-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.dashboard-reminder-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--warning);
+}
+.dashboard-reminder-dot.negative { background: var(--danger); }
+.dashboard-reminder-item strong {
+  display: block;
+  color: var(--text);
+  font-size: .82rem;
+}
+.dashboard-reminder-item p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.4;
 }
 
