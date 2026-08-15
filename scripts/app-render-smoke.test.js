@@ -93,6 +93,7 @@ function createContext() {
   vm.createContext(context);
   [
     "app-state.js",
+    "app-ui-feedback.js",
     "app-validators.js",
     "app-migrations.js",
     "app-storage.js",
@@ -111,6 +112,7 @@ function createContext() {
     "app-actions-crud.js",
     "app-actions-quick-entry.js",
     "app-actions-modals.js",
+    "app-actions-forms.js",
     "app-auth.js",
     "app-sync.js",
     "app-actions-navigation.js",
@@ -143,6 +145,16 @@ test("renderAll does not throw in DOM smoke context", function () {
   assert.ok(context.__elements.dashboardTotalAsset);
   assert.ok(context.__elements.incomeList);
   assert.ok(context.__elements.expenseList);
+});
+
+test("bottom strip list bullets use the semantic dot class", function () {
+  var context = createContext();
+  var emptyList = context.dashboardStripTopList([], "等待数据");
+  var populatedList = context.dashboardStripTopList([{ name: "日常", pct: 100 }], "等待数据");
+  assert.match(emptyList, /class="dashboard-strip-dot" aria-hidden="true"/);
+  assert.match(populatedList, /class="dashboard-strip-dot" aria-hidden="true"/);
+  assert.doesNotMatch(emptyList, /<i><\/i>/);
+  assert.doesNotMatch(populatedList, /<i><\/i>/);
 });
 
 test("dated record forms do not expose duplicate month inputs", function () {
@@ -245,6 +257,17 @@ test("appConfirm resolves false on dismiss close", function () {
   return Promise.resolve().then(function () {
     assert.strictEqual(result, false);
   });
+});
+
+test("health detail modal is derived from the active score model", function () {
+  var context = createContext();
+  var target = { closest: function () { return { dataset: { healthDetail: "score" } }; } };
+  assert.strictEqual(context.handleHealthDetailClick({ target: target }), true);
+  var html = context.document.getElementById("healthModalBody").innerHTML;
+  assert.match(html, /月度执行健康度/);
+  assert.match(html, /模型版本 <b>v1<\/b>/);
+  assert.match(html, /资产判断基线不完整/);
+  assert.doesNotMatch(html, /回撤|增长 \+4/);
 });
 
 test("activateView switches between home and module page modes", function () {

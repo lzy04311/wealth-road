@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "caiji-pwa-v20";
+var CACHE_NAME = "caiji-pwa-v28";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -8,11 +8,21 @@ var APP_SHELL = [
   "./styles.css",
   "./styles/base.css",
   "./styles/components.css",
+  "./styles/controls.css",
   "./styles/modals.css",
   "./styles/dashboard.css",
   "./styles/pages.css",
   "./styles/subpages.css",
   "./styles/responsive.css",
+  "./styles/pages/assets.css",
+  "./styles/pages/accounts.css",
+  "./styles/pages/records.css",
+  "./styles/pages/data.css",
+  "./styles/pages/flow.css",
+  "./styles/pages/investments.css",
+  "./styles/subpages/workspace-base.css",
+  "./styles/subpages/hierarchy.css",
+  "./styles/subpages/form-drawer.css",
   "./styles/dashboard/layout.css",
   "./styles/dashboard/layout-topbar.css",
   "./styles/dashboard/layout-shell.css",
@@ -21,6 +31,7 @@ var APP_SHELL = [
   "./styles/dashboard/layout-bottom-nav.css",
   "./styles/dashboard/responsive.css",
   "./scripts/app-state.js",
+  "./scripts/app-ui-feedback.js",
   "./scripts/app-validators.js",
   "./scripts/app-migrations.js",
   "./scripts/app-storage.js",
@@ -39,6 +50,7 @@ var APP_SHELL = [
   "./scripts/app-actions-crud.js",
   "./scripts/app-actions-quick-entry.js",
   "./scripts/app-actions-modals.js",
+  "./scripts/app-actions-forms.js",
   "./scripts/app-auth.js",
   "./scripts/app-sync.js",
   "./scripts/app-actions-navigation.js",

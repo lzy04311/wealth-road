@@ -2,10 +2,12 @@
   position: relative;
   z-index: 1;
   min-height: 60px;
+  height: auto;
   display: grid;
   grid-template-columns: minmax(560px, 1.08fr) minmax(700px, 1fr);
   gap: 0;
   align-items: center;
+  overflow: visible;
   margin-inline: 30px;
   padding: 6px 16px;
   border-radius: 24px;
@@ -26,6 +28,8 @@
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
   align-items: center;
+  overflow: visible;
+  padding-block: 4px;
 }
 
 /* ===== Bottom Status Item: Base ===== */
@@ -37,7 +41,8 @@
   grid-template-columns: 21px minmax(0, 1fr);
   gap: 6px;
   align-items: center;
-  padding: 3px 10px;
+  overflow: visible;
+  padding: 4px 10px;
   border-right: 1px solid rgba(201,166,107,.085);
 }
 
@@ -77,6 +82,7 @@
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
+  line-height: 1.35;
 }
 
 .dashboard-status-item span {
@@ -84,16 +90,14 @@
   font-family: var(--font-sans-zh);
   font-size: .68rem;
   font-weight: 600;
-  line-height: 1.35;
 }
 
 .dashboard-status-item strong {
   margin-top: 1px;
-  color: var(--muted);
+  color: var(--tone-color, var(--muted));
   font-family: var(--font-number);
   font-size: .60rem;
   font-weight: 700;
-  line-height: 1.3;
   letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
@@ -172,10 +176,6 @@
     0 0 22px rgba(220,178,101,.18),
     0 5px 12px rgba(133,100,52,.030);
 }
-
-.positive { color: var(--success) !important; }
-.negative { color: var(--danger) !important; }
-.warning { color: var(--warning) !important; }
 
 #healthModalBody { text-align: center; }
 #healthModalBody h3 { margin-bottom: 12px; font-size: 1.1rem; color: var(--text); }

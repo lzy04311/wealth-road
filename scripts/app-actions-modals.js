@@ -84,14 +84,39 @@ function appConfirm(title, message, okText, cancelText) {
   });
 }
 
+function healthScoreDelta(value) {
+  return value > 0 ? "+" + value : String(value);
+}
+
+function healthScoreRulesHtml() {
+  var model = FINANCIAL_HEALTH_MODEL;
+  var adjustments = model.adjustments;
+  return "<h3>" + esc(model.label) + " · 评分规则</h3>"
+    + "<p>模型版本 <b>v" + esc(model.version) + "</b>｜基准 <b>" + esc(model.baseScore) + "</b> 分</p>"
+    + "<p>未填计划收入 <b>" + esc(healthScoreDelta(adjustments.missingPlannedIncome)) + "</b>｜收入达到计划的 " + esc(model.salaryReceivedRatio * 100) + "% <b>" + esc(healthScoreDelta(adjustments.salaryReceived)) + "</b> / 发薪日后 " + esc(model.salaryGraceDays) + " 天仍未达到 <b>" + esc(healthScoreDelta(adjustments.salaryLate)) + "</b></p>"
+    + "<p>消费预算超支 <b>" + esc(healthScoreDelta(adjustments.overBudget)) + "</b>｜预算使用低于 " + esc(model.lowSpendingRatio * 100) + "% <b>" + esc(healthScoreDelta(adjustments.lowSpending)) + "</b></p>"
+    + "<p>月度自由现金为负 <b>" + esc(healthScoreDelta(adjustments.negativeFreeCash)) + "</b> / 为正 <b>" + esc(healthScoreDelta(adjustments.positiveFreeCash)) + "</b></p>"
+    + "<p>资产判断基线不完整 <b>" + esc(healthScoreDelta(adjustments.incompleteAssetBaseline)) + "</b></p>"
+    + "<p>这是预算与现金流执行提示，不是综合投资或偿债风险评级。</p>";
+}
+
+function healthLevelRulesHtml() {
+  var thresholds = FINANCIAL_HEALTH_MODEL.thresholds;
+  return "<h3>月度执行状态</h3>"
+    + "<p>≥" + esc(thresholds.stable) + " <b>稳定</b></p>"
+    + "<p>≥" + esc(thresholds.controlled) + " <b>可控</b></p>"
+    + "<p>≥" + esc(thresholds.attention) + " <b>需关注</b></p>"
+    + "<p>&lt;" + esc(thresholds.attention) + " <b>高压力</b></p>";
+}
+
 function handleHealthDetailClick(event) {
   var healthDetail = event.target.closest("[data-health-detail]");
   if (!healthDetail) return false;
   var type = healthDetail.dataset.healthDetail;
   if (type === "score") {
-    openHealthModal("<h3>评分规则</h3><p>基准 <b>72</b> 分</p><p>未填计划收入 <b>-18</b>｜工资到账 <b>+8</b> / 逾期 <b>-12</b></p><p>超支 <b>-18</b>｜支出&lt;55% <b>+6</b></p><p>负结余 <b>-16</b> / 正结余 <b>+8</b></p><p>无快照 <b>-8</b>｜回撤 <b>-8</b> / 增长 <b>+4</b></p>");
+    openHealthModal(healthScoreRulesHtml());
   } else {
-    openHealthModal("<h3>风险等级</h3><p>≥82 <b>低风险</b></p><p>≥64 <b>可控</b></p><p>≥45 <b>需关注</b></p><p>&lt;45 <b>高风险</b></p>");
+    openHealthModal(healthLevelRulesHtml());
   }
   return true;
 }

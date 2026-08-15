@@ -13,8 +13,3 @@ function dashboardShortName(name) {
   if (name.indexOf("保命") >= 0) return "保障";
   return String(name).length > 4 ? String(name).slice(0, 4) : String(name);
 }
-
-function dashboardStripIcon(icon) {
-  var map = { cash: "⌁", balance: "◍", invest: "↗", asset: "◎", goal: "◉", quote: "❛" };
-  return map[icon] || "•";
-}

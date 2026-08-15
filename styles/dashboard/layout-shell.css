@@ -32,36 +32,6 @@
   line-height: 1.45;
 }
 
-/* FINAL LOCK: bottom strip title consistency + bottom status text visibility */
-#dashboardBottomStrip .dashboard-strip-title {
-  font-family: var(--font-sans-zh) !important;
-  font-size: 15px !important;
-  font-weight: 650 !important;
-  line-height: 1.2 !important;
-  letter-spacing: 0 !important;
-}
-
-/* ===== Bottom Nav: Base (desktop default) ===== */
-.dashboard-bottom-nav {
-  min-height: 60px !important;
-  height: auto !important;
-  overflow: visible !important;
-}
-
-.dashboard-bottom-status,
-.dashboard-status-item {
-  overflow: visible !important;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-}
-
-.dashboard-status-item span,
-.dashboard-status-item strong {
-  line-height: 1.35 !important;
-}
-
-/* FINAL OVERRIDE: bottom strip internal balance (desktop/tablet) */
-
 .dashboard-cockpit-page::before,
 .dashboard-cockpit-page::after {
   content: "";

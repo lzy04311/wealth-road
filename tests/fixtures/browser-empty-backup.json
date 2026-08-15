@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 5,
+  "accounts": [],
+  "moneyAccounts": [],
+  "reconciliations": [],
+  "allocations": [],
+  "incomes": [],
+  "expenses": [],
+  "investments": [],
+  "transfers": [],
+  "snapshots": [],
+  "monthlyPlans": {},
+  "rules": "",
+  "assetItems": [],
+  "liabilities": []
+}

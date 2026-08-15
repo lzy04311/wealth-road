@@ -1,71 +1,71 @@
 ﻿@media (min-width: 901px) {
   #dashboardBottomStrip.dashboard-bottom-strip .dashboard-strip-item {
-    align-items: center !important;
-    justify-items: stretch !important;
-    padding: 3px 12px !important;
+    align-items: center;
+    justify-items: stretch;
+    padding: 3px 12px;
   }
 
   #dashboardBottomStrip .dashboard-strip-block {
-    grid-template-rows: 20px 1fr !important;
-    align-content: stretch !important;
-    justify-content: stretch !important;
-    height: 100% !important;
+    grid-template-rows: 20px 1fr;
+    align-content: stretch;
+    justify-content: stretch;
+    height: 100%;
   }
 
   #dashboardBottomStrip .dashboard-strip-title {
-    justify-self: start !important;
-    align-self: start !important;
-    text-align: left !important;
+    justify-self: start;
+    align-self: start;
+    text-align: left;
   }
 
   #dashboardBottomStrip .dashboard-strip-body {
-    display: grid !important;
-    align-content: center !important;
-    justify-items: stretch !important;
-    gap: 3px !important;
-    min-height: 0 !important;
-    width: 100% !important;
+    display: grid;
+    align-content: center;
+    justify-items: stretch;
+    gap: 3px;
+    min-height: 0;
+    width: 100%;
   }
 
   #dashboardBottomStrip .dashboard-strip-donut-row,
   #dashboardBottomStrip .dashboard-strip-allocation-row {
-    min-height: 0 !important;
-    align-items: center !important;
+    min-height: 0;
+    align-items: center;
   }
 
   #dashboardBottomStrip .dashboard-strip-list span {
-    font-size: 12px !important;
-    line-height: 1.2 !important;
+    font-size: 12px;
+    line-height: 1.2;
   }
 
   #dashboardBottomStrip .dashboard-strip-invest-line,
   #dashboardBottomStrip .dashboard-strip-sparkline {
-    width: 100% !important;
-    justify-self: stretch !important;
+    width: 100%;
+    justify-self: stretch;
   }
 
   #dashboardBottomStrip .dashboard-strip-goal .dashboard-strip-progress,
   #dashboardBottomStrip .dashboard-strip-cash .dashboard-strip-bar,
   #dashboardBottomStrip .dashboard-strip-cash .dashboard-strip-split {
-    width: 82% !important;
+    width: 82%;
   }
 
   #dashboardBottomStrip .dashboard-strip-quote .dashboard-strip-body {
-    align-content: center !important;
+    align-content: center;
   }
 
   #dashboardBottomStrip .dashboard-strip-quote-main {
-    font-size: 24px !important;
-    line-height: 1.1 !important;
+    font-size: 24px;
+    line-height: 1.1;
   }
 
   #dashboardBottomStrip .dashboard-strip-quote .dashboard-strip-desc {
-    font-size: 12px !important;
-    line-height: 1.4 !important;
-    max-width: 88% !important;
-    white-space: normal !important;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    font-size: 12px;
+    line-height: 1.4;
+    max-width: 88%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   /* bottom status text visibility is locked by the global FINAL LOCK block above */
@@ -334,8 +334,8 @@
   }
 
   .dashboard-bottom-nav {
-    min-height: 60px !important;
-    height: 60px !important;
+    min-height: 60px;
+    height: 60px;
     align-self: center;
     align-items: center;
     padding: 6px 14px;
@@ -346,7 +346,7 @@
   .dashboard-status-item {
     grid-template-columns: 19px minmax(0, 1fr);
     gap: 6px;
-    padding: 3px 8px;
+    padding: 4px 8px;
   }
 
   .dashboard-status-item i {
@@ -566,7 +566,7 @@
 
   .dashboard-status-item {
     min-height: 54px;
-    padding: 7px 8px;
+    padding: 4px 8px;
     border: 1px solid rgba(201,166,107,.12);
     border-radius: 12px;
     background: rgba(255,253,248,.28);

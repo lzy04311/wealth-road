@@ -1,5 +1,16 @@
 # Repository Agent Instructions
 
+## Project Operating Contract
+
+- 财记是本地优先的私人资金管理网页应用，使用原生 HTML、CSS 和 JavaScript，无构建步骤。
+- 浏览器入口是 `index.html`；PWA 验证需要 localhost HTTP 服务。
+- 工程修改后运行 `node scripts/check-project.js`，不得通过降低门禁阈值掩盖失败。
+- 当前权威工程状态是 `docs/ENGINEERING_STATUS.md`，数据结构以 `docs/DATA_MODEL.md` 为准，视觉以 `docs/DESIGN_SYSTEM.md` 为准。
+- 保持现有 localStorage 主 key、state 字段和迁移链兼容；新增结构必须配套 migration 与测试。
+- 不引入框架或外部依赖、不大规模重写、不启用云同步，除非用户明确授权对应范围。
+- 可选 Supabase 模块默认禁用；在认证、RLS、冲突处理、同源客户端脚本和部署配置验证前不得启用。
+- 小步修改并保留可回退性；现役代码优先于历史计划和归档资料。
+
 ## Financial Recording Protocol
 
 When the user describes an actual financial change in natural language, record it in the private append-only ledger through `scripts/finance-ledger.js`.

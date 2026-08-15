@@ -1,94 +1,49 @@
 # Roadmap
 
-本文件记录当前阶段路线图。若与 `docs/ENGINEERING_STATUS.md`、`docs/DATA_MODEL.md`、`docs/DESIGN_SYSTEM.md` 冲突，以 `docs/` 下的新文档为准。
+Last verified: 2026-08-15
 
-## 1. 已完成：工程加固阶段
+本路线图只列尚未闭合或需要持续守护的工作。当前工程事实以 `ENGINEERING_STATUS.md` 为准。
 
-当前工程加固已阶段性完成：
+## P0：数据安全守护
 
-- P0 数据安全加固。
-- `scripts/app-data-safety.test.js` 已扩展到 27 个回归测试。
-- 当前 schema 已推进到 v5，包含真实账户、资金用途分配和余额核对。
-- 已加入两侧真实账户转账、账户归档和历史流水补账户流程。
-- state 层拆分：
-  - `scripts/app-state.js`
-  - `scripts/app-validators.js`
-  - `scripts/app-migrations.js`
-  - `scripts/app-storage.js`
-- actions 层拆分：
-  - `scripts/app-actions-data.js`
-  - `scripts/app-actions-crud.js`
-  - `scripts/app-actions-quick-entry.js`
-  - `scripts/app-actions-modals.js`
-  - `scripts/app-actions-navigation.js`
-  - `scripts/app-actions.js`
-- CSS 注释分区：
-  - `styles/base.css`
-  - `styles/components.css`
-  - `styles/pages.css`
-  - `styles/responsive.css`
-- 新增核心文档：
-  - `docs/ENGINEERING_STATUS.md`
-  - `docs/DATA_MODEL.md`
-  - `docs/DESIGN_SYSTEM.md`
+当前没有已知 P0 阻断项。以下能力必须持续保持：
 
-## 2. 当前优先级
+- schema migration、导入前备份和损坏 localStorage 恢复。
+- 实体与引用完整性校验。
+- 双边转账守恒、负债扣减和余额核对口径。
+- 私密账本忽略与不可变更历史。
 
-### P0
+任何涉及 state 字段、localStorage key、迁移或导入管线的修改都必须新增回归测试。
 
-- 数据安全。
-- 备份可靠性。
-- 导入导出可靠性。
-- localStorage 损坏恢复。
-- 明确 schema migration。
+## P1：视觉与产品可信度
 
-当前 P0 已完成一轮加固，后续只在发现真实风险时继续处理。
+- 以 [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) 为基准，完成 Dashboard 的桌面、窄屏像素级比较。
+- 验收顶部品牌与快捷操作、主体三列、底部数据带、状态导航、文本裁切和页面横向溢出。
+- 继续统一二级页面布局和表单抽屉细节，但不大规模重写。
+- 保持“月度执行健康度”与综合财务风险的语义边界。
+- 如调整评分权重，必须同步模型版本、说明和场景测试。
+- 在定义指标和验收口径后，再实现年化收益、回撤和更细的投资表现归因。
+- 只有产品行为明确后，才把规则、订阅和目标扩展为提醒或周期动作系统。
 
-### P1
+## P2：维护性
 
-- 二级页面布局统一与表单抽屉进入收尾阶段。
-- Dashboard 视觉复刻需要独立任务继续。
-- CSS 逐步迁移和作用域收紧。
-- render 层后续拆分评估。
-- 保持现役文档与界面的“财记”品牌口径一致。
+- 继续小批量收紧 CSS 作用域；`!important` 数量不得高于门禁基线。
+- 通用表单和按钮已归入 `styles/controls.css`；一级页面样式已拆为六个按业务域命名的模块，入口和加载顺序由门禁固定。
+- 二级工作区已拆为基础布局、层级覆盖和表单抽屉三个模块；下一步逐区消除 `styles/subpages/hierarchy.css` 与基础布局之间的重复覆盖，避免一次性改写。
+- 仅在业务边界继续稳定后，再评估拆分 `styles/subpages/workspace-base.css`，每次都保持选择器语义和加载顺序并做真实浏览器回归。
+- 对剩余全局脚本逐域评估命名空间，不一次性迁移全部模块。
+- 将真实浏览器恢复流程接入可重复的 CI 自动化。
 
-### P2
+## P3：可选同步与发布
 
-- 更完整的测试覆盖。
-- 实体唯一 ID、引用完整性和完整浏览器写入流程测试。
-- 旧 selector 验证和清理。
-- 更细的组件边界整理。
+- Supabase 保持默认禁用。
+- 启用条件和回退边界以 `OPTIONAL_SYNC.md` 为准；启用前验证认证、RLS、同源客户端脚本、版本化写入和多设备冲突。
+- 建立明确的 push、PR、CI、merge、deploy、live verify 和回滚证据。
+- 发布完成并完整汇报后，才讨论清理本地分支和历史现场。
 
-## 3. 下一阶段建议
+## 暂不做
 
-下一阶段可以回到视觉和体验，但必须遵守 `docs/DESIGN_SYSTEM.md`：
-
-- Dashboard 视觉复刻继续。
-- 保持香槟金金融座舱和私人财富驾驶舱方向。
-- 不把 dashboard 改回普通堆卡片仪表盘。
-- 二级页面逐步统一，而不是一次性大规模重写。
-- CSS 迁移采用小步、可回退策略。
-- render 层拆分先评估，再执行。
-
-## 4. 暂不做
-
-当前仍然保持以下限制：
-
-- 暂不登录。
-- 暂不云同步。
-- 暂不小程序。
-- 暂不 App Store。
-- 暂不自动净值抓取。
-- 暂不接入真实账户、券商、基金接口。
-- 暂不引入前端框架。
-- 暂不做大规模 CSS 迁移。
-
-## 5. 每次新增功能前必须确认
-
-1. 是否符合 `docs/ENGINEERING_STATUS.md`。
-2. 是否会改变 state 字段名。
-3. 是否会改变 localStorage key。
-4. 是否需要 migration。
-5. 是否需要新增测试。
-6. 是否符合 `docs/DESIGN_SYSTEM.md`。
-7. 是否真的属于当前阶段。
+- 不引入前端框架。
+- 不做小程序或 App Store 发布。
+- 不自动抓取真实银行、券商或基金账户。
+- 不把月度执行评分扩写成未经验证的投资决策模型。

@@ -5,97 +5,70 @@ Last verified: 2026-08-15
 ## 1. Current Project Stage
 
 - Project: 财记, a local-first private personal finance web app.
-- Current phase: local financial correctness hardening plus scoped subpage workspace refinement.
-- Dashboard-wide visual changes still require a separately scoped task. The current active UI work is limited to secondary pages and non-disruptive form drawers.
-- This document records local engineering evidence only. It does not imply that the current commit is deployed or live verified.
+- Current phase: locally verified financial correctness and maintenance hardening.
+- Runtime stack: static HTML, CSS, and plain JavaScript; no build step and no external runtime dependency by default.
+- Dashboard-wide pixel comparison remains a separately scoped visual task.
+- This document records local engineering evidence only. It does not imply push, merge, deployment, or live verification.
 
-## 2. Completed Hardening Work
+## 2. Verified Current Capabilities
 
-### P0 Data Safety
-
-- Hardened import validation so arbitrary JSON objects cannot overwrite state.
-- Hardened localStorage loading so corrupted local data is preserved under a recovery key instead of silently normalized away.
-- Added schema migration pipeline through `migrateState(rawState)`.
-- Kept migration and normalization responsibilities separate.
-
-### Regression Tests
-
-- `scripts/app-data-safety.test.js`: 27 data safety and financial-invariant tests.
-- `scripts/app-render-smoke.test.js`: 23 render, interaction, local-only auth, and sync-safety smoke tests.
-- `scripts/pwa-assets.test.js`: 8 PWA and product-brand contract tests.
-- `scripts/finance-ledger.test.js`: 9 append-only ledger tests.
-- Test style: Node native `assert`, no external test framework.
-- Covered areas include import validation, schema v1-v5 migration, corrupted localStorage recovery, account conservation, liabilities, balance reconciliation, render paths, conflict safety, and PWA assets.
-
-### Financial Truth And Workflow
+### Data Safety And Financial Truth
 
 - Current schema version is `5`.
-- Real money locations live in `moneyAccounts`; purpose/budget pools remain in `accounts`.
-- Transfers between real accounts are two-sided and conserve total owned cash.
-- `reconciliations` records balance-check adjustments without rewriting opening balances.
-- Historical records missing real-account links are shown for explicit user repair; the app does not guess those links.
-- Referenced fund pools and real accounts are archived instead of deleted.
+- Import data passes entity, ID, date, amount, reference, transfer, and reconciliation validation before replacement.
+- Corrupted localStorage is preserved under a recovery key instead of silently overwritten.
+- Fund pools (`accounts`) and real money locations (`moneyAccounts`) are separate dimensions.
+- Real-account transfers are two-sided; referenced accounts are archived instead of deleted.
+- Reconciliation is an auditable adjustment and does not rewrite opening balances.
+- Private natural-language finance events remain in an ignored append-only ledger.
 
-### State Layer Split
+### Monthly Execution Health
 
-- `scripts/app-state.js`
-  - Global state structure, defaults, normalization, base utilities.
-- `scripts/app-validators.js`
-  - Import validation and state shape validation.
-- `scripts/app-migrations.js`
-  - Schema migration pipeline.
-- `scripts/app-storage.js`
-  - localStorage keys, load/save, corrupted data recovery.
+- `FINANCIAL_HEALTH_MODEL` version 1 is the single source for score weights, thresholds, UI explanation, and tests.
+- The user-facing label is “月度执行健康度”; it is a budget and cash-flow execution hint, not a comprehensive investment or solvency risk rating.
+- Asset-baseline deductions apply when required snapshot data is incomplete.
+- Threshold boundaries and representative healthy/stressed scenarios have direct regression tests.
 
-### Actions Layer Split
+### Runtime Structure
 
-- `scripts/app-actions-data.js`
-  - Data export/import actions.
-- `scripts/app-actions-crud.js`
-  - `upsert`, `removeRecord`, `editRecord`, historical real-account repair, archive safeguards.
-- `scripts/app-actions-quick-entry.js`
-  - Quick entry modal open/close and submit binding.
-- `scripts/app-actions-modals.js`
-  - Snapshot records modal and health detail modal.
-- `scripts/app-actions-navigation.js`
-  - View switching and dashboard home mode.
-- `scripts/app-actions.js`
-  - Form-drawer lifecycle, form submit binding, reconciliation input, feature toggles, click binding, and init.
+- `index.html` loads 26 ordered browser scripts.
+- State normalization, UI feedback, validators, migrations, storage, calculations, rendering, form bindings, orchestration, optional sync, and PWA responsibilities are split into focused files.
+- The project gate enforces the load order and prevents UI feedback, render context, form submission, and shared controls from drifting back into the wrong files.
+- Dashboard bottom-strip helpers have one active definition; retired pie/trend renderers and their stale DOM paths are removed.
+- `styles/pages.css` and `styles/subpages.css` are import-only entries backed by six business-page modules and three secondary-workspace modules; the remaining workspace base is a scoped refinement target rather than a mixed global stylesheet.
 
-### CSS Comment Sections
+## 3. Verification Evidence
 
-- `styles/base.css`
-  - Added sections for design tokens, base layout, dashboard home mode, header/tabs/views.
-- `styles/components.css`
-  - Added sections for generic cards/stats, legacy cockpit components, action tips/deprecated candidates.
-- `styles/pages.css`
-  - Added sections for assets, pie/chart legacy area, accounts, forms, buttons, records, data/backup, flow/monthly.
-- `styles/responsive.css`
-  - Added sections for global responsive, dashboard responsive, legacy dashboard responsive candidates, account role cards.
-- `styles/subpages.css`
-  - Secondary-page hierarchy, inspector layout, contextual actions, and responsive form drawers.
+- `scripts/app-data-safety.test.js`: 41 tests.
+- `scripts/app-render-smoke.test.js`: 24 tests.
+- `scripts/pwa-assets.test.js`: 8 tests.
+- `scripts/finance-ledger.test.js`: 9 tests.
+- Total deterministic tests: 82.
+- All JavaScript files pass syntax checking.
+- The project gate rejects duplicate browser globals, script or page-CSS order drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
+- Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`; the interaction itself is not yet CI-automated.
 
-## 3. Current Do-Not-Touch List
+## 4. Current Boundaries
 
-- Do not change state field names.
-- Do not change the localStorage main key.
-- Do not change dashboard visual design without a separately scoped task.
-- Do not enable or expand login/cloud sync without deployment configuration, conflict guarantees, and explicit product scope.
-- Do not start mini-program or App Store work.
-- Do not introduce a frontend framework.
-- Do not perform large-scale CSS migration.
-- Do not split `bindClicks` or `handleSubmit` unless separately planned.
+- Do not change state field names or the localStorage main key without a migration plan and regression tests.
+- Do not enable login or cloud sync without authentication, RLS, conflict, same-origin client script, and deployment verification.
+- Do not introduce a frontend framework or perform a large-scale rewrite.
+- Do not change Dashboard visual design without screenshot regression.
+- Do not treat monthly execution health as comprehensive financial risk.
 
-## 4. Required Checks After Engineering Changes
+## 5. Required Check
 
-Run these after every engineering change:
+Run after every engineering change:
 
 ```powershell
-node scripts\app-data-safety.test.js
-node scripts\app-render-smoke.test.js
-node scripts\pwa-assets.test.js
-node scripts\finance-ledger.test.js
-Get-ChildItem scripts -Recurse -Filter *.js | ForEach-Object { node --check $_.FullName }
+node scripts\check-project.js
 ```
 
-If a change only touches documentation or CSS comments, explain why behavior tests were not run.
+GitHub Actions runs the same dependency-free gate on pushes and pull requests. Browser automation remains pending because the repository currently avoids adding an external browser-test dependency.
+
+## 6. Release State
+
+- Local implementation: verified.
+- Current branch remote: not yet synchronized with the latest local commits.
+- CI result for these unpushed changes: pending.
+- Merge, deployment, and live verification: not claimed.

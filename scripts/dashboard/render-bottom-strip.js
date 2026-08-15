@@ -123,10 +123,10 @@ function dashboardStripDonutCore(rows) {
 
 function dashboardStripTopList(rows, fallbackText) {
   if (!rows.length) {
-    return "<span><i></i>暂无数据</span><span><i></i>" + esc(fallbackText) + "</span><span><i></i>等待记录</span>";
+    return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>暂无数据</span><span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(fallbackText) + "</span><span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>等待记录</span>";
   }
   return rows.slice(0, 3).map(function (row) {
-    return "<span><i></i>" + esc(dashboardStripLabel(row.name)) + " " + esc(numberValue(row.pct).toFixed(0)) + "%</span>";
+    return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(dashboardStripLabel(row.name)) + " " + esc(numberValue(row.pct).toFixed(0)) + "%</span>";
   }).join("");
 }
 

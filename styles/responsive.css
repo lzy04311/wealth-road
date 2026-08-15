@@ -52,7 +52,7 @@
   .ap-footer { grid-template-columns: 1fr; }
   .asset-item-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .asset-page-head { flex-direction: column; align-items: stretch; }
-  .app-header, .pie-grid, .asset-pie-layout, .data-actions { grid-template-columns: 1fr; }
+  .app-header, .data-actions { grid-template-columns: 1fr; }
   .sync-login-grid, .sync-meta-grid { grid-template-columns: 1fr; }
   .brand-title { order: -1; }
   .month-picker { justify-self: stretch; }
@@ -60,7 +60,6 @@
   .tab { flex: 0 0 86px; }
   .stats, .account-grid, .card-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .stat-details { grid-template-columns: 1fr; }
-  .asset-pie { margin: 0 auto; }
 }
 @media (max-width: 560px) {
   .app { width: min(100% - 18px, 1180px); padding-top: 12px; }
@@ -125,13 +124,11 @@
   .flow-review-body { padding: 14px; }
   .invest-records-head { align-items: flex-start; }
   .invest-records-head h2 { padding-top: 6px; }
-  .invest-actions-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .assets-panorama-card { padding: 16px; }
   .assets-panorama-card .ap-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ap-metric { min-width: 0; padding: 13px 8px; }
   .ap-metric strong { overflow-wrap: anywhere; }
-  .page-toolbar > .btn,
-  .asset-toolbar-actions { display: none; }
+  .page-toolbar > .btn { display: none; }
   .data-center-head,
   .data-card,
   .collapsible-form { padding: 14px; }
@@ -194,8 +191,6 @@
   h1 { font-size: 1.55rem; }
   .tabs { border-radius: var(--radius-md); }
   .stats, .account-grid, .card-grid, .form-grid, .account-mini-grid { grid-template-columns: 1fr; }
-  .asset-pie-layout { grid-template-columns: 1fr; gap: 12px; }
-  .asset-pie { width: min(190px, 100%); height: auto; }
   .actions .btn { flex: 1 1 auto; }
 }
 
@@ -262,7 +257,7 @@
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   background: #fff7e8;
-  color: #8a735e;
+  color: var(--tone-color, #8a735e);
   font-size: 0.76rem;
   font-weight: 700;
   white-space: nowrap;
@@ -301,7 +296,7 @@
 .role-primary strong {
   display: block;
   margin-top: 5px;
-  color: var(--account-color, var(--primary));
+  color: var(--tone-color, var(--account-color, var(--primary)));
   font-size: clamp(1.28rem, 1.7vw, 1.62rem);
   line-height: 1.1;
   font-weight: 800;

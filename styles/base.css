@@ -102,7 +102,7 @@ button { cursor: pointer; }
 .brand-title { text-align: center; width: 100%; }
 h1 { margin: 0; color: var(--text); font-size: clamp(1.45rem, 2.4vw, 2.05rem); font-weight: 800; }
 h2 { margin: 0; color: var(--text); }
-.subtitle, .section-title p, .asset-pie-card p { color: var(--muted); }
+.subtitle, .section-title p { color: var(--muted); }
 .subtitle { display: inline; margin-left: 12px; font-size: .78rem; font-weight: 400; color: var(--muted); vertical-align: middle; letter-spacing: .02em; }
 .today-widget {
   display: grid; align-items: center; justify-items: start; gap: 6px; padding: 8px 12px; border: 1px solid var(--champagne-line); border-radius: var(--radius-md); background: var(--paper-glass); width: fit-content; justify-self: start; backdrop-filter: blur(14px);

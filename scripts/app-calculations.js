@@ -1,5 +1,29 @@
 "use strict";
 
+var FINANCIAL_HEALTH_MODEL = {
+  version: 1,
+  label: "月度执行健康度",
+  baseScore: 72,
+  salaryReceivedRatio: 0.9,
+  salaryGraceDays: 3,
+  lowSpendingRatio: 0.55,
+  adjustments: {
+    missingPlannedIncome: -18,
+    salaryReceived: 8,
+    salaryLate: -12,
+    overBudget: -18,
+    lowSpending: 6,
+    negativeFreeCash: -16,
+    positiveFreeCash: 8,
+    incompleteAssetBaseline: -8
+  },
+  thresholds: {
+    stable: 82,
+    controlled: 64,
+    attention: 45
+  }
+};
+
 function monthlyIncome(month) { return sum(state.incomes, function (item) { return item.month === month ? item.amount : 0; }); }
 function monthlyPlan(month) { var plan = state.monthlyPlans && state.monthlyPlans[month] ? state.monthlyPlans[month] : {}; var raw = plan.plannedIncome; var has = raw !== "" && raw != null && !isNaN(Number(raw)) && Number(raw) > 0; return { plannedIncome: has ? numberValue(raw) : null, hasPlannedIncome: has, payday: plan.payday ? parseInt(plan.payday, 10) : 15 }; }
 function accountBudgetAmount(account, month) { var plan = monthlyPlan(month); if (!plan.hasPlannedIncome) return null; return plan.plannedIncome * numberValue(account.budgetPercent) / 100; }
@@ -49,7 +73,6 @@ function accountBalance(account, month) {
   return numberValue(opening + income - expense + investment - investmentFunding + transferIn - transferOut + allocationIn - allocationOut);
 }
 function totalBudgetPercent() { return sum(state.accounts, function (item) { return item.archived ? 0 : item.budgetPercent || 0; }); }
-function spendingBudgetPercent() { return sum(state.accounts, function (item) { return !item.archived && item.includeExpense ? item.budgetPercent || 0 : 0; }); }
 function budgetPercentMessage() { var total = Math.round(totalBudgetPercent() * 10) / 10; if (total === 100) return { text: "资金分配比例合计 100%，计划刚好分配完", className: "positive" }; if (total < 100) return { text: "资金分配比例合计 " + total.toFixed(1) + "% ，还有 " + (100 - total).toFixed(1) + "% 未分配", className: "positive" }; return { text: "资金分配比例合计 " + total.toFixed(1) + "% ，比例超出 " + (total - 100).toFixed(1) + "% ，需要调整", className: "negative" }; }
 function monthlySummary(month) {
   var income = monthlyIncome(month), plan = monthlyPlan(month);
@@ -80,25 +103,32 @@ function monthlySummary(month) {
     overBudget: plan.hasPlannedIncome && expense > spendingBudget && spendingBudget >= 0
   };
 }
+function financialHealthLevel(score) {
+  var thresholds = FINANCIAL_HEALTH_MODEL.thresholds;
+  if (score >= thresholds.stable) return { label: "稳定", className: "positive" };
+  if (score >= thresholds.controlled) return { label: "可控", className: "warning" };
+  if (score >= thresholds.attention) return { label: "需关注", className: "negative" };
+  return { label: "高压力", className: "negative" };
+}
 function financialHealth(month) {
   var s = monthlySummary(month), snap = assetSnapshotSummary(month), isCurrent = month === monthOf(today()), todayDate = isCurrent ? new Date().getDate() : 31;
-  var score = 72;
-  if (!s.hasPlannedIncome) score -= 18;
+  var model = FINANCIAL_HEALTH_MODEL, adjustments = model.adjustments;
+  var score = model.baseScore;
+  if (!s.hasPlannedIncome) score += adjustments.missingPlannedIncome;
   else {
     var salaryRatio = s.plannedIncome > 0 ? s.income / s.plannedIncome : 0;
-    if (salaryRatio >= 0.9) score += 8;
-    else if (todayDate > s.payday + 3) score -= 12;
+    if (salaryRatio >= model.salaryReceivedRatio) score += adjustments.salaryReceived;
+    else if (todayDate > s.payday + model.salaryGraceDays) score += adjustments.salaryLate;
   }
-  if (s.overBudget) score -= 18;
-  else if (s.hasPlannedIncome && s.spendingBudget > 0 && s.expense / s.spendingBudget < 0.55) score += 6;
-  if (s.freeCash < 0) score -= 16;
-  else if (s.freeCash > 0) score += 8;
-  if (snap.completeness === "missing") score -= 8;
+  if (s.overBudget) score += adjustments.overBudget;
+  else if (s.hasPlannedIncome && s.spendingBudget > 0 && s.expense / s.spendingBudget < model.lowSpendingRatio) score += adjustments.lowSpending;
+  if (s.freeCash < 0) score += adjustments.negativeFreeCash;
+  else if (s.freeCash > 0) score += adjustments.positiveFreeCash;
+  if (snap.completeness !== "complete") score += adjustments.incompleteAssetBaseline;
   score = Math.max(0, Math.min(100, Math.round(score)));
-  var risk = score >= 82 ? "低风险" : (score >= 64 ? "可控" : (score >= 45 ? "需关注" : "高风险"));
-  var className = score >= 82 ? "positive" : (score >= 64 ? "warning" : "negative");
-  var advice = !s.hasPlannedIncome ? "先填写本月计划收入，预算判断才会精确" : (s.overBudget ? "消费预算已超支，先检查非必要支出" : (s.freeCash < 0 ? "待分配资金为负，检查投入节奏和支出结构" : (snap.completeness === "missing" ? "补一条净值更新，建立资产判断基线" : "资金节奏稳定，继续按当前规则记录")));
-  return { score: score, risk: risk, className: className, advice: advice };
+  var level = financialHealthLevel(score);
+  var advice = !s.hasPlannedIncome ? "先填写本月计划收入，预算判断才会精确" : (s.overBudget ? "消费预算已超支，先检查非必要支出" : (s.freeCash < 0 ? "待分配资金为负，检查投入节奏和支出结构" : (snap.completeness !== "complete" ? "补齐净值更新，建立资产判断基线" : "资金节奏稳定，继续按当前规则记录")));
+  return { score: score, level: level.label, className: level.className, advice: advice, label: model.label, modelVersion: model.version };
 }
 function monthlyForecast(month) {
   var s = monthlySummary(month), parts = String(month || currentMonth()).split("-"), y = parseInt(parts[0], 10), m = parseInt(parts[1], 10);

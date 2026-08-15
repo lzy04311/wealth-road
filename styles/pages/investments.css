@@ -1,0 +1,302 @@
+/* ========== Investments page ========== */
+
+/* Layer 1: Top bar (horizontal cockpit) */
+.invest-topbar {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: stretch;
+}
+.invest-topbar-hero {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 22px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 92% 16%, rgba(218,184,119,.13), transparent 12rem),
+    linear-gradient(155deg, rgba(255,253,248,.96), rgba(252,246,236,.82));
+  box-shadow: 0 2px 8px rgba(29,29,31,.05), 0 8px 20px rgba(29,29,31,.08), inset 0 1px 0 rgba(255,255,255,.8);
+  border: 1px solid rgba(226,221,211,.45);
+}
+.invest-topbar-hero > span:first-child {
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+.invest-topbar-hero > strong {
+  margin-top: 2px;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 850;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.invest-topbar-meta {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.invest-topbar-meta span {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+}
+.invest-topbar-meta strong {
+  color: var(--text);
+  font-weight: 800;
+  margin-left: 2px;
+}
+.invest-topbar-meta strong.positive { color: var(--success); }
+.invest-topbar-meta strong.negative { color: var(--danger); }
+.invest-topbar-stats {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.invest-stat {
+  padding: 14px 12px;
+  border: 1px solid rgba(226,221,211,.6);
+  border-radius: var(--radius-md);
+  background: rgba(255,254,250,.78);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.invest-stat span {
+  display: block;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 600;
+}
+.invest-stat strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+.invest-stat strong.positive { color: var(--success); }
+.invest-stat strong.negative { color: var(--danger); }
+.invest-stat strong.warning { color: var(--warning); }
+
+/* Layer 2+3: Asymmetric middle */
+.invest-main {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 14px;
+  margin-bottom: 14px;
+  align-items: start;
+}
+.invest-main-left {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid rgba(226,221,211,.5);
+  border-radius: var(--radius-lg);
+  background: rgba(255,254,250,.6);
+}
+.invest-main-left .section-title { margin-top: 0; }
+.invest-main-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Portfolio cards */
+.invest-portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.invest-portfolio-card {
+  position: relative;
+  overflow: hidden;
+  padding: 16px;
+  border: 1px solid rgba(226,221,211,.7);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--surface), var(--surface-soft));
+  box-shadow: var(--shadow-sm);
+}
+.invest-portfolio-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: var(--account-color, var(--primary));
+  opacity: .82;
+}
+.ip-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ip-card-emoji {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(226,221,211,.9);
+  border-radius: var(--radius-sm);
+  background: var(--soft-gold);
+  font-size: 1.1rem;
+}
+.ip-card-title { min-width: 0; }
+.ip-card-title h3 {
+  margin: 0;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.ip-card-title p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 600;
+}
+.ip-card-badge {
+  margin-left: auto;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: .7rem;
+  font-weight: 700;
+}
+.ip-card-badge.ok { background: var(--soft-green); color: var(--success); border: 1px solid rgba(79,138,98,.28); }
+.ip-card-badge.stale { background: var(--soft-gold); color: var(--primary-dark); border: 1px solid var(--line); }
+.ip-card-hero {
+  padding: 11px 12px;
+  border: 1px solid rgba(226,221,211,.72);
+  border-radius: var(--radius-md);
+  background: rgba(248,246,241,.7);
+  text-align: center;
+  margin-bottom: 10px;
+}
+.ip-card-hero span {
+  display: block;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 600;
+}
+.ip-card-hero strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--account-color, var(--primary));
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.ip-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.ip-card-metrics > div {
+  padding: 8px 9px;
+  border: 1px solid rgba(226,221,211,.55);
+  border-radius: var(--radius-sm);
+  background: rgba(248,246,241,.7);
+  text-align: center;
+}
+.ip-card-metrics span {
+  display: block;
+  color: var(--muted);
+  font-size: .7rem;
+  font-weight: 600;
+}
+.ip-card-metrics strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--text);
+  font-size: .82rem;
+  font-weight: 700;
+}
+.ip-card-metrics strong.positive { color: var(--success); }
+.ip-card-metrics strong.negative { color: var(--danger); }
+.ip-card-foot {
+  padding-top: 8px;
+  border-top: 1px solid rgba(226,221,211,.4);
+}
+.ip-card-foot span {
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 600;
+}
+
+/* Layer 3: Actions (right column, lightweight) */
+.invest-actions {
+  padding: 14px 16px;
+  border: 1px solid rgba(226,221,211,.55);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(248,246,241,.92) 0%, rgba(248,246,241,.78) 100%);
+  box-shadow: 0 1px 4px rgba(29,29,31,.04);
+}
+.invest-actions > span {
+  display: block;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+/* Right-side mini stat rows */
+.invest-right-stats {
+  display: grid;
+  gap: 6px;
+}
+.invest-right-stat {
+  padding: 10px 12px;
+  border: 1px solid rgba(226,221,211,.48);
+  border-radius: var(--radius-sm);
+  background: rgba(255,254,250,.72);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.invest-right-stat span {
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 600;
+}
+.invest-right-stat strong {
+  color: var(--tone-color, var(--text));
+  font-size: .84rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Layer 4: Records (compact, bottom) */
+.invest-records {
+  padding: 18px 22px;
+  border: 1px solid rgba(226,221,211,.45);
+  border-radius: var(--radius-lg);
+  background: rgba(255,254,250,.5);
+}
+.invest-records-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.invest-records-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.invest-records .card-grid { margin-top: 0; }
+.invest-records .module-summary { margin: 8px 0 12px; }
+.invest-records .collapsible-form { margin: 0 0 12px; }
+.invest-records .section-title { margin-top: 0; }

@@ -1,54 +1,44 @@
-# 财记 / 本地优先私人资金管理网页
+# 财记文档索引
 
-财记是一个本地优先的私人资金管理网页应用，用于记录和理解现金流、投资状态、资产变化、资金分配边界和阶段性目标。
+财记是本地优先的私人资金管理网页应用，用于记录和理解现金流、投资状态、资产变化、资金分配边界和阶段性目标。
 
-截至 2026-08-15，项目已完成一轮数据安全与财务口径加固，当前本地 state 为 schema v5。真实资金账户、双边转账、资金用途分配、余额核对和历史流水补账户已进入现役代码；二级页面工作区与表单抽屉仍在当前工作分支继续收尾。
+截至 2026-08-15，当前本地 state 为 schema v5。真实资金账户、双边转账、资金用途分配、余额核对、历史流水补账户，以及版本化的“月度执行健康度”均已进入现役代码并通过本地门禁。
 
-上述能力已通过自动化测试和本地浏览器运行检查。本文档不代表代码已经部署或 live verified；集成与发布状态必须以当前 Git 和部署证据为准。
+这些结论只代表当前工作分支的本地验证，不代表已经推送、合并、部署或 live verified。
 
-## 文档优先级
+## 现役权威文档
 
-后续 AI 或人工修改项目时，优先遵守以下文档：
+1. `ENGINEERING_STATUS.md`：当前工程状态、检查命令和发布边界。
+2. `DATA_MODEL.md`：state schema、迁移、财务计算和评分边界。
+3. `DESIGN_SYSTEM.md`：现役视觉与组件规则。
+4. `03_ARCHITECTURE.md`：运行入口和代码职责。
+5. `04_ROADMAP.md`：尚未完成的优先级。
 
-1. `docs/ENGINEERING_STATUS.md`
-2. `docs/DATA_MODEL.md`
-3. `docs/DESIGN_SYSTEM.md`
+专项证据：
 
-如果旧文档与 `docs/` 下的新文档冲突，以 `docs/` 下的新文档为准。
+- `RAW_FINANCE_LEDGER.md`：自然语言记账与私有追加式账本协议。
+- `BROWSER_E2E_VERIFICATION.md`：隔离浏览器写入、编辑、核对、归档、导出和恢复证据。
+- `OPTIONAL_SYNC.md`：可选 Supabase 模块的当前禁用状态、启用门槛和回退边界。
+- `assets/reference-dashboard.png`：Dashboard 视觉比较基准。
 
-## 历史规则 / 早期规划
+Git 历史负责保存已经完成的实施计划、Dashboard 拆分过程和旧规则，不再让它们冒充现役指令。
 
-以下文件保留为历史规则、个人偏好和早期规划参考：
+## 当前结构
 
-- `01_DAILY_RULES.md`
-- `02_AI_RULES.md`
-- `03_ARCHITECTURE.md`
-- `04_ROADMAP.md`
+- `index.html`：页面结构、表单容器和运行脚本顺序。
+- `styles.css` / `styles/`：样式入口和模块。
+- `scripts/`：运行代码、项目门禁和私有账本工具。
+- `tests/fixtures/`：不含私人数据的浏览器恢复夹具。
+- `AGENTS.md`：Agent 必须先遵守的项目边界。
 
-其中 `03_ARCHITECTURE.md` 和 `04_ROADMAP.md` 已按当前工程状态更新，但仍低于 `docs/` 下三份核心文档。
+## 使用与验证
 
-## 当前结构概览
+核心本地功能可以直接打开 `index.html`。需要验证 PWA、Service Worker 或缓存行为时，通过 localhost HTTP 服务打开。
 
-- `index.html`: 页面结构和表单容器。
-- `styles.css`: CSS 入口文件。
-- `styles/`: 样式模块。
-- `scripts/`: 运行中的 JS 模块。
-- `docs/`: 当前最高优先级工程文档。
+```powershell
+node scripts\check-project.js
+```
 
-## 财务原始数据与完善路线
+该命令运行自动化测试、JavaScript 语法、浏览器全局符号、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界检查。
 
-- `RAW_FINANCE_LEDGER.md`: 自然语言记账、追加式 CSV、校验和现有 JSON 备份迁移流程。
-- `FINANCIAL_SYSTEM_CLOSURE_PLAN.md`: 已完成能力、当前遗留风险和后续分阶段完善路线。
-- `data/raw/wealth-events.csv`: 本机私有原始事件账本，由工具创建并写入，已排除在 Git 之外。
-
-## 使用方式
-
-核心本地功能可以直接打开 `index.html`。需要验证 PWA、Service Worker 或缓存行为时，应通过 localhost HTTP 服务或 VS Code Live Server 打开。
-
-## 数据说明
-
-- 数据仍保存在浏览器 `localStorage`。
-- 云同步模块目前没有生产配置，默认保持本地模式。
-- 不要随意修改 localStorage 主 key。
-- 不要随意修改 state 字段名。
-- 导出 JSON 备份时，不要把个人备份数据提交到代码仓库。
+数据默认保存在浏览器 `localStorage`。云同步模块配置为空，当前保持本地模式；不要提交个人 JSON 备份或 `data/raw/` 下的私密账本。
