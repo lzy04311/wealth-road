@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 function renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, targetAccounts, targetProgress) {
   var strip = byId("dashboardBottomStrip");
@@ -27,7 +27,7 @@ function dashboardStripCashModule(s, cashRate) {
   var flowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
   return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">现金流总览（本月）</span>"
+    + "<span class=\"dashboard-strip-title\">现金流总览</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
     + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
@@ -57,7 +57,7 @@ function dashboardStripInvestModule(assetSnap) {
   var roiText = assetSnap.roi == null ? "--" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-invest\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">投资回报（快照口径）</span>"
+    + "<span class=\"dashboard-strip-title\">投资回报</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-double\"><div><em>浮动盈亏</em><strong class=\"" + (assetSnap.roi == null ? "warning" : (assetSnap.pnl >= 0 ? "positive" : "negative")) + "\">" + esc(assetSnap.roi == null ? "数据不足" : pnlText) + "</strong></div><div><em>收益率</em><b>" + esc(roiText) + "</b></div></div>"
     + "<div class=\"dashboard-strip-invest-line\">" + dashboardStripSparkline(assetSnap) + "</div>"
@@ -107,7 +107,7 @@ function dashboardStripDonutCore(rows) {
   if (!rows.length) {
     return "<div class=\"dashboard-strip-donut dashboard-strip-donut-lg dashboard-strip-donut-empty\"></div>";
   }
-  var palette = ["#B88A4A", "#D9B65D", "#F2E5CC", "#8F6334"];
+  var palette = ["#D5B98A", "#E0CA9E", "#EADAB8", "#F2E9D2"];
   var safeRows = rows.slice(0, 4).map(function (row) { return { name: row.name, pct: numberValue(row.pct) }; });
   var total = sum(safeRows, function (row) { return row.pct; });
   if (total < 99) safeRows.push({ name: "其他", pct: 100 - total });

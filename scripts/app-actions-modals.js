@@ -115,7 +115,9 @@ function handleHealthDetailClick(event) {
   var healthDetail = event.target.closest("[data-health-detail]");
   if (!healthDetail) return false;
   var type = healthDetail.dataset.healthDetail;
-  if (type === "score") {
+  if (type === "all") {
+    openHealthModal(healthScoreRulesHtml() + healthLevelRulesHtml());
+  } else if (type === "score") {
     openHealthModal(healthScoreRulesHtml());
   } else {
     openHealthModal(healthLevelRulesHtml());

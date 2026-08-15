@@ -1,4 +1,4 @@
-﻿.dashboard-bottom-strip {
+.dashboard-bottom-strip {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0;
@@ -182,12 +182,9 @@
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   background:
-    radial-gradient(circle, rgba(255,253,248,.92) 0 56%, transparent 57%),
-    radial-gradient(circle at 34% 24%, rgba(255,255,255,.62), transparent 28%),
+    radial-gradient(circle, rgba(255,253,248,.94) 0 62%, transparent 63%),
     conic-gradient(var(--strip-donut));
-  box-shadow:
-    inset 0 0 0 1px rgba(201,166,107,.12),
-    0 3px 8px rgba(133,100,52,.030);
+  box-shadow: inset 0 0 0 1px rgba(214,183,135,.10);
 }
 
 .dashboard-strip-mini-list {
@@ -468,7 +465,7 @@
 
 .dashboard-strip-donut-lg {
   width: 56px;
-  box-shadow: inset 0 0 0 1px rgba(201,166,107,.12);
+  box-shadow: inset 0 0 0 1px rgba(214,183,135,.10);
 }
 
 .dashboard-strip-donut-lg span {
@@ -585,14 +582,13 @@
 
 .dashboard-strip-donut-empty {
   background:
-    radial-gradient(circle, rgba(255,253,248,.94) 0 42%, transparent 43%),
-    conic-gradient(from 12deg, rgba(201,166,107,.26), rgba(201,166,107,.10));
+    radial-gradient(circle, rgba(255,253,248,.94) 0 62%, transparent 63%),
+    conic-gradient(from 12deg, rgba(214,183,135,.24), rgba(214,183,135,.12));
 }
 
 .dashboard-strip-donut {
   background:
-    radial-gradient(circle, rgba(255,253,248,.92) 0 44%, transparent 45%),
-    radial-gradient(circle at 34% 24%, rgba(255,255,255,.62), transparent 28%),
+    radial-gradient(circle, rgba(255,253,248,.94) 0 62%, transparent 63%),
     conic-gradient(var(--strip-donut));
 }
 
