@@ -31,7 +31,11 @@ function monthlyExpense(accountId, month) { return sum(state.expenses, function 
 function monthlyInvestment(accountId, month) { return sum(state.investments, function (item) { if (item.accountId !== accountId || item.month !== month) return 0; return item.type === "转出" ? -item.amount : item.amount; }); }
 function investmentDirection(item) { return item.type === "转出" ? -1 : 1; }
 function transactionDateWithin(item, month) { return String(item.date || "") <= monthEndDate(month); }
-function hasMoneyAccounts() { return Array.isArray(state.moneyAccounts) && state.moneyAccounts.some(function (item) { return !item.archived; }); }
+function accountTransactionWithin(item, account, month) {
+  var date = String(item.date || "");
+  return date <= monthEndDate(month) && (!account.openingBalanceDate || date >= account.openingBalanceDate);
+}
+function hasMoneyAccounts() { return Array.isArray(state.moneyAccounts) && state.moneyAccounts.length > 0; }
 function moneyAccountName(id) { var item = (state.moneyAccounts || []).find(function (account) { return account.id === id; }); return item ? item.name : (id ? "已删除资金账户" : "未指定实际账户"); }
 function moneyAccountOpeningBalanceUntil(account, endDate) {
   if (!account || !account.openingBalance) return 0;
@@ -54,7 +58,7 @@ function moneyAccountBalanceUntil(account, endDate, excludeReconciliationId) {
   return numberValue(opening + income - expense + investmentIn - investmentOut + transferIn - transferOut + adjustment);
 }
 function moneyAccountBalance(account, month) { return moneyAccountBalanceUntil(account, monthEndDate(month)); }
-function moneyAccountsTotal(month) { return sum(state.moneyAccounts || [], function (account) { return account.archived ? 0 : moneyAccountBalance(account, month); }); }
+function moneyAccountsTotal(month) { return sum(state.moneyAccounts || [], function (account) { return moneyAccountBalance(account, month); }); }
 function openingBalanceForMonth(account, month) {
   if (!account.openingBalance) return 0;
   if (account.openingBalanceDate && account.openingBalanceDate > monthEndDate(month)) return 0;
@@ -62,14 +66,14 @@ function openingBalanceForMonth(account, month) {
 }
 function accountBalance(account, month) {
   var opening = openingBalanceForMonth(account, month);
-  var income = sum(state.incomes, function (item) { return item.accountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return linkedId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var investment = sum(state.investments, function (item) { if (item.accountId !== account.id || !transactionDateWithin(item, month)) return 0; return investmentDirection(item) * item.amount; });
-  var investmentFunding = hasMoneyAccounts() ? 0 : sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && transactionDateWithin(item, month) ? investmentDirection(item) * item.amount : 0; });
-  var transferIn = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.toAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var transferOut = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.fromAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var allocationIn = sum(state.allocations || [], function (item) { return item.toAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
-  var allocationOut = sum(state.allocations || [], function (item) { return item.fromAccountId === account.id && transactionDateWithin(item, month) ? item.amount : 0; });
+  var income = sum(state.incomes, function (item) { return item.accountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return linkedId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var investment = sum(state.investments, function (item) { if (item.accountId !== account.id || !accountTransactionWithin(item, account, month)) return 0; return investmentDirection(item) * item.amount; });
+  var investmentFunding = hasMoneyAccounts() ? 0 : sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && accountTransactionWithin(item, account, month) ? investmentDirection(item) * item.amount : 0; });
+  var transferIn = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.toAccountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var transferOut = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.fromAccountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var allocationIn = sum(state.allocations || [], function (item) { return item.toAccountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var allocationOut = sum(state.allocations || [], function (item) { return item.fromAccountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
   return numberValue(opening + income - expense + investment - investmentFunding + transferIn - transferOut + allocationIn - allocationOut);
 }
 function totalBudgetPercent() { return sum(state.accounts, function (item) { return item.archived ? 0 : item.budgetPercent || 0; }); }

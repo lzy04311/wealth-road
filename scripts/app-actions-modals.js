@@ -11,14 +11,15 @@ function resolveActiveDialog(payload) {
   resolver(payload);
 }
 
-function openSnapshotRecords() { var modal = byId("snapshotRecordsModal"); if (!modal) return; renderAssets(); modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); }
-function closeSnapshotRecords() { var modal = byId("snapshotRecordsModal"); if (!modal) return; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); }
+function openSnapshotRecords() { var modal = byId("snapshotRecordsModal"); if (!modal) return; renderAssets(); modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); if (typeof activateDialogFocus === "function") activateDialogFocus(modal); }
+function closeSnapshotRecords() { var modal = byId("snapshotRecordsModal"); if (!modal) return; modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); if (typeof deactivateDialogFocus === "function") deactivateDialogFocus(modal); }
 
 function closeHealthModal(reason) {
   var modal = byId("healthModal");
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  if (typeof deactivateDialogFocus === "function") deactivateDialogFocus(modal);
   if (reason === "dismiss") {
     if (activeDialogKind === "confirm") resolveActiveDialog(false);
     else if (activeDialogKind === "alert") resolveActiveDialog();
@@ -32,6 +33,7 @@ function openHealthModal(contentHtml) {
   body.innerHTML = contentHtml;
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  if (typeof activateDialogFocus === "function") activateDialogFocus(modal);
 }
 
 function appAlert(title, message, buttonText) {

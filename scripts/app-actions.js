@@ -3,13 +3,53 @@
 function resetForm(prefix) { byId(prefix + "Form").reset(); byId(prefix + "Id").value = ""; if (byId(prefix + "Date")) byId(prefix + "Date").value = today(); if (prefix === "account" && byId("accountOpeningBalanceDate")) byId("accountOpeningBalanceDate").value = today(); if (prefix === "moneyAccount" && byId("moneyAccountOpeningBalanceDate")) byId("moneyAccountOpeningBalanceDate").value = today(); if (prefix === "assetItem" && byId("assetItemValuationDate")) byId("assetItemValuationDate").value = today(); if (prefix === "liability" && byId("liabilityBalanceDate")) byId("liabilityBalanceDate").value = today(); var title = byId(prefix + "FormTitle"); if (title) title.textContent = prefix === "snapshot" ? "净值更新" : title.textContent.replace("编辑", "新增"); }
 function formCard(prefix) { return byId(prefix + "FormCard"); }
 var activeFormPrefix = "";
+var activeDialogFocusRoot = null;
+var dialogReturnFocus = null;
+function dialogPanel(container) {
+  if (!container) return null;
+  if (container.getAttribute && container.getAttribute("role") === "dialog") return container;
+  return container.querySelector ? (container.querySelector('[role="dialog"]') || container) : container;
+}
+function activateDialogFocus(container, preferred) {
+  var root = dialogPanel(container);
+  if (!root) return;
+  if (!activeDialogFocusRoot && document.activeElement && typeof document.activeElement.focus === "function") dialogReturnFocus = document.activeElement;
+  activeDialogFocusRoot = root;
+  setTimeout(function () {
+    var target = preferred || (root.querySelector ? root.querySelector('button:not([disabled]), input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') : null);
+    if (target && typeof target.focus === "function") target.focus();
+  }, 0);
+}
+function deactivateDialogFocus(container, restoreFocus) {
+  var root = dialogPanel(container);
+  if (!root || activeDialogFocusRoot !== root) return;
+  activeDialogFocusRoot = null;
+  var target = dialogReturnFocus;
+  dialogReturnFocus = null;
+  if (restoreFocus !== false && target && typeof target.focus === "function") setTimeout(function () { target.focus(); }, 0);
+}
+function trapDialogFocus(event) {
+  if (!activeDialogFocusRoot || event.key !== "Tab" || !activeDialogFocusRoot.querySelectorAll) return;
+  var focusable = Array.prototype.slice.call(activeDialogFocusRoot.querySelectorAll('button:not([disabled]), input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+  if (!focusable.length) return;
+  var first = focusable[0], last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+}
+function enhanceFormLabels() {
+  document.querySelectorAll(".field > label").forEach(function (label) {
+    var field = label.parentElement;
+    var control = field && field.querySelector ? field.querySelector("input[id], select[id], textarea[id]") : null;
+    if (control) label.htmlFor = control.id;
+  });
+}
 function syncFormDrawerState() {
   var isOpen = !!activeFormPrefix;
   document.body.classList.toggle("form-drawer-open", isOpen);
   var backdrop = byId("formDrawerBackdrop");
   if (backdrop) backdrop.setAttribute("aria-hidden", isOpen ? "false" : "true");
 }
-function closeActiveFormDrawer(shouldReset) {
+function closeActiveFormDrawer(shouldReset, restoreFocus) {
   if (!activeFormPrefix) return;
   var prefix = activeFormPrefix;
   var card = formCard(prefix);
@@ -18,6 +58,7 @@ function closeActiveFormDrawer(shouldReset) {
     card.classList.remove("open");
     card.setAttribute("aria-hidden", "true");
   }
+  deactivateDialogFocus(card, restoreFocus);
   activeFormPrefix = "";
   syncFormDrawerState();
 }
@@ -27,18 +68,16 @@ function openForm(prefix) {
     if (card) { card.classList.add("open"); card.setAttribute("aria-hidden", "false"); }
     var modal = byId("snapshotModal");
     if (modal) { modal.classList.add("open"); modal.setAttribute("aria-hidden", "false"); }
+    activateDialogFocus(modal, card && card.querySelector ? card.querySelector('input:not([type="hidden"]), select, textarea') : null);
     return;
   }
   if (!card) return;
-  if (activeFormPrefix && activeFormPrefix !== prefix) closeActiveFormDrawer(false);
+  if (activeFormPrefix && activeFormPrefix !== prefix) closeActiveFormDrawer(false, false);
   activeFormPrefix = prefix;
   card.classList.add("open");
   card.setAttribute("aria-hidden", "false");
   syncFormDrawerState();
-  setTimeout(function () {
-    var firstField = card.querySelector('input:not([type="hidden"]), select, textarea');
-    if (firstField) firstField.focus();
-  }, 0);
+  activateDialogFocus(card, card.querySelector('input:not([type="hidden"]), select, textarea'));
 }
 function closeForm(prefix) {
   var card = formCard(prefix);
@@ -46,8 +85,10 @@ function closeForm(prefix) {
   if (prefix === "snapshot") {
     var modal = byId("snapshotModal");
     if (modal) { modal.classList.remove("open"); modal.setAttribute("aria-hidden", "true"); }
+    deactivateDialogFocus(modal);
     return;
   }
+  deactivateDialogFocus(card);
   if (activeFormPrefix === prefix) activeFormPrefix = "";
   syncFormDrawerState();
 }
@@ -124,6 +165,7 @@ function bindClicks() {
     if (btn.dataset.action === "duplicate") duplicateRecord(btn.dataset.type, btn.dataset.id);
     if (btn.dataset.action === "link-money-account") linkHistoricalMoneyAccount(btn.dataset.type, btn.dataset.id);
     if (btn.dataset.action === "audit-open") openAuditEntity(btn.dataset.collection, btn.dataset.id);
+    if (btn.dataset.action === "restore-archived") restoreArchivedRecord(btn.dataset.type, btn.dataset.id);
   });
   byId("currentMonth").addEventListener("change", renderAll);
   byId("dashboardDate").addEventListener("change", function () { if (!this.value) return; byId("currentMonth").value = monthOf(this.value); renderTodayWidget(); renderAll(); });
@@ -141,14 +183,17 @@ function bindClicks() {
   if (byId("backendSendLogin")) byId("backendSendLogin").addEventListener("click", sendBackendLoginEmail);
   if (byId("backendVerifyOtp")) byId("backendVerifyOtp").addEventListener("click", verifyBackendEmailOtp);
   if (byId("backendLogout")) byId("backendLogout").addEventListener("click", logoutBackend);
+  if (byId("backendSaveConfig")) byId("backendSaveConfig").addEventListener("click", applyBackendConfigFromForm);
+  if (byId("backendClearConfig")) byId("backendClearConfig").addEventListener("click", clearBackendConfigFromForm);
   if (byId("backendPullCloud")) byId("backendPullCloud").addEventListener("click", function () { pullCloudState(true); });
-  if (byId("backendPushLocal")) byId("backendPushLocal").addEventListener("click", function () { pushLocalStateToCloud({ force: true }); });
+  if (byId("backendPushLocal")) byId("backendPushLocal").addEventListener("click", function () { pushLocalStateToCloud(); });
   document.addEventListener("keydown", function (event) {
+    trapDialogFocus(event);
     if (event.key === "Escape") { if (activeQuickType) closeQuickModal(); closeActiveFormDrawer(true); closeForm("snapshot"); closeSnapshotRecords(); closeHealthModal("dismiss"); }
     if (event.key === "/" && document.body.classList.contains("module-page-mode") && byId("flow").classList.contains("active") && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") { event.preventDefault(); byId("flowRecordSearch").focus(); }
   });
 }
-function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "transfer", "snapshot", "reconciliation", "allocation"].forEach(function (p) { byId(p + "Date").value = today(); }); byId("moneyAccountOpeningBalanceDate").value = today(); syncSelects(); enhanceFormDrawers(); bindFormSubmits(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); if (typeof initBackendAuth === "function") initBackendAuth(); }
+function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "transfer", "snapshot", "reconciliation", "allocation"].forEach(function (p) { byId(p + "Date").value = today(); }); byId("moneyAccountOpeningBalanceDate").value = today(); syncSelects(); enhanceFormLabels(); enhanceFormDrawers(); bindFormSubmits(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); if (typeof initBackendAuth === "function") initBackendAuth(); }
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {

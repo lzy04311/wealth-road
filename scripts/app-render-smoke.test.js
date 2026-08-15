@@ -363,19 +363,12 @@ test("a local save during cloud sync queues a snapshot of the latest state", fun
     return {
       user: { id: "user-a" },
       client: {
-        from: function () {
+        rpc: function (name, payload) {
+          assert.strictEqual(name, "save_finance_state");
+          requests.push(payload.p_state);
           return {
-            upsert: function (payload) {
-              requests.push(payload.state);
-              return {
-                select: function () {
-                  return {
-                    single: function () {
-                      return new Promise(function (resolve) { resolvers.push(resolve); });
-                    }
-                  };
-                }
-              };
+            single: function () {
+              return new Promise(function (resolve) { resolvers.push(resolve); });
             }
           };
         }
@@ -391,11 +384,11 @@ test("a local save during cloud sync queues a snapshot of the latest state", fun
   assert.strictEqual(context.backendSyncState.pendingCloudPush, true);
   assert.strictEqual(requests[0].rules, "first");
 
-  resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:00.000Z" }, error: null });
+  resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:00.000Z", conflict: false }, error: null });
   return firstPush.then(function () {
     assert.strictEqual(requests.length, 2);
     assert.strictEqual(requests[1].rules, "second");
-    resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:01.000Z" }, error: null });
+    resolvers.shift()({ data: { updated_at: "2026-08-15T00:00:01.000Z", conflict: false }, error: null });
     return Promise.resolve();
   });
 });
@@ -409,6 +402,33 @@ test("backend auth stays local-only when Supabase client is unavailable", functi
 test("backend config is local-only by default", function () {
   var context = createContext();
   assert.strictEqual(context.isBackendConfigured(), false);
+});
+
+test("backend config rejects privileged and missing client credentials", function () {
+  var context = createContext();
+  assert.strictEqual(context.isAllowedBackendAnonKey("sb_secret_abcdefghijklmnopqrstuvwxyz"), false);
+  assert.strictEqual(context.isAllowedBackendAnonKey("sb_publishable_abcdefghijklmnopqrstuvwxyz"), true);
+  assert.strictEqual(context.isAllowedBackendClientScript("https://cdn.example.com/supabase.js"), false);
+  assert.strictEqual(context.isAllowedBackendClientScript("./scripts/vendor/supabase-js.js"), true);
+});
+
+test("server-side sync conflict blocks cloud overwrite", function () {
+  var context = createContext();
+  context.getSyncClientAndUser = function () {
+    return {
+      user: { id: "user-a" },
+      client: {
+        rpc: function () {
+          return { single: function () { return Promise.resolve({ data: { updated_at: "2026-08-16T00:00:00.000Z", conflict: true }, error: null }); } };
+        }
+      }
+    };
+  };
+  return context.pushLocalStateToCloud().then(function (ok) {
+    assert.strictEqual(ok, false);
+    assert.strictEqual(context.backendSyncState.unresolvedConflict, true);
+    assert.strictEqual(context.backendSyncState.status, "conflict");
+  });
 });
 
 test("sync conflict detection flags two-device edits", function () {

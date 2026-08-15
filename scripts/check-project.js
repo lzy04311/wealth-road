@@ -11,7 +11,7 @@ var root = path.join(__dirname, "..");
 var failures = [];
 
 function relative(filePath) { return path.relative(root, filePath).replace(/\\/g, "/"); }
-function ignoredDirectory(name) { return name === ".git" || name === "node_modules" || name === "data"; }
+function ignoredDirectory(name) { return name === ".git" || name === "node_modules" || name === "data" || name === ".vercel" || name === "dist" || name === "build" || name === ".cache" || name === ".parcel-cache" || name === ".vite" || name === "coverage" || name === ".vscode" || name === ".idea"; }
 function walk(directory, predicate, files) {
   files = files || [];
   fs.readdirSync(directory, { withFileTypes: true }).forEach(function (entry) {
@@ -136,12 +136,24 @@ check("browser layer boundaries", function () {
   var renderCoreSource = fs.readFileSync(path.join(root, "scripts/app-render-core.js"), "utf8");
   var actionsSource = fs.readFileSync(path.join(root, "scripts/app-actions.js"), "utf8");
   var formActionsSource = fs.readFileSync(path.join(root, "scripts/app-actions-forms.js"), "utf8");
+  var calculationsSource = fs.readFileSync(path.join(root, "scripts/app-calculations.js"), "utf8");
+  var backendConfigSource = fs.readFileSync(path.join(root, "scripts/app-backend-config.js"), "utf8");
+  var syncSource = fs.readFileSync(path.join(root, "scripts/app-sync.js"), "utf8");
+  var idbSource = fs.readFileSync(path.join(root, "scripts/app-idb.js"), "utf8");
+  var supabaseSchemaSource = fs.readFileSync(path.join(root, "scripts/supabase-schema.sql"), "utf8");
   assert(stateSource.indexOf("function notify(") === -1, "UI feedback must not return to app-state.js");
   assert(stateSource.indexOf("renderContextCache") === -1, "render context must not return to app-state.js");
   assert(feedbackSource.indexOf("function notify(") >= 0, "app-ui-feedback.js must own notifications");
   assert(renderCoreSource.indexOf("renderContextCache") >= 0, "app-render-core.js must own render context");
   assert(actionsSource.indexOf("addEventListener(\"submit\"") === -1, "form submit bindings must not return to app-actions.js");
   assert(formActionsSource.indexOf("function bindFormSubmits(") >= 0, "app-actions-forms.js must expose the form binding entry");
+  assert(calculationsSource.indexOf("function accountTransactionWithin(") >= 0, "fund-pool opening-date boundary must remain explicit");
+  assert(calculationsSource.indexOf("account.archived ? 0 : moneyAccountBalance") === -1, "archived money accounts must remain in financial assets");
+  assert(backendConfigSource.indexOf("backendKeyRole(text) === \"service_role\"") >= 0, "frontend backend config must reject service_role keys");
+  assert(syncSource.indexOf('.rpc("save_finance_state"') >= 0 && syncSource.indexOf(".upsert({") === -1, "cloud writes must use server-side compare-and-swap");
+  assert(supabaseSchemaSource.indexOf("function public.save_finance_state") >= 0 && supabaseSchemaSource.indexOf("p_expected_updated_at") >= 0, "Supabase schema must provide compare-and-swap RPC");
+  assert(actionsSource.indexOf("function enhanceFormLabels(") >= 0 && actionsSource.indexOf("function trapDialogFocus(") >= 0, "form labels and dialog focus boundaries must remain accessible");
+  assert(idbSource.indexOf("IDB_MAX_AUDIT_ENTRIES = 1000") >= 0 && idbSource.indexOf("function idbPruneAudit(") >= 0, "IndexedDB audit retention must remain bounded");
 
   var stylesEntry = fs.readFileSync(path.join(root, "styles.css"), "utf8");
   var pagesSource = fs.readFileSync(path.join(root, "styles/pages.css"), "utf8");
@@ -178,6 +190,8 @@ check("browser layer boundaries", function () {
   var rootStylesVersion = (indexSource.match(/styles\.css\?v=(\d+)/) || [])[1];
   var serviceWorkerVersion = (serviceWorkerSource.match(/caiji-pwa-v(\d+)/) || [])[1];
   assert(rootStylesVersion && rootStylesVersion === serviceWorkerVersion, "index stylesheet and service-worker cache versions must match");
+  var browserScriptVersions = Array.from(indexSource.matchAll(/<script\s+defer\s+src="scripts\/[^"]+\?v=(\d+)"/g)).map(function (match) { return match[1]; });
+  assert(browserScriptVersions.length === expectedScripts.length && browserScriptVersions.every(function (version) { return version === serviceWorkerVersion; }), "all browser scripts must use the current service-worker cache version");
   expectedPageImports.concat(expectedSubpageImports).forEach(function (target) {
     assert(fs.existsSync(path.resolve(path.join(root, "styles"), target)), target + " is missing");
   });

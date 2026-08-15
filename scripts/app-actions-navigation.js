@@ -16,6 +16,7 @@ function activateView(viewName) {
   if (targetTab) targetTab.classList.add("active");
   byId(viewName).classList.add("active");
   setDashboardHomeMode(viewName);
+  if (viewName === "data" && typeof renderIdbPanel === "function") renderIdbPanel();
   if (viewName === "dashboard") window.scrollTo(0, 0);
   else window.scrollTo(0, 0);
   return true;

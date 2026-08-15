@@ -1,6 +1,6 @@
 # Engineering Status
 
-Last verified: 2026-08-15
+Last verified: 2026-08-16
 
 ## 1. Current Project Stage
 
@@ -21,7 +21,9 @@ Last verified: 2026-08-15
 - Real-account transfers are two-sided; referenced accounts are archived instead of deleted.
 - Reconciliation is an auditable adjustment and does not rewrite opening balances.
 - Private natural-language finance events remain in an ignored append-only ledger.
-- Every save mirrors state into an IndexedDB safety net: versioned automatic backups (latest 30 kept) plus an append-only operation audit log, with graceful no-op fallback when IndexedDB is unavailable. The Data page exposes one-tap restore from the latest backup and a recent-operations audit view.
+- Every save mirrors state into an IndexedDB safety net: versioned automatic backups (latest 30 kept) plus an operation audit log (latest 1000 kept), with graceful no-op fallback when IndexedDB is unavailable. The Data page exposes one-tap restore from the latest backup and a recent-operations audit view with entity drill-down.
+- Archived real money accounts remain visible and continue to count toward financial assets until their balance is actually zero. Fund-pool opening dates exclude earlier linked transactions from current balances.
+- Optional cloud writes use a server-side compare-and-swap RPC; privileged service-role keys and non-local client scripts are rejected before configuration.
 
 ### Monthly Execution Health
 
@@ -29,6 +31,11 @@ Last verified: 2026-08-15
 - The user-facing label is “月度执行健康度”; it is a budget and cash-flow execution hint, not a comprehensive investment or solvency risk rating.
 - Asset-baseline deductions apply when required snapshot data is incomplete.
 - Threshold boundaries and representative healthy/stressed scenarios have direct regression tests.
+
+### Upcoming Reminders
+
+- `upcomingReminders` derives payday, subscription-renewal, and repayment-due reminders from existing data without new schema.
+- The Dashboard status bar and a right-side card surface the next seven days of reminders; overdue items are flagged negative.
 
 ### Runtime Structure
 
@@ -41,12 +48,12 @@ Last verified: 2026-08-15
 
 ## 3. Verification Evidence
 
-- `scripts/app-data-safety.test.js`: 41 tests.
-- `scripts/app-render-smoke.test.js`: 25 tests.
+- `scripts/app-data-safety.test.js`: 44 tests.
+- `scripts/app-render-smoke.test.js`: 27 tests.
 - `scripts/pwa-assets.test.js`: 8 tests.
 - `scripts/finance-ledger.test.js`: 9 tests.
-- `scripts/app-idb.test.js`: 5 tests.
-- Total deterministic tests: 88.
+- `scripts/app-idb.test.js`: 6 tests.
+- Total deterministic tests: 94.
 - All JavaScript files pass syntax checking.
 - The project gate rejects duplicate browser globals, script or page-CSS order drift, CSS cache-version drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
 - Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`. It remains a manual release check while the repository intentionally has no browser-automation dependency.

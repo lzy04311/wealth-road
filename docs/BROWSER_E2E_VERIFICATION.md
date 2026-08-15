@@ -1,6 +1,6 @@
 # Browser E2E Verification
 
-Last verified: 2026-08-15
+Last verified: 2026-08-16
 
 ## Scope
 
@@ -40,7 +40,7 @@ Last verified: 2026-08-15
 
 ## Boundary Refactor Regression
 
-- All 26 ordered browser scripts loaded after separating UI feedback and form submission bindings.
+- All 27 ordered browser scripts loaded after separating UI feedback and form submission bindings.
 - `styles/controls.css` loaded through the root stylesheet; visible inputs retained a 44px minimum height and primary buttons retained a 40px minimum height.
 - `styles/pages.css` and `styles/subpages.css` loaded as import-only entries, and all six business-page plus two secondary-workspace modules were present in the active stylesheet graph.
 - After consolidating the secondary-workspace shell into `workspace-base.css`, browser-computed styles for the app width, module header, back button, title, description, pseudo-element, and context bar matched the pre-change baseline exactly.
@@ -51,6 +51,14 @@ Last verified: 2026-08-15
 - No application console warnings or errors were observed, and no form was submitted during this structural verification.
 
 This evidence verifies runtime structure, not pixel parity. The remaining visual comparison uses [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) and must cover the top bar, three-column body, bottom data strip, status/navigation row, text clipping, and responsive breakpoints.
+
+## Repair Regression
+
+- The account drawer focused its first field on open, trapped forward Tab navigation at the final close button, closed on Escape, and restored focus to the triggering button.
+- Every remaining `.field > label` resolved to a live form control; the Supabase same-origin client-script field was required.
+- The Data page rendered the IndexedDB audit panel on demand.
+- After aligning all browser asset query versions and the service-worker cache at `v31`, the application initialized and rendered every tested workspace without new `v31` console warnings or errors. Older `v27` errors remained only in the browser's accumulated historical log.
+- Archived-account valuation, opening-date filtering, server-side compare-and-swap sync conflicts, and bounded IndexedDB audit retention are covered by deterministic regression tests. No live Supabase project was exercised.
 
 ## Automation Boundary
 

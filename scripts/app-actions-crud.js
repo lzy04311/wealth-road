@@ -153,6 +153,19 @@ function removeRecord(type, id) {
   });
 }
 
+function restoreArchivedRecord(type, id) {
+  var key = { account: "accounts", moneyAccount: "moneyAccounts" }[type];
+  var item = key && state[key] ? state[key].find(function (row) { return row.id === id; }) : null;
+  if (!item || !item.archived) return;
+  item.archived = false;
+  if (save()) {
+    syncSelects();
+    renderAll();
+    if (typeof auditLog === "function") auditLog({ operation: "restore", collection: key, entityId: id, summary: "恢复使用 · " + item.name });
+    showActionFeedback("已恢复使用 · " + item.name);
+  } else item.archived = true;
+}
+
 function removeRecordFinal(type, id, key) {
   var previous = state[key];
   var removedIndex = previous.findIndex(function (item) { return item.id === id; });

@@ -1,6 +1,6 @@
 # Optional Sync Boundary
 
-Last verified: 2026-08-15
+Last verified: 2026-08-16
 
 ## Current Status
 
@@ -20,6 +20,8 @@ These facts describe dormant capability, not authorization to enable cloud sync.
 - Unknown future schema versions and invalid references must be rejected.
 - Cloud replacement must create a local JSON backup first.
 - Two-device edits require an explicit user choice; do not auto-merge or silently overwrite.
+- Cloud writes must use the `save_finance_state` compare-and-swap RPC with the last synchronized `updated_at`; a mismatch is a conflict and must not write.
+- Frontend configuration accepts only anon/publishable keys and a same-origin client script. Privileged `service_role` keys are rejected.
 - Cloud failure must never roll back a successful local save.
 
 The first supported backend shape remains one authenticated row per user containing `user_id`, `schema_version`, the complete state JSON, and `updated_at`.
@@ -30,7 +32,7 @@ Enabling sync requires all of the following:
 
 1. A user-owned Supabase project and `user_finance_states` table.
 2. Row Level Security with select, insert, and update policies restricted to `auth.uid() = user_id`.
-3. Browser use of an anon key only; service-role or administrator secrets must never enter frontend code.
+3. Browser use of an anon/publishable key only; service-role or administrator secrets must never enter frontend code.
 4. A pinned Supabase browser client served from the application origin, or a separately reviewed CSP change.
 5. Verified email authentication, allowed redirect URLs, logout, and expired-session handling.
 6. Versioned writes, invalid-cloud-state rejection, failed-push recovery, and explicit conflict choices.
@@ -43,7 +45,7 @@ Clearing the optional backend configuration returns the application to local-onl
 
 ## Open Decisions
 
-- Supabase project URL and anon key.
+- Supabase project URL and anon/publishable key.
 - Same-origin client packaging and version.
 - Authentication redirect URL for the eventual hosting origin.
 - The accepted manual-sync and automatic-push behavior across two real devices.

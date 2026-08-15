@@ -91,7 +91,7 @@ v1 -> v2 的迁移规则：
 
 ### v4 双维度财务口径
 
-- `accounts.openingBalance` / `openingBalanceDate`: 建账前已经存在的账户余额和生效日期。
+- `accounts.openingBalance` / `openingBalanceDate`: 建账前已经存在的账户余额和生效日期；更早的关联流水不再重复计入。
 - `accounts.valuationMethod`: `流水余额` 由交易流水推导；`净值快照` 使用最近快照并补计快照后的资金变动。
 - `incomes.accountId`: 收入归属资金池；为空时进入待分配资金。
 - `incomes.moneyAccountId`: 实际到账的银行卡、支付宝等资金账户。
@@ -122,7 +122,7 @@ v1 -> v2 的迁移规则：
 | `includeAsset` | boolean | 是否计入资产统计。 |
 | `target` | number | 账户目标金额，范围 `0-999999999`。 |
 | `openingBalance` | number | 建账前已有的资金池余额。 |
-| `openingBalanceDate` | string | 期初余额生效日期。 |
+| `openingBalanceDate` | string | 期初余额生效日期；更早的关联流水不参与资金池余额计算。 |
 | `valuationMethod` | string | `流水余额` 或 `净值快照`。 |
 | `archived` | boolean | 是否停止用于新记录。 |
 | `note` | string | 备注，最大长度受 `MAX_NOTE_LENGTH` 限制。 |
@@ -312,7 +312,7 @@ v1 -> v2 的迁移规则：
 
 资金池或真实账户被历史记录引用时，直接删除会使记录失去配置上下文。当前界面会将这类账户归档并停止用于新记录；只有没有任何引用的账户才允许删除。
 
-历史引用覆盖收入、支出、投资、转账、净值快照、资金分配和余额核对。归档不会删除这些历史记录，并支持撤销恢复。
+历史引用覆盖收入、支出、投资、转账、净值快照、资金分配和余额核对。归档不会删除这些历史记录，并支持恢复使用。真实账户归档后仍计入金融资产，只有实际余额清零后才不再影响净资产。
 
 ### 页面和计算依赖
 
@@ -353,7 +353,7 @@ v1 -> v2 的迁移规则：
 
 ## 6. Cloud Sync Boundary
 
-仓库已有可选 Supabase 同步模块和完整 state `jsonb` 方案，但默认配置为空，当前现役模式仍是本地 `localStorage`。启用前必须配置认证、RLS、重定向地址并完成真实多设备冲突验收。
+仓库已有可选 Supabase 同步模块和完整 state `jsonb` 方案，但默认配置为空，当前现役模式仍是本地 `localStorage`。云端写入通过 `save_finance_state` RPC 比较 `updated_at` 后原子更新，冲突时拒绝覆盖。启用前仍必须配置认证、RLS、同源客户端、重定向地址并完成真实多设备冲突验收。
 
 建议第一阶段云端结构：
 

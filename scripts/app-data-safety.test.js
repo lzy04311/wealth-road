@@ -619,3 +619,32 @@ test("balance reconciliation adjusts the ledger without changing opening balance
   assert.strictEqual(context.moneyAccountBalanceUntil(account, "2026-08-10"), 850);
   assert.strictEqual(context.moneyAccountBalance(account, "2026-08"), 1050);
 });
+
+test("daysUntilDate signs past and future dates relative to today", function () {
+  var context = createContext(null, { calculations: true });
+  assert.ok(context.daysUntilDate("2000-01-01") < 0, "past date should be negative");
+  assert.ok(context.daysUntilDate("2099-12-31") > 0, "future date should be positive");
+  assert.strictEqual(context.daysUntilDate("not-a-date"), null);
+  assert.strictEqual(context.daysUntilDate(""), null);
+});
+
+test("archived money accounts remain in financial assets", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(validV5Backup({
+    accounts: [],
+    moneyAccounts: [{ id: "closed-bank", name: "旧工资卡", type: "银行卡", openingBalance: 880, openingBalanceDate: "2026-01-01", archived: true, note: "" }]
+  }));
+  assert.strictEqual(context.hasMoneyAccounts(), true);
+  assert.strictEqual(context.moneyAccountsTotal("2026-08"), 880);
+  assert.strictEqual(context.wealthSummary("2026-08").financialAssets, 880);
+});
+
+test("fund-pool opening balance excludes earlier linked transactions", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(validV5Backup({
+    accounts: [{ id: "pool", name: "备用现金", type: "短期储蓄", budgetPercent: 0, fixedBudget: false, includeExpense: false, includeAsset: true, target: 0, openingBalance: 100, openingBalanceDate: "2026-08-01", valuationMethod: "流水余额", archived: false, note: "" }],
+    incomes: [{ id: "old-income", date: "2026-07-20", month: "2026-07", accountId: "pool", moneyAccountId: "", source: "其他", amount: 50, note: "" }],
+    expenses: [{ id: "new-expense", date: "2026-08-05", month: "2026-08", accountId: "pool", sourceAccountId: "pool", moneyAccountId: "", category: "其他", amount: 20, note: "" }]
+  }));
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-08"), 80);
+});
