@@ -39,3 +39,6 @@ coverage/
 data/raw/*.csv
 data/raw/*.lock
 data/raw/*.json
+
+.vercel
+.env*
