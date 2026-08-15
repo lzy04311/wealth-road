@@ -107,13 +107,18 @@ check("HTML DOM contract", function () {
   return Object.keys(ids).length + " unique ids";
 });
 
-check("CSS override budget", function () {
+check("CSS important allowlist", function () {
   var cssFiles = walk(path.join(root, "styles"), function (filePath) { return path.extname(filePath) === ".css"; });
-  var count = cssFiles.reduce(function (total, filePath) {
-    return total + (fs.readFileSync(filePath, "utf8").match(/!important/g) || []).length;
-  }, 0);
-  assert(count <= 29, "!important count grew above the audited baseline: " + count + " > 29");
-  return count + "/29 !important declarations";
+  var findings = [];
+  cssFiles.forEach(function (filePath) {
+    fs.readFileSync(filePath, "utf8").split(/\r?\n/).forEach(function (line, index) {
+      if (line.indexOf("!important") >= 0) findings.push({ file: relative(filePath), line: index + 1, text: line.trim() });
+    });
+  });
+  assert(findings.length === 1, "expected one allowlisted !important declaration, found " + findings.length + ":\n" + findings.map(function (item) { return item.file + ":" + item.line + " " + item.text; }).join("\n"));
+  assert(findings[0].file === "styles/base.css", "!important is only allowed in styles/base.css: " + findings[0].file + ":" + findings[0].line);
+  assert(findings[0].text === ".hidden-view { display: none !important; }", "unexpected allowlisted declaration at styles/base.css:" + findings[0].line + ": " + findings[0].text);
+  return "1 allowlisted declaration · .hidden-view";
 });
 
 check("retired product names", function () {
