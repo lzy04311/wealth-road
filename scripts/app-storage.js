@@ -74,6 +74,7 @@ function save() {
     touchLocalSyncMeta(lastSavedAt.toISOString());
     updateSaveStatusUI();
     if (typeof scheduleCloudPushAfterLocalSave === "function") scheduleCloudPushAfterLocalSave();
+    if (typeof scheduleIdbBackup === "function") scheduleIdbBackup();
     return true;
   } catch (err) {
     notify("保存失败：浏览器本地存储空间可能已满，请先导出备份。");

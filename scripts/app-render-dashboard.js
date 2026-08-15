@@ -1,4 +1,4 @@
-﻿"use strict";
+"use strict";
 
 function renderDashboard(ctx) {
   var month = currentMonth();
@@ -31,10 +31,13 @@ function renderDashboard(ctx) {
 function renderDashboardStatusBar(month, backupText) {
   var el = byId("dashboardStatusBar");
   if (!el) return;
+  var reminders = upcomingReminders(7);
+  var reminderValue = reminders.length ? reminders.length + " 项" : "无待办";
+  var reminderSub = reminders.length ? reminders[0].title : "近期无提醒";
   el.innerHTML = [
     { label: "今日", value: today(), sub: dashboardWeekdayText() },
     { label: "同步状态", value: backupText, sub: lastSavedAt ? savedTimeText(lastSavedAt).slice(11, 19) : "本地存储" },
-    { label: "市场状态", value: "占位观察", sub: "暂不接入行情" }
+    { label: "近期提醒", value: reminderValue, sub: reminderSub }
   ].map(function (item) {
     return "<div class=\"dashboard-status-pill\"><span>" + esc(item.label) + "</span><strong>" + esc(item.value) + "</strong><small>" + esc(item.sub) + "</small></div>";
   }).join("");
@@ -84,6 +87,7 @@ function renderDashboardRightCards(month, s, assetSnap, health, forecast, assetA
   cards.push(dashboardInsightCard(s, forecast));
   cards.push(dashboardRiskCard(health, forecast));
   cards.push(dashboardGoalCard(targetAccounts, reachedTargets, targetProgress));
+  cards.push(dashboardReminderCard());
   cards.push(dashboardBackupCard(backupText));
   byId("dashboardRightCards").innerHTML = cards.join("");
 }
@@ -153,6 +157,15 @@ function dashboardBackupCard(backupText) {
     + "<p>" + esc(lastSavedAt ? "上次保存 " + savedTimeText(lastSavedAt).slice(11, 19) : "使用浏览器本地存储") + "</p>"
     + "<div class=\"dashboard-check-mark\"><span>✓</span></div>"
     + "</article>";
+}
+
+function dashboardReminderCard() {
+  var reminders = upcomingReminders(7);
+  if (!reminders.length) return "";
+  var items = reminders.slice(0, 3).map(function (r) {
+    return "<div class=\"dashboard-reminder-item\"><span class=\"dashboard-reminder-dot " + esc(r.className) + "\"></span><div><strong>" + esc(r.title) + "</strong><p>" + esc(r.description) + "</p></div></div>";
+  }).join("");
+  return "<article class=\"dashboard-side-card dashboard-panel dashboard-reminder-card\"><h3><i></i>近期提醒</h3>" + items + (reminders.length > 3 ? "<div class=\"row-meta\">另有 " + (reminders.length - 3) + " 项提醒</div>" : "") + "</article>";
 }
 
 function dashboardMiniSparkline(s, forecast) {

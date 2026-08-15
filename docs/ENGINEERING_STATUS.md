@@ -21,6 +21,7 @@ Last verified: 2026-08-15
 - Real-account transfers are two-sided; referenced accounts are archived instead of deleted.
 - Reconciliation is an auditable adjustment and does not rewrite opening balances.
 - Private natural-language finance events remain in an ignored append-only ledger.
+- Every save mirrors state into an IndexedDB safety net: versioned automatic backups (latest 30 kept) plus an append-only operation audit log, with graceful no-op fallback when IndexedDB is unavailable. The Data page exposes one-tap restore from the latest backup and a recent-operations audit view.
 
 ### Monthly Execution Health
 
@@ -31,8 +32,8 @@ Last verified: 2026-08-15
 
 ### Runtime Structure
 
-- `index.html` loads 26 ordered browser scripts.
-- The dependency-free classic-script runtime is an explicit contract: the complete 26-file order and every top-level declaration are checked deterministically.
+- `index.html` loads 27 ordered browser scripts.
+- The dependency-free classic-script runtime is an explicit contract: the complete 27-file order and every top-level declaration are checked deterministically.
 - State normalization, UI feedback, validators, migrations, storage, calculations, rendering, form bindings, orchestration, optional sync, and PWA responsibilities are split into focused files.
 - The project gate enforces the load order and prevents UI feedback, render context, form submission, shared controls, and secondary-workspace shell selectors from drifting back into the wrong files.
 - Dashboard bottom-strip helpers have one active definition; retired pie/trend renderers and their stale DOM paths are removed.
@@ -41,10 +42,11 @@ Last verified: 2026-08-15
 ## 3. Verification Evidence
 
 - `scripts/app-data-safety.test.js`: 41 tests.
-- `scripts/app-render-smoke.test.js`: 24 tests.
+- `scripts/app-render-smoke.test.js`: 25 tests.
 - `scripts/pwa-assets.test.js`: 8 tests.
 - `scripts/finance-ledger.test.js`: 9 tests.
-- Total deterministic tests: 82.
+- `scripts/app-idb.test.js`: 5 tests.
+- Total deterministic tests: 88.
 - All JavaScript files pass syntax checking.
 - The project gate rejects duplicate browser globals, script or page-CSS order drift, CSS cache-version drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
 - Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`. It remains a manual release check while the repository intentionally has no browser-automation dependency.

@@ -37,3 +37,8 @@
 .import-card { border-color: var(--accent); background: linear-gradient(145deg, var(--surface), var(--soft-gold)); }
 .import-warning { margin: 0; border-color: var(--accent); background: var(--soft-gold); color: var(--primary-dark); font-weight: 600; }
 footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .82rem; }
+.idb-audit-card { grid-column: 1 / -1; }
+.idb-audit-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; }
+.idb-audit-row { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); }
+.idb-audit-row .row-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.idb-audit-row .row-meta { margin-top: 4px; }

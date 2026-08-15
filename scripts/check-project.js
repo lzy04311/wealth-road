@@ -52,7 +52,8 @@ function browserScriptFiles() {
   ["data safety", "scripts/app-data-safety.test.js"],
   ["render and sync smoke", "scripts/app-render-smoke.test.js"],
   ["PWA and brand", "scripts/pwa-assets.test.js"],
-  ["private finance ledger", "scripts/finance-ledger.test.js"]
+  ["private finance ledger", "scripts/finance-ledger.test.js"],
+  ["indexeddb persistence", "scripts/app-idb.test.js"]
 ].forEach(function (entry) { run(entry[0], process.execPath, [entry[1]]); });
 
 check("JavaScript syntax", function () {
@@ -94,6 +95,7 @@ check("browser layer boundaries", function () {
     "scripts/app-ui-feedback.js",
     "scripts/app-validators.js",
     "scripts/app-migrations.js",
+    "scripts/app-idb.js",
     "scripts/app-storage.js",
     "scripts/app-backend-config.js",
     "scripts/app-calculations.js",

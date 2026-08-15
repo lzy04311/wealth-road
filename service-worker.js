@@ -33,6 +33,7 @@ var APP_SHELL = [
   "./scripts/app-ui-feedback.js",
   "./scripts/app-validators.js",
   "./scripts/app-migrations.js",
+  "./scripts/app-idb.js",
   "./scripts/app-storage.js",
   "./scripts/app-backend-config.js",
   "./scripts/app-calculations.js",
