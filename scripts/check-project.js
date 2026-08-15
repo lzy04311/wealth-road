@@ -89,6 +89,35 @@ check("browser global symbols", function () {
 
 check("browser layer boundaries", function () {
   var scripts = browserScriptFiles().map(relative);
+  var expectedScripts = [
+    "scripts/app-state.js",
+    "scripts/app-ui-feedback.js",
+    "scripts/app-validators.js",
+    "scripts/app-migrations.js",
+    "scripts/app-storage.js",
+    "scripts/app-backend-config.js",
+    "scripts/app-calculations.js",
+    "scripts/app-render-core.js",
+    "scripts/dashboard/dashboard-formatters.js",
+    "scripts/dashboard/render-bottom-strip.js",
+    "scripts/app-render-dashboard.js",
+    "scripts/app-render-assets.js",
+    "scripts/app-render-records.js",
+    "scripts/app-render-investments.js",
+    "scripts/app-render-monthly.js",
+    "scripts/app-render-flow.js",
+    "scripts/app-actions-data.js",
+    "scripts/app-actions-crud.js",
+    "scripts/app-actions-quick-entry.js",
+    "scripts/app-actions-modals.js",
+    "scripts/app-actions-forms.js",
+    "scripts/app-auth.js",
+    "scripts/app-sync.js",
+    "scripts/app-actions-navigation.js",
+    "scripts/app-actions.js",
+    "scripts/app-pwa.js"
+  ];
+  assert(JSON.stringify(scripts) === JSON.stringify(expectedScripts), "index.html browser script order changed");
   function position(file) {
     var index = scripts.indexOf(file);
     assert(index >= 0, file + " is missing from index.html");
@@ -117,7 +146,6 @@ check("browser layer boundaries", function () {
   var subpagesSource = fs.readFileSync(path.join(root, "styles/subpages.css"), "utf8");
   var controlsSource = fs.readFileSync(path.join(root, "styles/controls.css"), "utf8");
   var workspaceBaseSource = fs.readFileSync(path.join(root, "styles/subpages/workspace-base.css"), "utf8");
-  var hierarchySource = fs.readFileSync(path.join(root, "styles/subpages/hierarchy.css"), "utf8");
   var indexSource = fs.readFileSync(path.join(root, "index.html"), "utf8");
   var serviceWorkerSource = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
   function cssImportRecords(source) {
@@ -134,7 +162,7 @@ check("browser layer boundaries", function () {
     return record.version;
   }
   var expectedPageImports = ["./pages/assets.css", "./pages/accounts.css", "./pages/records.css", "./pages/data.css", "./pages/flow.css", "./pages/investments.css"];
-  var expectedSubpageImports = ["./subpages/workspace-base.css", "./subpages/hierarchy.css", "./subpages/form-drawer.css"];
+  var expectedSubpageImports = ["./subpages/workspace-base.css", "./subpages/form-drawer.css"];
   assert(stylesEntry.indexOf("styles/controls.css") >= 0, "styles.css must load the controls layer");
   assert(stylesEntry.indexOf("styles/controls.css") < stylesEntry.indexOf("styles/pages.css"), "shared controls must load before page-specific styles");
   assert(JSON.stringify(cssImportTargets(pagesSource)) === JSON.stringify(expectedPageImports), "styles/pages.css import order changed");
@@ -164,9 +192,9 @@ check("browser layer boundaries", function () {
   ];
   workspaceShellSelectors.forEach(function (selector) {
     assert(workspaceBaseSource.indexOf(selector) >= 0, "workspace shell selector is missing from workspace-base.css: " + selector);
-    assert(hierarchySource.indexOf(selector) === -1, "workspace shell selector must not return to hierarchy.css: " + selector);
   });
-  return scripts.length + " ordered scripts · 9 ordered page CSS modules · state/UI/actions/CSS shell/cache ownership enforced";
+  assert(!fs.existsSync(path.join(root, "styles/subpages/hierarchy.css")), "retired hierarchy.css override layer must not return");
+  return scripts.length + " ordered scripts · 8 ordered page CSS modules · state/UI/actions/CSS shell/cache ownership enforced";
 });
 
 check("HTML DOM contract", function () {

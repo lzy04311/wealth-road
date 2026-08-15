@@ -42,14 +42,16 @@ Last verified: 2026-08-15
 
 - All 26 ordered browser scripts loaded after separating UI feedback and form submission bindings.
 - `styles/controls.css` loaded through the root stylesheet; visible inputs retained a 44px minimum height and primary buttons retained a 40px minimum height.
-- `styles/pages.css` and `styles/subpages.css` loaded as import-only entries, and all six business-page plus three secondary-workspace modules were present in the active stylesheet graph.
+- `styles/pages.css` and `styles/subpages.css` loaded as import-only entries, and all six business-page plus two secondary-workspace modules were present in the active stylesheet graph.
 - After consolidating the secondary-workspace shell into `workspace-base.css`, browser-computed styles for the app width, module header, back button, title, description, pseudo-element, and context bar matched the pre-change baseline exactly.
+- After removing the final `hierarchy.css` override layer, computed styles for Flow, Investments, Assets, Goals, and Data workspace components matched the pre-removal baseline exactly.
+- Final narrow-viewport navigation covered Flow, Investments, Assets, Goals, Accounts, and Data; every page remained free of document- and body-level horizontal overflow.
 - Flow and Accounts navigation, quick entry, and the real-account form drawer opened correctly.
 - Desktop and narrow viewport checks showed no page-level horizontal overflow, including while the form drawer was open.
 - No application console warnings or errors were observed, and no form was submitted during this structural verification.
 
 This evidence verifies runtime structure, not pixel parity. The remaining visual comparison uses [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) and must cover the top bar, three-column body, bottom data strip, status/navigation row, text clipping, and responsive breakpoints.
 
-## Remaining Boundary
+## Automation Boundary
 
-This workflow is repeatable with the committed fixtures, but the browser interaction and Dashboard pixel comparison are not yet executed by CI. The one-command project gate covers deterministic Node tests, syntax, documents, branding, Git whitespace, and the private-ledger boundary.
+This workflow is repeatable with the committed fixtures, but browser interaction and Dashboard pixel comparison remain manual release checks under the repository's no-external-runtime-dependency contract. The one-command project gate covers deterministic Node tests, syntax, exact script and page-CSS order, cache coherence, documents, branding, Git whitespace, and the private-ledger boundary. Adding CI browser automation is a separate tooling decision, not unfinished structural cleanup.
