@@ -33,7 +33,7 @@ Last verified: 2026-08-15
 
 - `index.html` loads 26 ordered browser scripts.
 - State normalization, UI feedback, validators, migrations, storage, calculations, rendering, form bindings, orchestration, optional sync, and PWA responsibilities are split into focused files.
-- The project gate enforces the load order and prevents UI feedback, render context, form submission, and shared controls from drifting back into the wrong files.
+- The project gate enforces the load order and prevents UI feedback, render context, form submission, shared controls, and secondary-workspace shell selectors from drifting back into the wrong files.
 - Dashboard bottom-strip helpers have one active definition; retired pie/trend renderers and their stale DOM paths are removed.
 - `styles/pages.css` and `styles/subpages.css` are import-only entries backed by six business-page modules and three secondary-workspace modules; the remaining workspace base is a scoped refinement target rather than a mixed global stylesheet.
 
@@ -45,7 +45,7 @@ Last verified: 2026-08-15
 - `scripts/finance-ledger.test.js`: 9 tests.
 - Total deterministic tests: 82.
 - All JavaScript files pass syntax checking.
-- The project gate rejects duplicate browser globals, script or page-CSS order drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
+- The project gate rejects duplicate browser globals, script or page-CSS order drift, CSS cache-version drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
 - Real browser create/edit/transfer/archive/reconciliation/export/import recovery is recorded in `docs/BROWSER_E2E_VERIFICATION.md`; the interaction itself is not yet CI-automated.
 
 ## 4. Current Boundaries

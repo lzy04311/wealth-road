@@ -7,8 +7,8 @@
 }
 
 .module-page-mode .app {
-  width: min(1380px, calc(100% - 48px));
-  padding-top: 14px;
+  width: min(1240px, calc(100% - 64px));
+  padding-top: 0;
 }
 
 .module-page-mode .view.active {
@@ -17,19 +17,21 @@
 }
 
 .module-page-mode .module-page-header {
-  top: 10px;
-  min-height: 82px;
-  margin-bottom: 14px;
-  padding: 11px 14px;
-  border-color: var(--workspace-line-strong);
-  border-radius: 18px;
-  background:
-    linear-gradient(145deg, rgba(255, 253, 248, .94), rgba(250, 244, 232, .82));
-  box-shadow: 0 10px 26px rgba(133, 100, 52, .06), inset 0 1px 0 rgba(255,255,255,.82);
+  top: 0;
+  min-height: 70px;
+  margin: 0 0 24px;
+  padding: 12px 2px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--workspace-line-strong);
+  border-radius: 0;
+  background: rgba(255, 253, 248, .88);
+  box-shadow: none;
+  backdrop-filter: blur(20px) saturate(1.08);
 }
 
 .module-page-mode .module-page-header::after {
   content: "";
+  display: none;
   position: absolute;
   inset: auto 16px 0;
   height: 1px;
@@ -48,23 +50,26 @@
 
 .module-page-mode .module-page-header h2 {
   font-family: var(--font-serif-zh);
-  font-size: 1.42rem;
+  font-size: 1.3rem;
   line-height: 1.15;
 }
 
 .module-page-mode .module-page-header p {
   max-width: 760px;
   color: rgba(129,120,102,.92);
-  font-size: .8rem;
+  font-size: .78rem;
 }
 
 .module-page-mode .module-back-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  background: rgba(255, 253, 248, .78);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.82);
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  box-shadow: none;
 }
+
+.module-page-mode .module-back-btn:hover { background: rgba(243, 230, 206, .58); }
 
 .module-page-mode .module-page-header > .btn {
   min-height: 40px;
@@ -84,13 +89,19 @@
 }
 
 .subpage-context-bar {
-  min-height: 72px;
-  margin: 0 0 14px;
-  padding: 15px 18px;
-  border-radius: 16px;
+  min-height: 0;
+  margin: 0 0 20px;
+  padding: 6px 0 6px 16px;
+  overflow: visible;
+  border: 0;
+  border-left: 2px solid var(--primary);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .subpage-context-bar p {
+  max-width: 760px;
   margin: 3px 0 0;
   color: var(--muted);
   font-size: .84rem;
@@ -670,4 +681,3 @@
 .repair-card .row-actions {
   margin-top: 12px;
 }
-

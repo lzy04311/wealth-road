@@ -43,6 +43,7 @@ Last verified: 2026-08-15
 - All 26 ordered browser scripts loaded after separating UI feedback and form submission bindings.
 - `styles/controls.css` loaded through the root stylesheet; visible inputs retained a 44px minimum height and primary buttons retained a 40px minimum height.
 - `styles/pages.css` and `styles/subpages.css` loaded as import-only entries, and all six business-page plus three secondary-workspace modules were present in the active stylesheet graph.
+- After consolidating the secondary-workspace shell into `workspace-base.css`, browser-computed styles for the app width, module header, back button, title, description, pseudo-element, and context bar matched the pre-change baseline exactly.
 - Flow and Accounts navigation, quick entry, and the real-account form drawer opened correctly.
 - Desktop and narrow viewport checks showed no page-level horizontal overflow, including while the form drawer was open.
 - No application console warnings or errors were observed, and no form was submitted during this structural verification.

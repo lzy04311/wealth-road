@@ -1,52 +1,4 @@
 /* ========== Refined module hierarchy ========== */
-.module-page-mode .app {
-  width: min(1240px, calc(100% - 64px));
-  padding-top: 0;
-}
-
-.module-page-mode .module-page-header {
-  top: 0;
-  min-height: 70px;
-  margin: 0 0 24px;
-  padding: 12px 2px 14px;
-  border: 0;
-  border-bottom: 1px solid var(--workspace-line-strong);
-  border-radius: 0;
-  background: rgba(255, 253, 248, .88);
-  box-shadow: none;
-  backdrop-filter: blur(20px) saturate(1.08);
-}
-
-.module-page-mode .module-page-header::after { display: none; }
-
-.module-page-mode .module-back-btn {
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  box-shadow: none;
-}
-
-.module-page-mode .module-back-btn:hover { background: rgba(243, 230, 206, .58); }
-
-.module-page-mode .module-page-header h2 { font-size: 1.3rem; }
-.module-page-mode .module-page-header p { font-size: .78rem; }
-
-.subpage-context-bar {
-  min-height: 0;
-  margin: 0 0 20px;
-  padding: 6px 0 6px 16px;
-  overflow: visible;
-  border: 0;
-  border-left: 2px solid var(--primary);
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.subpage-context-bar p { max-width: 760px; }
-
 .module-page-mode .flow-topbar,
 .module-page-mode .invest-topbar {
   gap: 0;
@@ -186,4 +138,3 @@
   border-radius: 14px;
   box-shadow: none;
 }
-

@@ -203,10 +203,10 @@
   - 二级工作区样式入口，只按固定顺序导入工作区模块，不承载具体规则。
 
 - `styles/subpages/workspace-base.css`
-  - 二级页面工作区、侧栏检查区和上下文操作的基础布局。
+  - 二级页面外壳、标题栏、返回按钮、上下文条、侧栏检查区和工作区基础布局。
 
 - `styles/subpages/hierarchy.css`
-  - 二级页面的视觉层级和局部覆盖。
+  - 二级页面内容组件的视觉层级和局部精修，不得重新定义工作区外壳。
 
 - `styles/subpages/form-drawer.css`
   - 响应式表单抽屉及其状态。
@@ -218,7 +218,7 @@
 
 - `scripts/check-project.js`
   - 运行全部 Node 回归测试与 JavaScript 语法检查。
-  - 检查浏览器全局符号、脚本加载顺序、层级职责、页面 CSS 导入顺序、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
+  - 检查浏览器全局符号、脚本加载顺序、层级职责、页面 CSS 导入顺序与缓存版本、DOM 合同、CSS 覆盖预算、品牌、Markdown 链接、Git 空白和私密账本边界。
 
 ## 4. 数据结构
 
