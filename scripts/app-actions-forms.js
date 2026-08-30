@@ -99,14 +99,16 @@ function bindReconciliationForm() {
 function bindExpenseForm() {
   byId("expenseForm").addEventListener("submit", function (event) {
     event.preventDefault();
-    if (!ensureMoneyAccountsSelected(["expenseMoneyAccount"], "请选择支出实际扣款的账户")) return;
     var previous = state.expenses.find(function (item) { return item.id === byId("expenseId").value; });
+    var paymentMode = byId("expensePaymentMode") && byId("expensePaymentMode").value === "payroll_withholding" ? "payroll_withholding" : "money_account";
+    if (paymentMode !== "payroll_withholding" && !ensureMoneyAccountsSelected(["expenseMoneyAccount"], "请选择支出实际扣款的账户")) return;
     if (!upsert(state.expenses, {
       id: byId("expenseId").value || uid(),
       date: byId("expenseDate").value,
       accountId: byId("expenseAccount").value,
       sourceAccountId: previous ? previous.sourceAccountId : "",
-      moneyAccountId: byId("expenseMoneyAccount").value,
+      moneyAccountId: paymentMode === "payroll_withholding" ? "" : byId("expenseMoneyAccount").value,
+      paymentMode: paymentMode,
       category: cleanText(byId("expenseCategory").value) || "未分类",
       amount: safeAmount(byId("expenseAmount").value),
       note: cleanText(byId("expenseNote").value, MAX_NOTE_LENGTH)

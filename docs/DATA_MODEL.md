@@ -6,7 +6,7 @@
 
 ### 当前版本
 
-- 当前 `schemaVersion`: `5`
+- 当前 `schemaVersion`: `6`
 - 定义位置：`scripts/app-state.js` 中的 `CURRENT_SCHEMA_VERSION`
 
 ### v1 到 v2 迁移
@@ -42,6 +42,13 @@ v1 -> v2 的迁移规则：
 - 历史备份迁移时该字段补为 `[]`，不会修改期初余额或旧流水。
 - 缺少真实账户引用的历史流水继续保留空引用，由用户在“历史流水待补账户”中确认。
 
+### v5 到 v6 迁移
+
+- 为每条支出新增 `paymentMode`，旧记录统一补为 `money_account`。
+- `payroll_withholding` 表示工资净额到账前已经完成结算的真实消费：计入消费、分类和预算，但不再次减少真实账户、现金流或净资产。
+- 工资代扣不得关联 `moneyAccountId` 或旧 `sourceAccountId`；收入记录必须按银行实际净到账金额记录。
+- 不修改 localStorage 主 key，v1-v5 备份继续沿原迁移链升级。
+
 ### 未来版本升级原则
 
 - 新增字段必须通过 migration 补齐默认值。
@@ -55,7 +62,7 @@ v1 -> v2 的迁移规则：
 
 ```js
 {
-  schemaVersion: 5,
+  schemaVersion: 6,
   accounts: [],
   moneyAccounts: [],
   reconciliations: [],
@@ -89,13 +96,14 @@ v1 -> v2 的迁移规则：
 - `transfers`: array。账户之间的双边内部调拨，不计入收入、支出或净资产变化。
 - `liabilities`: array。信用卡、贷款和借款等当前未偿还余额。
 
-### v4 双维度财务口径
+### 双维度财务口径
 
 - `accounts.openingBalance` / `openingBalanceDate`: 建账前已经存在的账户余额和生效日期；更早的关联流水不再重复计入。
 - `accounts.valuationMethod`: `流水余额` 由交易流水推导；`净值快照` 使用最近快照并补计快照后的资金变动。
 - `incomes.accountId`: 收入归属资金池；为空时进入待分配资金。
 - `incomes.moneyAccountId`: 实际到账的银行卡、支付宝等资金账户。
 - `expenses.accountId`: 使用的消费资金池；`moneyAccountId` 是实际付款账户。
+- `expenses.paymentMode`: `money_account` 表示现金或实际账户结算；`payroll_withholding` 表示工资净额到账前已结算，不再次影响真实账户余额。
 - `investments.accountId`: 长期投资、高风险投资等策略资金池。
 - `investments.sourceMoneyAccountId` / `targetMoneyAccountId`: 实际付款位置和投资资金位置。
 - 旧 `sourceAccountId`、`fromAccountId`、`toAccountId` 只用于兼容历史数据，不再由新表单写入。
@@ -104,6 +112,8 @@ v1 -> v2 的迁移规则：
 - `liabilities.balanceDate`: 当前负债余额的生效日期。
 
 统一公式：`净资产 = 金融资产 + 独立计入资产 - 未结清负债`。建立真实账户后，`金融资产 = 真实账户账面余额合计 + 投资浮动盈亏`；内部转账和资金用途分配只改变分布，不改变净资产。
+
+月度计算同时保留两套支出口径：`expense` 是包含工资代扣的真实消费总额，用于分类、预算和消费趋势；`cashExpense` 只包含会减少可用现金的支出。`netCashFlow = income - cashExpense`，`freeCash = income - cashExpense - 正向投资投入`。工资代扣不会在净到账收入之外再次扣减现金或财富归因。
 
 ## 3. Entity Fields
 
@@ -199,6 +209,7 @@ v1 -> v2 的迁移规则：
 | `accountId` | string | 关联的 `accounts[].id`。 |
 | `moneyAccountId` | string | 实际扣款的真实账户。 |
 | `sourceAccountId` | string | 旧数据兼容字段；建立真实账户后不再作为实际付款位置写入。 |
+| `paymentMode` | string | `money_account` 或 `payroll_withholding`；后者表示到账前已结算且不影响真实账户余额。 |
 | `category` | string | 支出分类，为空时归一化为 `未分类`。 |
 | `amount` | number | 支出金额，范围 `0-999999999`。 |
 | `note` | string | 备注。 |
@@ -350,6 +361,9 @@ v1 -> v2 的迁移规则：
 - 未知未来版本必须拒绝导入，不能静默降级。
 - 数据导入前必须生成当前 state 自动备份。
 - 校验失败时不得覆盖当前 state。
+- JSON 导入是完整 state 恢复；CSV 流水导入是独立的追加流程，不得覆盖现有集合。
+- CSV 追加先生成完整 state 草稿并复用 `validateImportData -> migrateState -> normalizeState`，用户确认与安全检查点完成后才允许一次性保存。
+- CSV 疑似重复只用于风险提示，必须由用户明确选择导入或跳过，不得静默去重。
 
 ## 6. Cloud Sync Boundary
 

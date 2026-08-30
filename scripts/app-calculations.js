@@ -30,6 +30,7 @@ function accountBudgetAmount(account, month) { var plan = monthlyPlan(month); if
 function monthlyExpense(accountId, month) { return sum(state.expenses, function (item) { return item.accountId === accountId && item.month === month ? item.amount : 0; }); }
 function monthlyInvestment(accountId, month) { return sum(state.investments, function (item) { if (item.accountId !== accountId || item.month !== month) return 0; return item.type === "转出" ? -item.amount : item.amount; }); }
 function investmentDirection(item) { return item.type === "转出" ? -1 : 1; }
+function expenseAffectsCash(item) { return !item || item.paymentMode !== "payroll_withholding"; }
 function transactionDateWithin(item, month) { return String(item.date || "") <= monthEndDate(month); }
 function accountTransactionWithin(item, account, month) {
   var date = String(item.date || "");
@@ -49,7 +50,7 @@ function moneyAccountTransactionUntil(item, account, endDate) {
 function moneyAccountBalanceUntil(account, endDate, excludeReconciliationId) {
   var opening = moneyAccountOpeningBalanceUntil(account, endDate);
   var income = sum(state.incomes, function (item) { return item.moneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { return item.moneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { return expenseAffectsCash(item) && item.moneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
   var investmentIn = sum(state.investments, function (item) { return item.targetMoneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
   var investmentOut = sum(state.investments, function (item) { return item.sourceMoneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
   var transferIn = sum(state.transfers || [], function (item) { return item.toMoneyAccountId === account.id && moneyAccountTransactionUntil(item, account, endDate) ? item.amount : 0; });
@@ -67,7 +68,7 @@ function openingBalanceForMonth(account, month) {
 function accountBalance(account, month) {
   var opening = openingBalanceForMonth(account, month);
   var income = sum(state.incomes, function (item) { return item.accountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return linkedId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return expenseAffectsCash(item) && linkedId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
   var investment = sum(state.investments, function (item) { if (item.accountId !== account.id || !accountTransactionWithin(item, account, month)) return 0; return investmentDirection(item) * item.amount; });
   var investmentFunding = hasMoneyAccounts() ? 0 : sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && accountTransactionWithin(item, account, month) ? investmentDirection(item) * item.amount : 0; });
   var transferIn = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.toAccountId === account.id && accountTransactionWithin(item, account, month) ? item.amount : 0; });
@@ -90,16 +91,18 @@ function monthlySummary(month) {
     if (!Object.prototype.hasOwnProperty.call(accountMap, item.accountId)) { orphanExpenseCount += 1; orphanExpenseTotal += numberValue(item.amount); }
     return item.amount;
   });
+  var cashExpense = sum(state.expenses, function (item) { return item.month === month && expenseAffectsCash(item) ? item.amount : 0; });
+  var payrollWithholdingExpense = numberValue(expense - cashExpense);
   var invest = sum(state.investments, function (item) { return item.month === month ? investmentDirection(item) * item.amount : 0; });
   var legacyTransferOut = sum(state.investments, function (item) { return item.month === month && item.type === "转出" ? item.amount : 0; });
-  var freeCash = numberValue(income - expense - Math.max(0, invest));
-  var netCashFlow = numberValue(income - expense);
+  var freeCash = numberValue(income - cashExpense - Math.max(0, invest));
+  var netCashFlow = numberValue(income - cashExpense);
   var assetNet = sum(state.accounts, function (account) { return account.includeAsset && !account.archived ? accountBalance(account, month) : 0; });
   var snap = assetSnapshotSummary(month);
   return {
     income: income, plannedIncome: plan.plannedIncome, hasPlannedIncome: plan.hasPlannedIncome, payday: plan.payday,
     budget: spendingBudget, spendingBudget: spendingBudget, allocationBudget: allocationBudget,
-    expense: expense, surplus: freeCash, freeCash: freeCash, netCashFlow: netCashFlow,
+    expense: expense, cashExpense: cashExpense, payrollWithholdingExpense: payrollWithholdingExpense, surplus: freeCash, freeCash: freeCash, netCashFlow: netCashFlow,
     budgetBalance: plan.hasPlannedIncome ? spendingBudget - expense : 0, investment: invest,
     assetNet: assetNet, assetMarketValue: snap.totalAsset,
     orphanExpenseCount: orphanExpenseCount, orphanExpenseTotal: numberValue(orphanExpenseTotal),
@@ -166,7 +169,8 @@ function monthlyForecast(month) {
   var s = monthlySummary(month), parts = String(month || currentMonth()).split("-"), y = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
   var now = new Date(), isCurrent = month === monthOf(today()), day = isCurrent ? now.getDate() : new Date(y, m, 0).getDate(), days = new Date(y, m, 0).getDate();
   var remainingDays = Math.max(1, days - day + 1), dailyExpense = day > 0 ? s.expense / day : 0;
-  var projectedExpense = numberValue(dailyExpense * days), projectedSurplus = numberValue(s.income - projectedExpense - Math.max(0, s.investment));
+  var dailyCashExpense = day > 0 ? s.cashExpense / day : 0;
+  var projectedExpense = numberValue(dailyExpense * days), projectedCashExpense = numberValue(dailyCashExpense * days), projectedSurplus = numberValue(s.income - projectedCashExpense - Math.max(0, s.investment));
   var safeSpend = s.hasPlannedIncome ? Math.max(0, s.spendingBudget - s.expense) : Math.max(0, s.freeCash);
   var dailySafeSpend = numberValue(safeSpend / remainingDays);
   var paceRatio = s.hasPlannedIncome && s.spendingBudget > 0 ? projectedExpense / s.spendingBudget : null;
@@ -175,14 +179,14 @@ function monthlyForecast(month) {
   var budgetUsedRate = s.hasPlannedIncome && s.spendingBudget > 0 ? s.expense / s.spendingBudget * 100 : null;
   var budgetStatus = budgetUsedRate == null ? "待计划" : (budgetUsedRate > 100 ? "已超支" : (budgetUsedRate > 85 ? "接近上限" : "正常"));
   var budgetClassName = budgetUsedRate == null ? "warning" : (budgetUsedRate > 100 ? "negative" : (budgetUsedRate > 85 ? "warning" : "positive"));
-  return { projectedExpense: projectedExpense, projectedSurplus: projectedSurplus, safeSpend: numberValue(safeSpend), dailySafeSpend: dailySafeSpend, pace: pace, className: className, budgetUsedRate: budgetUsedRate, budgetStatus: budgetStatus, budgetClassName: budgetClassName };
+  return { projectedExpense: projectedExpense, projectedCashExpense: projectedCashExpense, projectedSurplus: projectedSurplus, safeSpend: numberValue(safeSpend), dailySafeSpend: dailySafeSpend, pace: pace, className: className, budgetUsedRate: budgetUsedRate, budgetStatus: budgetStatus, budgetClassName: budgetClassName };
 }
 function cumulativeInvestmentNet(accountId, month) { return sum(state.investments, function (item) { if (item.accountId !== accountId || !transactionDateWithin(item, month)) return 0; return investmentDirection(item) * item.amount; }); }
 function latestSnapshotForAccount(accountId) { return state.snapshots.filter(function (x) { return x.accountId === accountId; }).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); })[0] || null; }
 function latestSnapshotForAccountUntil(accountId, month) { var end = monthEndDate(month); return state.snapshots.filter(function (x) { return x.accountId === accountId && String(x.date || "") <= end; }).sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); })[0] || null; }
 function accountLedgerDeltaBetween(accountId, startDate, endDate) {
   var income = sum(state.incomes, function (item) { return item.accountId === accountId && item.date > startDate && item.date <= endDate ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { return item.sourceAccountId === accountId && item.date > startDate && item.date <= endDate ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { return expenseAffectsCash(item) && item.sourceAccountId === accountId && item.date > startDate && item.date <= endDate ? item.amount : 0; });
   var investment = sum(state.investments, function (item) { return item.accountId === accountId && item.date > startDate && item.date <= endDate ? investmentDirection(item) * item.amount : 0; });
   var investmentFunding = sum(state.investments, function (item) { return item.sourceAccountId === accountId && item.accountId !== accountId && item.date > startDate && item.date <= endDate ? investmentDirection(item) * item.amount : 0; });
   var transferIn = sum(state.transfers || [], function (item) { return item.toAccountId === accountId && item.date > startDate && item.date <= endDate ? item.amount : 0; });
@@ -247,7 +251,7 @@ function unallocatedCashSummary(month) {
     return { value: numberValue(Math.max(0, difference)), gap: numberValue(Math.max(0, -difference)) };
   }
   var value = sum(state.incomes, function (item) { return !item.accountId && transactionDateWithin(item, month) ? item.amount : 0; });
-  value -= sum(state.expenses, function (item) { return !item.sourceAccountId && transactionDateWithin(item, month) ? item.amount : 0; });
+  value -= sum(state.expenses, function (item) { return expenseAffectsCash(item) && !item.sourceAccountId && transactionDateWithin(item, month) ? item.amount : 0; });
   value -= sum(state.investments, function (item) { return !item.sourceAccountId && transactionDateWithin(item, month) ? investmentDirection(item) * item.amount : 0; });
   value += sum(state.allocations || [], function (item) { return !item.fromAccountId && transactionDateWithin(item, month) ? -item.amount : (!item.toAccountId && transactionDateWithin(item, month) ? item.amount : 0); });
   return { value: numberValue(Math.max(0, value)), gap: numberValue(Math.max(0, -value)) };
@@ -278,7 +282,7 @@ function accountBalanceAtDate(account, endDate) {
   var opening = account.openingBalance && (!account.openingBalanceDate || account.openingBalanceDate <= endDate) ? numberValue(account.openingBalance) : 0;
   function within(item) { var date = String(item.date || ""); return date <= endDate && (!account.openingBalanceDate || date >= account.openingBalanceDate); }
   var income = sum(state.incomes, function (item) { return item.accountId === account.id && within(item) ? item.amount : 0; });
-  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return linkedId === account.id && within(item) ? item.amount : 0; });
+  var expense = sum(state.expenses, function (item) { var linkedId = hasMoneyAccounts() ? item.accountId : item.sourceAccountId; return expenseAffectsCash(item) && linkedId === account.id && within(item) ? item.amount : 0; });
   var investment = sum(state.investments, function (item) { return item.accountId === account.id && within(item) ? investmentDirection(item) * item.amount : 0; });
   var investmentFunding = hasMoneyAccounts() ? 0 : sum(state.investments, function (item) { return item.sourceAccountId === account.id && item.accountId !== account.id && within(item) ? investmentDirection(item) * item.amount : 0; });
   var transferIn = hasMoneyAccounts() ? 0 : sum(state.transfers || [], function (item) { return item.toAccountId === account.id && within(item) ? item.amount : 0; });
@@ -317,7 +321,7 @@ function unallocatedCashSummaryAtDate(endDate) {
     return { value: numberValue(Math.max(0, difference)), gap: numberValue(Math.max(0, -difference)) };
   }
   var value = sum(state.incomes, function (item) { return !item.accountId && item.date <= endDate ? item.amount : 0; });
-  value -= sum(state.expenses, function (item) { return !item.sourceAccountId && item.date <= endDate ? item.amount : 0; });
+  value -= sum(state.expenses, function (item) { return expenseAffectsCash(item) && !item.sourceAccountId && item.date <= endDate ? item.amount : 0; });
   value -= sum(state.investments, function (item) { return !item.sourceAccountId && item.date <= endDate ? investmentDirection(item) * item.amount : 0; });
   value += sum(state.allocations || [], function (item) { return !item.fromAccountId && item.date <= endDate ? -item.amount : (!item.toAccountId && item.date <= endDate ? item.amount : 0); });
   return { value: numberValue(Math.max(0, value)), gap: numberValue(Math.max(0, -value)) };
@@ -373,7 +377,7 @@ function wealthAttribution(month) {
   var startDate = calculationMonthStartDate(month), closingDate = calculationMonthEndDate(month);
   if (!startDate || !closingDate) return { cashflowContribution: null, investmentPnl: null, liabilityChange: null, otherChange: null, unexplained: null, totalChange: null };
   var openingDate = calculationDateBefore(startDate);
-  var cashflowContribution = numberValue(sum(state.incomes, function (item) { return item.date > openingDate && item.date <= closingDate ? item.amount : 0; }) - sum(state.expenses, function (item) { return item.date > openingDate && item.date <= closingDate ? item.amount : 0; }));
+  var cashflowContribution = numberValue(sum(state.incomes, function (item) { return item.date > openingDate && item.date <= closingDate ? item.amount : 0; }) - sum(state.expenses, function (item) { return expenseAffectsCash(item) && item.date > openingDate && item.date <= closingDate ? item.amount : 0; }));
   var change = wealthChange(month);
   if (!change.hasBaseline) return { cashflowContribution: cashflowContribution, investmentPnl: null, liabilityChange: null, otherChange: null, unexplained: null, totalChange: null };
   var opening = wealthSummaryAtDate(openingDate), closing = wealthSummaryAtDate(closingDate);

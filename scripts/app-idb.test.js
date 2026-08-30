@@ -123,7 +123,7 @@ test("writes and reads the latest state backup", function () {
   }).then(function (backup) {
     assert.ok(backup, "backup should exist");
     assert.strictEqual(backup.state.rules, "v1");
-    assert.strictEqual(backup.schemaVersion, 5);
+    assert.strictEqual(backup.schemaVersion, context.CURRENT_SCHEMA_VERSION);
   });
 });
 
@@ -131,7 +131,7 @@ test("verified backup round-trips a large state without truncation", function ()
   var context = createContext(true);
   var rows = [];
   for (var i = 0; i < 6500; i += 1) rows.push({ id: "row-" + i, note: "往返-" + i + "-" + "x".repeat(180), amount: i });
-  var snapshot = { schemaVersion: 5, expenses: rows, rules: "large-roundtrip" };
+  var snapshot = { schemaVersion: 6, expenses: rows, rules: "large-roundtrip" };
   return context.idbCreateVerifiedBackup(snapshot).then(function (ok) {
     assert.strictEqual(ok, true);
     return context.idbReadLatestBackup();

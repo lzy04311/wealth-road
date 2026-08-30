@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=33">
+  <link rel="stylesheet" href="styles.css?v=34">
 </head>
 <body>
   <div class="app">
@@ -471,6 +471,7 @@
           <div class="section-title compact"><div><h2 id="expenseFormTitle">新增支出</h2><p>分别记录钱从哪里扣除，以及使用哪个资金池</p></div></div>
           <form id="expenseForm">
             <input type="hidden" id="expenseId">
+            <input type="hidden" id="expensePaymentMode" value="money_account">
             <div class="form-grid">
               <div class="field"><label>日期</label><input type="date" id="expenseDate" required></div>
               <div class="field"><label>使用资金池</label><select id="expenseAccount" required></select></div>
@@ -778,6 +779,30 @@
             <input type="file" id="importFile" accept="application/json,.json">
             <div class="actions"><button class="btn ghost" id="importData">校验并导入 JSON</button></div>
           </div>
+          <div class="card data-card ledger-import-card">
+            <h2>流水导入</h2>
+            <p class="subtitle">从 UTF-8 CSV 批量追加纸质账本流水；不会覆盖现有数据，也不会替代完整 JSON 恢复。</p>
+            <div class="notice import-warning">收入请填写银行实际净到账金额。工资代扣会计入消费和预算，但不会再次减少实际账户余额。</div>
+            <input type="file" id="ledgerCsvFile" accept="text/csv,.csv">
+            <div class="actions"><button class="btn ghost" type="button" id="previewLedgerCsv">解析并预览 CSV</button></div>
+            <section class="ledger-import-preview" id="ledgerCsvPreview" aria-live="polite" hidden>
+              <div class="section-title compact"><div><h3>账户映射与导入预览</h3><p>CSV 没有账户列；系统只做同名精确匹配，其余使用下方默认值。</p></div></div>
+              <div class="form-grid ledger-import-mapping">
+                <div class="field"><label for="ledgerCsvExpenseAccount">默认消费资金池</label><select id="ledgerCsvExpenseAccount"></select></div>
+                <div class="field"><label for="ledgerCsvInvestmentAccount">默认投资策略</label><select id="ledgerCsvInvestmentAccount"></select></div>
+                <div class="field"><label for="ledgerCsvIncomeMoneyAccount">收入到账账户</label><select id="ledgerCsvIncomeMoneyAccount"></select></div>
+                <div class="field"><label for="ledgerCsvExpenseMoneyAccount">普通支出付款账户</label><select id="ledgerCsvExpenseMoneyAccount"></select></div>
+                <div class="field"><label for="ledgerCsvInvestmentSourceMoneyAccount">投资转出账户</label><select id="ledgerCsvInvestmentSourceMoneyAccount"></select></div>
+                <div class="field"><label for="ledgerCsvInvestmentTargetMoneyAccount">投资转入账户</label><select id="ledgerCsvInvestmentTargetMoneyAccount"></select></div>
+              </div>
+              <div class="ledger-preview-stats" id="ledgerCsvPreviewStats"></div>
+              <div class="notice data-save-note" id="ledgerCsvPreviewNotice"></div>
+              <div class="actions ledger-duplicate-actions"><button class="btn ghost small" type="button" id="importAllLedgerDuplicates">全部仍然导入疑似重复</button><button class="btn ghost small" type="button" id="skipAllLedgerDuplicates">全部跳过疑似重复</button></div>
+              <div class="table-wrap ledger-preview-table"><table><thead><tr><th>行</th><th>日期</th><th>类型</th><th>项目</th><th>金额</th><th>状态与决定</th></tr></thead><tbody id="ledgerCsvPreviewRows"></tbody></table></div>
+              <p class="subtitle" id="ledgerCsvPreviewLimit"></p>
+              <div class="actions"><button class="btn primary" type="button" id="confirmLedgerCsvImport" disabled>备份并追加流水</button><button class="btn ghost" type="button" id="cancelLedgerCsvImport">取消预览</button></div>
+            </section>
+          </div>
           <div class="card data-card idb-audit-card">
             <h2>操作记录</h2>
             <p class="subtitle">最近的本机操作审计，便于追溯</p>
@@ -831,32 +856,33 @@
     <button id="actionFeedbackButton" type="button">撤销</button>
     <button class="action-feedback-close" type="button" data-action="dismiss-feedback" aria-label="关闭提示">×</button>
   </div>
-  <script defer src="scripts/app-state.js?v=33"></script>
-  <script defer src="scripts/app-ui-feedback.js?v=33"></script>
-  <script defer src="scripts/app-validators.js?v=33"></script>
-  <script defer src="scripts/app-migrations.js?v=33"></script>
-  <script defer src="scripts/app-idb.js?v=33"></script>
-  <script defer src="scripts/app-storage.js?v=33"></script>
-  <script defer src="scripts/app-backend-config.js?v=33"></script>
-  <script defer src="scripts/app-calculations.js?v=33"></script>
-  <script defer src="scripts/app-render-core.js?v=33"></script>
-  <script defer src="scripts/dashboard/dashboard-formatters.js?v=33"></script>
-  <script defer src="scripts/dashboard/render-bottom-strip.js?v=33"></script>
-  <script defer src="scripts/app-render-dashboard.js?v=33"></script>
-  <script defer src="scripts/app-render-assets.js?v=33"></script>
-  <script defer src="scripts/app-render-records.js?v=33"></script>
-  <script defer src="scripts/app-render-investments.js?v=33"></script>
-  <script defer src="scripts/app-render-monthly.js?v=33"></script>
-  <script defer src="scripts/app-render-flow.js?v=33"></script>
-  <script defer src="scripts/app-actions-data.js?v=33"></script>
-  <script defer src="scripts/app-actions-crud.js?v=33"></script>
-  <script defer src="scripts/app-actions-quick-entry.js?v=33"></script>
-  <script defer src="scripts/app-actions-modals.js?v=33"></script>
-  <script defer src="scripts/app-actions-forms.js?v=33"></script>
-  <script defer src="scripts/app-auth.js?v=33"></script>
-  <script defer src="scripts/app-sync.js?v=33"></script>
-  <script defer src="scripts/app-actions-navigation.js?v=33"></script>
-  <script defer src="scripts/app-actions.js?v=33"></script>
-  <script defer src="scripts/app-pwa.js?v=33"></script>
+  <script defer src="scripts/app-state.js?v=34"></script>
+  <script defer src="scripts/app-ui-feedback.js?v=34"></script>
+  <script defer src="scripts/app-validators.js?v=34"></script>
+  <script defer src="scripts/app-migrations.js?v=34"></script>
+  <script defer src="scripts/app-idb.js?v=34"></script>
+  <script defer src="scripts/app-storage.js?v=34"></script>
+  <script defer src="scripts/app-backend-config.js?v=34"></script>
+  <script defer src="scripts/app-calculations.js?v=34"></script>
+  <script defer src="scripts/app-render-core.js?v=34"></script>
+  <script defer src="scripts/dashboard/dashboard-formatters.js?v=34"></script>
+  <script defer src="scripts/dashboard/render-bottom-strip.js?v=34"></script>
+  <script defer src="scripts/app-render-dashboard.js?v=34"></script>
+  <script defer src="scripts/app-render-assets.js?v=34"></script>
+  <script defer src="scripts/app-render-records.js?v=34"></script>
+  <script defer src="scripts/app-render-investments.js?v=34"></script>
+  <script defer src="scripts/app-render-monthly.js?v=34"></script>
+  <script defer src="scripts/app-render-flow.js?v=34"></script>
+  <script defer src="scripts/app-actions-data.js?v=34"></script>
+  <script defer src="scripts/app-actions-ledger-import.js?v=34"></script>
+  <script defer src="scripts/app-actions-crud.js?v=34"></script>
+  <script defer src="scripts/app-actions-quick-entry.js?v=34"></script>
+  <script defer src="scripts/app-actions-modals.js?v=34"></script>
+  <script defer src="scripts/app-actions-forms.js?v=34"></script>
+  <script defer src="scripts/app-auth.js?v=34"></script>
+  <script defer src="scripts/app-sync.js?v=34"></script>
+  <script defer src="scripts/app-actions-navigation.js?v=34"></script>
+  <script defer src="scripts/app-actions.js?v=34"></script>
+  <script defer src="scripts/app-pwa.js?v=34"></script>
 </body>
 </html>

@@ -1,12 +1,13 @@
 ﻿"use strict";
 
-var CURRENT_SCHEMA_VERSION = 5;
+var CURRENT_SCHEMA_VERSION = 6;
 var incomeSources = ["工资", "奖金", "副业", "其他"];
 var accountTypes = ["生活消费", "自我投资", "长期投资", "短期储蓄", "应急金", "自由支配", "其他"];
 var moneyAccountTypes = ["银行卡", "支付账户", "现金", "投资账户", "其他"];
 var accountValuationMethods = ["流水余额", "净值快照"];
 var investmentTypes = ["投资", "储蓄", "转入", "转出"];
 var investmentEntryTypes = ["投资", "储蓄", "转出"];
+var expensePaymentModes = ["money_account", "payroll_withholding"];
 var assetKinds = ["现金", "投资", "电子产品", "贵重物品", "电子订阅", "买断软件", "数字资产", "其他"];
 var assetStatuses = ["在用", "闲置", "观察", "保留", "准备卖出", "已停用"];
 var assetValuationModes = ["独立计入", "关联账户", "不计入", "待确认"];
@@ -136,7 +137,8 @@ function normalizeIncome(item, idMap, moneyIdMap) {
 function normalizeExpense(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};
   var date = safeDate(item.date);
-  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: normalizeAccountId(item.sourceAccountId, idMap), moneyAccountId: normalizeAccountId(item.moneyAccountId, moneyIdMap || {}), category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
+  var paymentMode = safeEnum(item.paymentMode, expensePaymentModes, "money_account");
+  return { id: safeId(item.id), date: date, month: monthOf(date), accountId: normalizeAccountId(item.accountId, idMap), sourceAccountId: paymentMode === "payroll_withholding" ? "" : normalizeAccountId(item.sourceAccountId, idMap), moneyAccountId: paymentMode === "payroll_withholding" ? "" : normalizeAccountId(item.moneyAccountId, moneyIdMap || {}), paymentMode: paymentMode, category: cleanText(item.category) || "未分类", amount: safeAmount(item.amount), note: cleanText(item.note, MAX_NOTE_LENGTH) };
 }
 function normalizeInvestment(item, idMap, moneyIdMap) {
   item = item && typeof item === "object" ? item : {};

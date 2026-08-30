@@ -109,6 +109,7 @@ function createContext() {
     "app-render-monthly.js",
     "app-render-flow.js",
     "app-actions-data.js",
+    "app-actions-ledger-import.js",
     "app-actions-crud.js",
     "app-actions-quick-entry.js",
     "app-actions-modals.js",
@@ -688,7 +689,7 @@ test("left asset metrics label pending allocation by its real semantics", functi
   var html = context.__elements.dashboardAssetMetrics.innerHTML;
   assert.match(html, /本月待分配/);
   assert.match(html, /¥456\.00/);
-  assert.match(html, /收入减支出减投入/);
+  assert.match(html, /到账收入减现金支出减投入/);
   assert.doesNotMatch(html, /可动用资金/);
 });
 

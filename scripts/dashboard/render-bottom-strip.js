@@ -19,17 +19,17 @@ function renderDashboardBottomStrip(s, assetSnap, change, attribution, primaryGo
 
 function dashboardStripCashModule(s, cashRate, readiness) {
   if (readiness && !readiness.hasCashflowEvidence) {
-    return "<article class=\"dashboard-strip-item dashboard-strip-cash\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">现金流总览</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"warning\">待记录</strong></div><div class=\"dashboard-strip-foot\">记录收入与支出后计算本月现金流</div></div></div></article>";
+    return "<article class=\"dashboard-strip-item dashboard-strip-cash\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">现金流总览</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>实际现金净流入</em><strong class=\"warning\">待记录</strong></div><div class=\"dashboard-strip-foot\">记录到账收入与现金支出后计算</div></div></div></article>";
   }
   var flowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
   return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
     + "<div class=\"dashboard-strip-block\">"
     + "<span class=\"dashboard-strip-title\">现金流总览</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
+    + "<div class=\"dashboard-strip-kv\"><em>实际现金净流入</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
     + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
-    + "<div class=\"dashboard-strip-split\"><span>收入 " + esc(money(s.income)) + "</span><span>支出 " + esc(money(s.expense)) + "</span></div>"
-    + "<div class=\"dashboard-strip-foot\">本月待分配 " + esc(money(s.freeCash)) + "</div>"
+    + "<div class=\"dashboard-strip-split\"><span>到账收入 " + esc(money(s.income)) + "</span><span>现金支出 " + esc(money(s.cashExpense)) + "</span></div>"
+    + "<div class=\"dashboard-strip-foot\">本月待分配 " + esc(money(s.freeCash)) + (s.payrollWithholdingExpense > 0 ? " · 工资代扣 " + esc(money(s.payrollWithholdingExpense)) + " 已计入消费" : "") + "</div>"
     + "</div>"
     + "</div></article>";
 }
