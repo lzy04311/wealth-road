@@ -50,6 +50,7 @@ function browserScriptFiles() {
 
 [
   ["data safety", "scripts/app-data-safety.test.js"],
+  ["CSV ledger import", "scripts/app-ledger-import.test.js"],
   ["render and sync smoke", "scripts/app-render-smoke.test.js"],
   ["PWA and brand", "scripts/pwa-assets.test.js"],
   ["private finance ledger", "scripts/finance-ledger.test.js"],
@@ -110,6 +111,7 @@ check("browser layer boundaries", function () {
     "scripts/app-render-monthly.js",
     "scripts/app-render-flow.js",
     "scripts/app-actions-data.js",
+    "scripts/app-actions-ledger-import.js",
     "scripts/app-actions-crud.js",
     "scripts/app-actions-quick-entry.js",
     "scripts/app-actions-modals.js",
@@ -129,6 +131,7 @@ check("browser layer boundaries", function () {
   assert(position("scripts/app-state.js") < position("scripts/app-ui-feedback.js"), "state must load before UI feedback");
   assert(position("scripts/app-ui-feedback.js") < position("scripts/app-storage.js"), "UI feedback must exist before storage save paths run");
   assert(position("scripts/app-calculations.js") < position("scripts/app-render-core.js"), "calculations must load before render context");
+  assert(position("scripts/app-actions-data.js") < position("scripts/app-actions-ledger-import.js"), "CSV append import must reuse data-safety actions without replacing JSON restore");
   assert(position("scripts/app-actions-modals.js") < position("scripts/app-actions-forms.js"), "form lifecycle must load before form bindings");
   assert(position("scripts/app-actions-forms.js") < position("scripts/app-actions.js"), "form bindings must load before app initialization");
 
@@ -295,6 +298,21 @@ check("responsive visual and accessibility contract", function () {
   assert(actionsData.indexOf("MAX_IMPORT_BYTES") >= 0 && actionsData.indexOf("idbCreateVerifiedBackup") >= 0, "backup size and verified checkpoint paths must remain connected");
   assert(actionsData.indexOf("已导出备份文件") === -1, "unverified browser downloads must not claim export success");
   return "AA status colors · 44px targets · reduced motion · mobile scroll cue · orientation any · verified backup copy";
+});
+
+check("CSV ledger append contract", function () {
+  var index = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var stateSource = fs.readFileSync(path.join(root, "scripts/app-state.js"), "utf8");
+  var calculations = fs.readFileSync(path.join(root, "scripts/app-calculations.js"), "utf8");
+  var ledgerImport = fs.readFileSync(path.join(root, "scripts/app-actions-ledger-import.js"), "utf8");
+  var jsonImport = fs.readFileSync(path.join(root, "scripts/app-actions-data.js"), "utf8");
+  assert(stateSource.indexOf('CURRENT_SCHEMA_VERSION = 6') >= 0 && stateSource.indexOf('"payroll_withholding"') >= 0, "schema v6 payroll-withholding semantics are missing");
+  assert(calculations.indexOf("function expenseAffectsCash") >= 0 && calculations.indexOf("cashExpense") >= 0, "calculation layer must separate consumption from cash expense");
+  assert(index.indexOf('id="importFile"') >= 0 && index.indexOf('id="ledgerCsvFile"') >= 0, "JSON recovery and CSV append inputs must stay separate");
+  assert(jsonImport.indexOf("function importData()") >= 0 && ledgerImport.indexOf("function confirmLedgerCsvImport()") >= 0, "full recovery and ledger append actions must stay independent");
+  assert(ledgerImport.indexOf("prepareImportedState(merged)") >= 0 && ledgerImport.indexOf("createSafetyCheckpoint(state") >= 0, "CSV append must reuse full-state validation and safety checkpoints");
+  assert(ledgerImport.indexOf('decisions[row.index] || ""') >= 0, "suspected duplicates must begin unresolved rather than being silently skipped");
+  return "schema v6 · dual expense semantics · explicit duplicates · validated append-only save";
 });
 
 check("retired product names", function () {

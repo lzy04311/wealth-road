@@ -171,6 +171,10 @@ function validateImportEntities(data) {
     validateImportReference(errors, item, label, "accountId", accountIds, false);
     validateImportReference(errors, item, label, "sourceAccountId", accountIds, false);
     validateImportReference(errors, item, label, "moneyAccountId", moneyAccountIds, false);
+    if (Number(data.schemaVersion) >= 6) {
+      if (item.paymentMode !== "money_account" && item.paymentMode !== "payroll_withholding") errors.push(label + ".paymentMode 必须是 money_account 或 payroll_withholding。");
+      if (item.paymentMode === "payroll_withholding" && (item.moneyAccountId || item.sourceAccountId)) errors.push(label + " 的工资代扣不能关联实际扣款账户或旧资金来源账户。");
+    }
   });
   each("investments", function (item, label) {
     validateImportReference(errors, item, label, "accountId", accountIds, false);

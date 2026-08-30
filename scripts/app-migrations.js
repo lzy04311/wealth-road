@@ -55,6 +55,15 @@ function v4ToV5(rawState) {
   next.schemaVersion = 5;
   return next;
 }
+function v5ToV6(rawState) {
+  var next = clonePlain(rawState);
+  next.expenses = (next.expenses || []).map(function (item) {
+    item.paymentMode = item.paymentMode || "money_account";
+    return item;
+  });
+  next.schemaVersion = 6;
+  return next;
+}
 function migrateState(rawState) {
   var errors = validateImportData(rawState);
   if (errors.length) throw new Error(errors.join("\n"));
@@ -75,6 +84,10 @@ function migrateState(rawState) {
   if (version === 4) {
     next = v4ToV5(next);
     version = 5;
+  }
+  if (version === 5) {
+    next = v5ToV6(next);
+    version = 6;
   }
   if (version !== CURRENT_SCHEMA_VERSION) throw new Error("不支持的备份版本：" + rawState.schemaVersion + "。");
   return next;

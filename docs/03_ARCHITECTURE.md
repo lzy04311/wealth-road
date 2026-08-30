@@ -28,7 +28,7 @@
 
 ### Browser Script Contract
 
-- 浏览器运行时使用 27 个 `defer` 经典脚本，不依赖构建工具或运行时模块加载器。
+- 浏览器运行时使用 28 个 `defer` 经典脚本，不依赖构建工具或运行时模块加载器。
 - 固定方向是 state / validation / storage -> calculations -> render -> actions -> optional auth and sync -> navigation / init / PWA。
 - 完整文件顺序和顶层声明唯一性由 `scripts/check-project.js` 精确校验；新增跨文件接口必须先确定所属层，不能依赖偶然加载顺序。
 
@@ -51,7 +51,7 @@
 
 - `scripts/app-migrations.js`
   - `CURRENT_SCHEMA_VERSION` 对应的迁移管线。
-  - 当前支持 v1 -> v2 -> v3 -> v4 -> v5。
+  - 当前支持 v1 -> v2 -> v3 -> v4 -> v5 -> v6。
   - 不认识的未来版本必须拒绝。
 
 - `scripts/app-storage.js`
@@ -77,7 +77,8 @@
 ### Calculations
 
 - `scripts/app-calculations.js`
-  - 月度收入、支出、预算、资金池余额和真实账户余额。
+  - 月度收入、消费支出、现金支出、预算、资金池余额和真实账户余额。
+  - `paymentMode` 的现金影响只在计算层统一判断，工资代扣仍保留消费与预算语义。
   - 余额核对、资产快照与统一净资产汇总。
   - 版本化月度执行健康度、预测和账户状态。
   - `FINANCIAL_HEALTH_MODEL` 是评分权重、阈值和展示说明的单一事实源。
@@ -112,6 +113,11 @@
   - `downloadStateBackup`
   - `exportData`
   - `importData`
+
+- `scripts/app-actions-ledger-import.js`
+  - 无外部依赖的 UTF-8 CSV 解析、字段校验和账户映射。
+  - 追加式流水预览、疑似重复显式决策和完整 state 草稿校验。
+  - 复用现有安全检查点与保存回滚，不介入 JSON 完整恢复入口。
 
 - `scripts/app-actions-crud.js`
   - `upsert`

@@ -8,7 +8,7 @@
   return records.slice().sort(function (a, b) { return String(b.date).localeCompare(String(a.date)); }).map(function (item) {
     var title = "", details = "", amountClass = "";
     if (type === "income") { title = item.source; details = meta(["到账账户：" + moneyAccountName(item.moneyAccountId), "收入归属：" + fundingAccountName(item.accountId), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "positive"; }
-    else if (type === "expense") { title = accountName(item.accountId); details = meta(["付款账户：" + (item.moneyAccountId ? moneyAccountName(item.moneyAccountId) : fundingAccountName(item.sourceAccountId)), "资金池：" + accountName(item.accountId), "类别：" + item.category, "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "negative"; }
+    else if (type === "expense") { title = accountName(item.accountId); details = meta([item.paymentMode === "payroll_withholding" ? "结算方式：工资到账前代扣，不影响实际账户余额" : "付款账户：" + (item.moneyAccountId ? moneyAccountName(item.moneyAccountId) : fundingAccountName(item.sourceAccountId)), "资金池：" + accountName(item.accountId), "类别：" + item.category, "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = "negative"; }
     else { title = accountName(item.accountId); details = meta(["付款账户：" + (item.sourceMoneyAccountId ? moneyAccountName(item.sourceMoneyAccountId) : fundingAccountName(item.sourceAccountId)), "投资账户：" + moneyAccountName(item.targetMoneyAccountId), "投资策略：" + accountName(item.accountId), "类型：" + item.type, "产品：" + (item.product || "无"), "日期：" + item.date, "备注：" + (item.note || "无")]); amountClass = item.type === "转出" ? "negative" : "positive"; }
     return "<div class=\"record-card\"><div class=\"row-title\"><span>" + esc(title) + "</span><span class=\"badge\">" + esc(type === "income" ? "收入" : (type === "expense" ? item.category : item.type)) + "</span></div><div class=\"row-amount " + amountClass + "\">" + (type === "expense" || item.type === "转出" ? "-" : "+") + money(item.amount) + "</div>" + details + "<div class=\"row-actions\"><button class=\"btn small ghost\" data-action=\"duplicate\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">再记一笔</button><button class=\"btn small ghost\" data-action=\"edit\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">编辑</button><button class=\"btn small danger\" data-action=\"delete\" data-type=\"" + esc(type) + "\" data-id=\"" + esc(item.id) + "\">删除</button></div></div>";
   }).join("");
@@ -158,7 +158,7 @@ function renderReconciliations() {
 function unlinkedMoneyRecords() {
   var rows = [];
   state.incomes.forEach(function (item) { if (!item.moneyAccountId) rows.push({ type: "income", item: item }); });
-  state.expenses.forEach(function (item) { if (!item.moneyAccountId) rows.push({ type: "expense", item: item }); });
+  state.expenses.forEach(function (item) { if (!item.moneyAccountId && item.paymentMode !== "payroll_withholding") rows.push({ type: "expense", item: item }); });
   state.investments.forEach(function (item) { if (!item.sourceMoneyAccountId || !item.targetMoneyAccountId) rows.push({ type: "investment", item: item }); });
   state.transfers.forEach(function (item) { if (!item.fromMoneyAccountId || !item.toMoneyAccountId) rows.push({ type: "transfer", item: item }); });
   return rows.sort(function (a, b) { return String(b.item.date).localeCompare(String(a.item.date)); });

@@ -20,7 +20,7 @@ function renderDashboard(ctx) {
   var investmentAssets = numberValue(sum(investmentRows, function (row) { return row.value; }));
   var targetAccounts = state.accounts.filter(function (account) { return !account.archived && numberValue(account.target) > 0; });
   var primaryGoal = dashboardPrimaryGoal(month, targetAccounts);
-  var savingRate = s.income > 0 ? Math.max(0, (s.income - s.expense) / s.income * 100) : null;
+  var savingRate = s.income > 0 ? Math.max(0, s.netCashFlow / s.income * 100) : null;
   var storageDisplay = typeof storageHealthPresentation === "function" ? storageHealthPresentation() : { shortLabel: "待检测", detail: "存储状态待检测", className: "warning" };
   var backupText = storageDisplay.shortLabel;
   var coreJudgement = readiness.canJudgeExecution ? (s.surplus >= 0 ? "资金节奏稳定" : "现金流承压") : "等待首笔真实数据";
@@ -74,7 +74,7 @@ function renderDashboardAssetCard(month, s, health, totalAsset, wealth, change, 
   changeEl.setAttribute("data-dash-tip", changeTip);
   var liabilityHint = isUnknown ? "待记录" : (wealth.liabilities > 0 ? "待偿还" : "已记录为零");
   byId("dashboardAssetMetrics").innerHTML = [
-    dashboardMetric("本月待分配", isUnknown ? "待记录" : money(s.freeCash), isUnknown ? "warning" : (s.freeCash >= 0 ? "positive" : "negative"), isUnknown ? "记录收入与流出后计算" : "收入减支出减投入"),
+    dashboardMetric("本月待分配", isUnknown ? "待记录" : money(s.freeCash), isUnknown ? "warning" : (s.freeCash >= 0 ? "positive" : "negative"), isUnknown ? "记录收入与流出后计算" : "到账收入减现金支出减投入"),
     dashboardMetric("金融资产", isUnknown ? "待建账" : money(wealth.financialAssets), isUnknown ? "warning" : "", isUnknown ? "添加实际账户后计算" : "当前持有"),
     dashboardMetric("投资资产", isUnknown ? "待记录" : money(investmentAssets), isUnknown ? "warning" : "", isUnknown ? "记录持仓或净值后计算" : "投资账户市值"),
     dashboardMetric("负债", isUnknown ? "待记录" : money(wealth.liabilities), isUnknown ? "warning" : (wealth.liabilities > 0 ? "negative" : ""), liabilityHint)

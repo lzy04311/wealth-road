@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "caiji-pwa-v33";
+var CACHE_NAME = "caiji-pwa-v34";
 var APP_SHELL = [
   "./",
   "./index.html",
@@ -47,6 +47,7 @@ var APP_SHELL = [
   "./scripts/app-render-monthly.js",
   "./scripts/app-render-flow.js",
   "./scripts/app-actions-data.js",
+  "./scripts/app-actions-ledger-import.js",
   "./scripts/app-actions-crud.js",
   "./scripts/app-actions-quick-entry.js",
   "./scripts/app-actions-modals.js",

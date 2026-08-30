@@ -98,8 +98,11 @@ test("data safety actions precede collapsed experimental cloud sync", function (
   var exportAt = html.indexOf('id="exportData"');
   var backupAt = html.indexOf('id="idbRestoreLatest"');
   var importAt = html.indexOf('id="importData"');
+  var ledgerAt = html.indexOf('id="previewLedgerCsv"');
   var cloudAt = html.indexOf('class="card data-card sync-card experimental-sync-card"');
-  assert.ok(exportAt > 0 && backupAt > exportAt && importAt > backupAt && cloudAt > importAt);
+  assert.ok(exportAt > 0 && backupAt > exportAt && importAt > backupAt && ledgerAt > importAt && cloudAt > ledgerAt);
+  assert.match(html, /流水导入/);
+  assert.match(html, /accept="text\/csv,\.csv"/);
   assert.match(html, /<details class="card data-card sync-card experimental-sync-card">/);
 });
 
@@ -126,6 +129,7 @@ test("service worker precaches core shell assets", function () {
     "./styles/subpages/form-drawer.css",
     "./scripts/app-state.js",
     "./scripts/app-ui-feedback.js",
+    "./scripts/app-actions-ledger-import.js",
     "./scripts/app-actions-forms.js",
     "./scripts/app-actions.js",
     "./manifest.webmanifest"

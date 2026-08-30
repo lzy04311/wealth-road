@@ -271,6 +271,8 @@ function editRecord(type, id) {
     byId("expenseDate").value = expense.date;
     byId("expenseAccount").value = expense.accountId;
     byId("expenseMoneyAccount").value = expense.moneyAccountId || "";
+    byId("expensePaymentMode").value = expense.paymentMode || "money_account";
+    byId("expenseMoneyAccount").required = expense.paymentMode !== "payroll_withholding" && hasMoneyAccounts();
     byId("expenseCategory").value = expense.category;
     byId("expenseAmount").value = expense.amount;
     byId("expenseNote").value = expense.note || "";

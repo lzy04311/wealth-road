@@ -61,6 +61,20 @@
           check(strip.scrollWidth > strip.clientWidth, "mobile data strip is not horizontally scrollable");
           check(w.getComputedStyle(d.getElementById("dashboardStripHint")).display !== "none", "horizontal scroll hint is hidden");
 
+          check(typeof w.ledgerCsvReadRows === "function", "independent CSV ledger importer is missing");
+          var ledgerRows = w.ledgerCsvReadRows([
+            "日期,项目,分类,收入,支出,类型,备注",
+            "2026-08-15,实际到账工资,工资,5430,,收入,",
+            "2026-08-15,公司餐费,日常开支,,70,工资代扣,到账前结算"
+          ].join("\n"));
+          w.ledgerCsvSession = { rows: ledgerRows, decisions: {} };
+          w.renderLedgerCsvPreview();
+          check(!d.getElementById("ledgerCsvPreview").hidden, "CSV preview did not open");
+          check(/新增收入1/.test(d.getElementById("ledgerCsvPreviewStats").textContent.replace(/\s/g, "")), "CSV income preview count is wrong");
+          check(/新增支出1/.test(d.getElementById("ledgerCsvPreviewStats").textContent.replace(/\s/g, "")), "CSV payroll preview count is wrong");
+          check(!d.getElementById("confirmLedgerCsvImport").disabled, "valid CSV preview cannot be confirmed");
+          w.resetLedgerCsvImport();
+
           var sample = await fetch("/tests/fixtures/dashboard-sample.json").then(function (response) { return response.json(); });
           var prepared = w.prepareImportedState(sample);
           check(prepared.ok, "sample import validation failed");
@@ -76,15 +90,17 @@
           var exportButton = d.getElementById("exportData");
           var backupButton = d.getElementById("idbRestoreLatest");
           var importButton = d.getElementById("importData");
+          var ledgerButton = d.getElementById("previewLedgerCsv");
           var cloud = d.querySelector(".experimental-sync-card");
           check(exportButton.compareDocumentPosition(backupButton) & Node.DOCUMENT_POSITION_FOLLOWING, "backup does not follow export");
           check(backupButton.compareDocumentPosition(importButton) & Node.DOCUMENT_POSITION_FOLLOWING, "import does not follow automatic backup");
-          check(importButton.compareDocumentPosition(cloud) & Node.DOCUMENT_POSITION_FOLLOWING, "experimental cloud sync precedes local safety actions");
+          check(importButton.compareDocumentPosition(ledgerButton) & Node.DOCUMENT_POSITION_FOLLOWING, "ledger append does not follow JSON recovery");
+          check(ledgerButton.compareDocumentPosition(cloud) & Node.DOCUMENT_POSITION_FOLLOWING, "experimental cloud sync precedes local safety actions");
           check(!cloud.open, "experimental cloud sync must default closed");
           var manifest = await fetch("/manifest.webmanifest").then(function (response) { return response.json(); });
           check(manifest.orientation === "any", "manifest still forces portrait");
 
-          finish(true, "empty state, sample save, IDB round-trip, mobile layout, semantics and data hierarchy");
+          finish(true, "empty state, CSV preview, sample save, IDB round-trip, mobile layout, semantics and data hierarchy");
         })().catch(function (error) { finish(false, error && error.message ? error.message : String(error)); });
       }, { once: true });
       frame.src = "/index.html";

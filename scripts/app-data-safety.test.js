@@ -79,6 +79,12 @@ function validV5Backup(overrides) {
   }, overrides || {});
 }
 
+function validV6Backup(overrides) {
+  return Object.assign(validV5Backup(), {
+    schemaVersion: 6
+  }, overrides || {});
+}
+
 function calculationState() {
   return validV2Backup({
     accounts: [
@@ -272,7 +278,7 @@ test("reconciliation differences must match their balances", function () {
   assert.match(result.errors.join("\n"), /adjustment.*actualBalance - bookBalance/);
 });
 
-test("a relationally complete v5 backup is accepted", function () {
+test("a relationally complete v5 backup migrates to the current schema", function () {
   var context = createContext();
   var backup = validV5Backup({
     accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 100, fixedBudget: true, includeExpense: true, includeAsset: false, target: 0 }],
@@ -289,7 +295,53 @@ test("a relationally complete v5 backup is accepted", function () {
   });
   var result = context.prepareImportedState(backup);
   assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
-  assert.strictEqual(result.state.schemaVersion, 5);
+  assert.strictEqual(result.state.schemaVersion, context.CURRENT_SCHEMA_VERSION);
+  assert.strictEqual(result.state.expenses[0].paymentMode, "money_account");
+});
+
+test("schema v6 rejects payroll withholding linked to a cash account", function () {
+  var context = createContext();
+  var backup = validV6Backup({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 100, fixedBudget: true, includeExpense: true, includeAsset: false, target: 0 }],
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 0, openingBalanceDate: "2026-07-31" }],
+    expenses: [{ id: "meal", date: "2026-08-15", month: "2026-08", accountId: "daily", sourceAccountId: "", moneyAccountId: "bank", paymentMode: "payroll_withholding", category: "餐饮", amount: 70, note: "" }]
+  });
+  var result = context.prepareImportedState(backup);
+  assert.strictEqual(result.ok, false);
+  assert.match(result.errors.join("\n"), /工资代扣不能关联/);
+});
+
+test("payroll withholding counts as consumption without double-reducing cash or wealth", function () {
+  var context = createContext(null, { calculations: true });
+  var backup = validV6Backup({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", budgetPercent: 100, fixedBudget: true, includeExpense: true, includeAsset: false, target: 0, openingBalance: 0, openingBalanceDate: "" }],
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 0, openingBalanceDate: "2026-07-31" }],
+    monthlyPlans: { "2026-08": { plannedIncome: 5430, payday: 15 } },
+    incomes: [{ id: "salary", date: "2026-08-15", month: "2026-08", accountId: "", moneyAccountId: "bank", source: "工资", amount: 5430, note: "实际到账" }],
+    expenses: [{ id: "meal", date: "2026-08-15", month: "2026-08", accountId: "daily", sourceAccountId: "", moneyAccountId: "", paymentMode: "payroll_withholding", category: "餐饮", amount: 70, note: "工资到账前代扣" }]
+  });
+  var prepared = context.prepareImportedState(backup);
+  assert.strictEqual(prepared.ok, true, (prepared.errors || []).join("\n"));
+  context.state = prepared.state;
+  var summary = context.monthlySummary("2026-08");
+  assert.strictEqual(summary.income, 5430);
+  assert.strictEqual(summary.expense, 70);
+  assert.strictEqual(summary.cashExpense, 0);
+  assert.strictEqual(summary.payrollWithholdingExpense, 70);
+  assert.strictEqual(summary.netCashFlow, 5430);
+  assert.strictEqual(summary.freeCash, 5430);
+  assert.strictEqual(summary.budgetBalance, 5360);
+  assert.strictEqual(context.monthlyExpense("daily", "2026-08"), 70);
+  assert.strictEqual(context.moneyAccountBalance(context.state.moneyAccounts[0], "2026-08"), 5430);
+  assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-08"), 0);
+  assert.strictEqual(context.unallocatedCashSummary("2026-08").value, 5430);
+  assert.strictEqual(context.wealthChange("2026-08").change, 5430);
+  var attribution = context.wealthAttribution("2026-08");
+  assert.strictEqual(attribution.cashflowContribution, 5430);
+  assert.strictEqual(attribution.unexplained, 0);
+
+  context.state.moneyAccounts = [];
+  assert.strictEqual(context.unallocatedCashSummary("2026-08").value, 5430);
 });
 
 test("browser E2E recovery fixture passes the production import pipeline", function () {
@@ -940,13 +992,13 @@ test("R2.5 allocation execution compares planned pools with recorded assignment"
   assert.deepStrictEqual(execution.pools.map(function (row) { return [row.id, row.planned, row.actual]; }), [["living", 1200, 1000], ["save", 800, 800]]);
 });
 
-test("R2.7 dashboard sample fixture is a complete finite v5 business scenario", function () {
+test("R2.7 dashboard sample fixture migrates into a complete current business scenario", function () {
   var context = createContext(null, { calculations: true });
   var result = context.prepareImportedState(dashboardSampleFixture());
   assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
   assert.deepStrictEqual(context.__store, {});
   context.state = result.state;
-  assert.strictEqual(result.state.schemaVersion, 5);
+  assert.strictEqual(result.state.schemaVersion, context.CURRENT_SCHEMA_VERSION);
   assert.strictEqual(result.state.moneyAccounts.length, 2);
   assert.strictEqual(result.state.incomes.length, 1);
   assert.strictEqual(result.state.expenses.length, 7);
