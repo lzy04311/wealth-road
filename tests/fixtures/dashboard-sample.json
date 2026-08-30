@@ -1,0 +1,365 @@
+{
+  "schemaVersion": 5,
+  "accounts": [
+    {
+      "id": "sample_daily",
+      "name": "日常开支",
+      "type": "生活消费",
+      "budgetPercent": 31.7,
+      "fixedBudget": true,
+      "includeExpense": true,
+      "includeAsset": false,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    },
+    {
+      "id": "sample_learning",
+      "name": "学习成长",
+      "type": "自我投资",
+      "budgetPercent": 8.6,
+      "fixedBudget": true,
+      "includeExpense": true,
+      "includeAsset": false,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    },
+    {
+      "id": "sample_long",
+      "name": "长期投资",
+      "type": "长期投资",
+      "budgetPercent": 24.3,
+      "fixedBudget": true,
+      "includeExpense": false,
+      "includeAsset": true,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "净值快照",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    },
+    {
+      "id": "sample_reserve",
+      "name": "备用现金",
+      "type": "短期储蓄",
+      "budgetPercent": 10.4,
+      "fixedBudget": true,
+      "includeExpense": false,
+      "includeAsset": true,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    },
+    {
+      "id": "sample_emergency",
+      "name": "应急金",
+      "type": "应急金",
+      "budgetPercent": 15.0,
+      "fixedBudget": true,
+      "includeExpense": false,
+      "includeAsset": true,
+      "target": 12000,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    },
+    {
+      "id": "sample_fun",
+      "name": "娱乐消费",
+      "type": "自由支配",
+      "budgetPercent": 10.0,
+      "fixedBudget": true,
+      "includeExpense": true,
+      "includeAsset": false,
+      "target": 0,
+      "openingBalance": 0,
+      "openingBalanceDate": "",
+      "valuationMethod": "流水余额",
+      "archived": false,
+      "note": "R2.7 synthetic dashboard sample"
+    }
+  ],
+  "moneyAccounts": [
+    {
+      "id": "sample_bank",
+      "name": "样例银行卡",
+      "type": "银行卡",
+      "openingBalance": 7200,
+      "openingBalanceDate": "2026-07-31",
+      "archived": false,
+      "note": "Fictional test-only account"
+    },
+    {
+      "id": "sample_wallet",
+      "name": "样例支付钱包",
+      "type": "支付账户",
+      "openingBalance": 1350,
+      "openingBalanceDate": "2026-07-31",
+      "archived": false,
+      "note": "Fictional test-only account"
+    }
+  ],
+  "reconciliations": [
+    {
+      "id": "sample_reconciliation",
+      "date": "2026-08-26",
+      "month": "2026-08",
+      "moneyAccountId": "sample_bank",
+      "bookBalance": 13956,
+      "actualBalance": 13940.45,
+      "adjustment": -15.55,
+      "note": "Fictional monthly balance check"
+    }
+  ],
+  "allocations": [
+    {
+      "id": "sample_alloc_daily",
+      "date": "2026-08-12",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_daily",
+      "amount": 2050.35,
+      "note": "Fictional planned-fund allocation"
+    },
+    {
+      "id": "sample_alloc_learning",
+      "date": "2026-08-13",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_learning",
+      "amount": 520.45,
+      "note": "Fictional planned-fund allocation"
+    },
+    {
+      "id": "sample_alloc_reserve",
+      "date": "2026-08-16",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_reserve",
+      "amount": 980.15,
+      "note": "Fictional planned-fund allocation"
+    },
+    {
+      "id": "sample_alloc_emergency",
+      "date": "2026-08-20",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_emergency",
+      "amount": 880.25,
+      "note": "Fictional emergency-fund allocation"
+    },
+    {
+      "id": "sample_alloc_fun",
+      "date": "2026-08-22",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_fun",
+      "amount": 620.75,
+      "note": "Fictional planned-fund allocation"
+    },
+    {
+      "id": "sample_alloc_long",
+      "date": "2026-08-24",
+      "month": "2026-08",
+      "fromAccountId": "",
+      "toAccountId": "sample_long",
+      "amount": 1508.30,
+      "note": "Fictional investment-pool allocation"
+    }
+  ],
+  "incomes": [
+    {
+      "id": "sample_salary",
+      "date": "2026-08-15",
+      "month": "2026-08",
+      "accountId": "",
+      "moneyAccountId": "sample_bank",
+      "source": "工资",
+      "amount": 6888.60,
+      "note": "Fictional August salary"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "sample_exp_rent",
+      "date": "2026-08-02",
+      "month": "2026-08",
+      "accountId": "sample_daily",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "住房",
+      "amount": 1487.35,
+      "note": "Fictional rent payment"
+    },
+    {
+      "id": "sample_exp_breakfast",
+      "date": "2026-08-04",
+      "month": "2026-08",
+      "accountId": "sample_daily",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "吃饭",
+      "amount": 86.40,
+      "note": "Fictional meal expense"
+    },
+    {
+      "id": "sample_exp_transport",
+      "date": "2026-08-07",
+      "month": "2026-08",
+      "accountId": "sample_daily",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "交通",
+      "amount": 47.80,
+      "note": "Fictional commute expense"
+    },
+    {
+      "id": "sample_exp_groceries",
+      "date": "2026-08-11",
+      "month": "2026-08",
+      "accountId": "sample_daily",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "生活",
+      "amount": 263.75,
+      "note": "Fictional grocery expense"
+    },
+    {
+      "id": "sample_exp_learning",
+      "date": "2026-08-16",
+      "month": "2026-08",
+      "accountId": "sample_learning",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_bank",
+      "category": "学习",
+      "amount": 132.60,
+      "note": "Fictional course expense"
+    },
+    {
+      "id": "sample_exp_entertainment",
+      "date": "2026-08-19",
+      "month": "2026-08",
+      "accountId": "sample_fun",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "娱乐",
+      "amount": 158.35,
+      "note": "Fictional entertainment expense"
+    },
+    {
+      "id": "sample_exp_household",
+      "date": "2026-08-24",
+      "month": "2026-08",
+      "accountId": "sample_daily",
+      "sourceAccountId": "",
+      "moneyAccountId": "sample_wallet",
+      "category": "生活",
+      "amount": 76.90,
+      "note": "Fictional household expense"
+    }
+  ],
+  "investments": [
+    {
+      "id": "sample_invest_1",
+      "date": "2026-08-12",
+      "month": "2026-08",
+      "accountId": "sample_long",
+      "sourceAccountId": "",
+      "sourceMoneyAccountId": "",
+      "targetMoneyAccountId": "",
+      "type": "投资",
+      "amount": 873.45,
+      "product": "指数基金",
+      "note": "Fictional principal contribution"
+    },
+    {
+      "id": "sample_invest_2",
+      "date": "2026-08-23",
+      "month": "2026-08",
+      "accountId": "sample_long",
+      "sourceAccountId": "",
+      "sourceMoneyAccountId": "",
+      "targetMoneyAccountId": "",
+      "type": "投资",
+      "amount": 431.25,
+      "product": "指数基金",
+      "note": "Fictional principal contribution"
+    }
+  ],
+  "transfers": [],
+  "snapshots": [
+    {
+      "id": "sample_snapshot_opening",
+      "date": "2026-07-31",
+      "month": "2026-07",
+      "accountId": "sample_long",
+      "marketValue": 2860,
+      "principal": 2700,
+      "note": "Fictional opening investment snapshot"
+    },
+    {
+      "id": "sample_snapshot_current",
+      "date": "2026-08-28",
+      "month": "2026-08",
+      "accountId": "sample_long",
+      "marketValue": 4215.60,
+      "principal": 4004.70,
+      "note": "Fictional current investment snapshot"
+    }
+  ],
+  "monthlyPlans": {
+    "2026-08": {
+      "plannedIncome": 6888.60,
+      "payday": 15
+    },
+    "2026-09": {
+      "plannedIncome": 6942.75,
+      "payday": 9
+    }
+  },
+  "rules": "R2.7 synthetic dashboard sample only; never use as production data.",
+  "assetItems": [
+    {
+      "id": "sample_subscription",
+      "kind": "电子订阅",
+      "name": "样例云服务",
+      "owner": "sample-user",
+      "purchasePrice": 0,
+      "currentValue": 0,
+      "valuationDate": "",
+      "monthlyCost": 86.80,
+      "renewalDate": "2026-09-12",
+      "status": "在用",
+      "valuationMode": "不计入",
+      "linkedAccountId": "",
+      "note": "Fictional subscription for dashboard tests"
+    }
+  ],
+  "liabilities": [
+    {
+      "id": "sample_credit_card",
+      "name": "样例信用卡",
+      "type": "信用卡",
+      "currentBalance": 3400,
+      "balanceDate": "2026-07-31",
+      "interestRate": 18.6,
+      "minimumPayment": 460,
+      "dueDate": "2026-09-06",
+      "status": "还款中",
+      "note": "Fictional liability for dashboard tests"
+    }
+  ]
+}

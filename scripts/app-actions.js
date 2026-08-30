@@ -193,7 +193,7 @@ function bindClicks() {
     if (event.key === "/" && document.body.classList.contains("module-page-mode") && byId("flow").classList.contains("active") && event.target.tagName !== "INPUT" && event.target.tagName !== "TEXTAREA") { event.preventDefault(); byId("flowRecordSearch").focus(); }
   });
 }
-function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "transfer", "snapshot", "reconciliation", "allocation"].forEach(function (p) { byId(p + "Date").value = today(); }); byId("moneyAccountOpeningBalanceDate").value = today(); syncSelects(); enhanceFormLabels(); enhanceFormDrawers(); bindFormSubmits(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); if (typeof initBackendAuth === "function") initBackendAuth(); }
+function init() { byId("dashboardDate").value = today(); renderTodayWidget(); setInterval(renderTodayWidget, 30000); byId("currentMonth").value = monthOf(today()); ["income", "expense", "investment", "transfer", "snapshot", "reconciliation", "allocation"].forEach(function (p) { byId(p + "Date").value = today(); }); byId("moneyAccountOpeningBalanceDate").value = today(); syncSelects(); enhanceFormLabels(); enhanceFormDrawers(); bindFormSubmits(); bindQuickModalSubmit(); bindClicks(); renderAll(); setDashboardHomeMode("dashboard"); if (typeof refreshStorageHealth === "function") refreshStorageHealth(); if (typeof initBackendAuth === "function") initBackendAuth(); }
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", init);
 } else {

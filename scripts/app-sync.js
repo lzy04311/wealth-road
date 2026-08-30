@@ -130,9 +130,8 @@ async function pushLocalStateToCloud() {
 
 async function applyCloudState(prepared) {
   var previous = state;
-  if (typeof downloadStateBackup === "function") {
-    downloadStateBackup(previous, "caiji-backup-before-cloud-pull_" + backupTimestamp() + ".json");
-  }
+  if (typeof createSafetyCheckpoint === "function") await createSafetyCheckpoint(previous, "caiji-backup-before-cloud-pull_");
+  else if (typeof downloadStateBackup === "function") downloadStateBackup(previous, "caiji-backup-before-cloud-pull_" + backupTimestamp() + ".json");
   state = prepared.state;
   if (save()) {
     updateSyncMeta({

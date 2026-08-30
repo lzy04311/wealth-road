@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>财记真实浏览器门禁</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    iframe { width: 390px; height: 844px; border: 0; }
+    #result { position: fixed; inset: auto 8px 8px; z-index: 9; padding: 6px; background: white; font: 12px monospace; }
+  </style>
+</head>
+<body data-browser-gate="pending">
+  <iframe id="app" title="财记测试实例"></iframe>
+  <img src="/__gate_delay__" alt="" hidden>
+  <pre id="result">RUNNING</pre>
+  <script>
+    (function () {
+      "use strict";
+      var result = document.getElementById("result");
+      function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+      function check(condition, message) { if (!condition) throw new Error(message); }
+      function finish(ok, message) {
+        document.body.setAttribute("data-browser-gate", ok ? "pass" : "fail");
+        result.textContent = (ok ? "PASS " : "FAIL ") + message;
+      }
+      try { localStorage.clear(); } catch (err) {}
+      var frame = document.getElementById("app");
+      frame.addEventListener("load", function () {
+        (async function () {
+          var w = frame.contentWindow, d = frame.contentDocument;
+          await wait(600);
+          if (typeof w.refreshStorageHealth === "function") await w.refreshStorageHealth();
+
+          check(/待评估/.test(d.getElementById("dashboardAssetHealth").textContent), "empty health must be unknown");
+          check(d.getElementById("dashboardTotalAsset").textContent === "待建账", "empty wealth must be unknown");
+          check(/先建立三条真实基线/.test(d.getElementById("dashboardRightCards").textContent), "onboarding guide missing");
+          check(!/本月平稳|账目结构正常|自动保存正常/.test(d.getElementById("dashboardCockpit").textContent), "fabricated healthy copy returned");
+
+          var healthButton = d.getElementById("dashboardAssetHealth");
+          check(healthButton.tagName === "BUTTON", "health explanation is not actionable");
+          healthButton.click();
+          await wait(30);
+          check(d.getElementById("healthModal").classList.contains("open"), "health explanation did not open");
+          w.closeHealthModal("dismiss");
+
+          var nodes = d.querySelectorAll("#wealthCompassNodes .compass-node");
+          check(nodes.length === 6, "compass node count changed");
+          check(d.querySelectorAll("#wealthCompassNodes button").length === 3, "no-op compass buttons returned");
+          check(d.querySelectorAll('#wealthCompassNodes [role="status"]').length === 3, "read-only compass semantics missing");
+
+          var homeButtons = d.querySelectorAll(".dashboard-home-action");
+          Array.prototype.forEach.call(homeButtons, function (button) {
+            var rect = button.getBoundingClientRect();
+            check(rect.width >= 44 && rect.height >= 44, "mobile home target below 44px");
+            check(!!button.getAttribute("aria-label"), "mobile home target has no accessible name");
+          });
+          var nodeDesc = d.querySelector(".compass-node .node-desc");
+          check(parseFloat(w.getComputedStyle(nodeDesc).fontSize) >= 12, "mobile node context below 12px");
+          var strip = d.getElementById("dashboardBottomStrip");
+          check(strip.scrollWidth > strip.clientWidth, "mobile data strip is not horizontally scrollable");
+          check(w.getComputedStyle(d.getElementById("dashboardStripHint")).display !== "none", "horizontal scroll hint is hidden");
+
+          var sample = await fetch("/tests/fixtures/dashboard-sample.json").then(function (response) { return response.json(); });
+          var prepared = w.prepareImportedState(sample);
+          check(prepared.ok, "sample import validation failed");
+          w.state = prepared.state;
+          check(w.save(), "browser localStorage save failed");
+          w.renderAll();
+          check(!/待评估/.test(d.getElementById("dashboardAssetHealth").textContent), "rated sample stayed unknown");
+          check(!/先建立三条真实基线/.test(d.getElementById("dashboardRightCards").textContent), "onboarding did not retire after real data");
+          check(await w.idbCreateVerifiedBackup(w.state), "IndexedDB read-back verification failed");
+          var latest = await w.idbReadLatestBackup();
+          check(latest && latest.state && latest.state.expenses.length === sample.expenses.length, "IndexedDB backup round-trip mismatch");
+
+          var exportButton = d.getElementById("exportData");
+          var backupButton = d.getElementById("idbRestoreLatest");
+          var importButton = d.getElementById("importData");
+          var cloud = d.querySelector(".experimental-sync-card");
+          check(exportButton.compareDocumentPosition(backupButton) & Node.DOCUMENT_POSITION_FOLLOWING, "backup does not follow export");
+          check(backupButton.compareDocumentPosition(importButton) & Node.DOCUMENT_POSITION_FOLLOWING, "import does not follow automatic backup");
+          check(importButton.compareDocumentPosition(cloud) & Node.DOCUMENT_POSITION_FOLLOWING, "experimental cloud sync precedes local safety actions");
+          check(!cloud.open, "experimental cloud sync must default closed");
+          var manifest = await fetch("/manifest.webmanifest").then(function (response) { return response.json(); });
+          check(manifest.orientation === "any", "manifest still forces portrait");
+
+          finish(true, "empty state, sample save, IDB round-trip, mobile layout, semantics and data hierarchy");
+        })().catch(function (error) { finish(false, error && error.message ? error.message : String(error)); });
+      }, { once: true });
+      frame.src = "/index.html";
+    })();
+  </script>
+</body>
+</html>

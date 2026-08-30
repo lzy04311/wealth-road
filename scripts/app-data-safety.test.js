@@ -14,6 +14,9 @@ function createContext(seedStorage, options) {
   var context = {
     console: console,
     alert: function (message) { alerts.push(String(message)); },
+    document: { getElementById: function () { return null; } },
+    TextEncoder: TextEncoder,
+    Blob: Blob,
     localStorage: {
       getItem: function (key) { return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null; },
       setItem: function (key, value) { store[key] = String(value); },
@@ -26,6 +29,9 @@ function createContext(seedStorage, options) {
   });
   if (options && options.calculations) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, "app-calculations.js"), "utf8"), context);
+  }
+  if (options && options.actionsData) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "app-actions-data.js"), "utf8"), context);
   }
   context.__store = store;
   context.__alerts = alerts;
@@ -101,6 +107,10 @@ function calculationState() {
   });
 }
 
+function dashboardSampleFixture() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, "..", "tests", "fixtures", "dashboard-sample.json"), "utf8"));
+}
+
 function test(name, fn) {
   try {
     fn();
@@ -117,6 +127,34 @@ test("ordinary JSON object import is rejected", function () {
   var result = context.prepareImportedState({ hello: "world" });
   assert.strictEqual(result.ok, false);
   assert.match(result.errors.join("\n"), /schemaVersion/);
+});
+
+test("large production backups round-trip above the retired 1MB ceiling", function () {
+  var context = createContext(null, { actionsData: true });
+  var expenses = [];
+  for (var i = 0; i < 6000; i += 1) {
+    expenses.push({ id: "expense-" + i, date: "2026-08-01", month: "2026-08", accountId: "living", category: "日常", amount: i % 500 + 1, note: "大数据往返校验记录-" + i + "-" + "x".repeat(160) });
+  }
+  var backup = validV5Backup({ expenses: expenses });
+  var text = context.serializeStateBackup(backup);
+  var bytes = context.backupTextBytes(text);
+  assert.ok(bytes > 1024 * 1024, "fixture must exceed the retired 1MB limit");
+  assert.ok(bytes < context.MAX_IMPORT_BYTES, "fixture must remain inside the production import limit");
+  var result = context.prepareImportedState(JSON.parse(text));
+  assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
+  assert.strictEqual(result.state.expenses.length, expenses.length);
+  assert.strictEqual(result.state.expenses[5999].id, "expense-5999");
+});
+
+test("storage health distinguishes untested, writable and unverified backup states", function () {
+  var context = createContext();
+  assert.strictEqual(context.storageHealthPresentation().shortLabel, "待检测");
+  assert.strictEqual(context.probeLocalStorageWrite(), true);
+  context.storageHealth.checked = true;
+  context.storageHealth.localWritable = true;
+  context.storageHealth.idbAvailable = false;
+  assert.match(context.storageHealthPresentation().label, /本地可写/);
+  assert.doesNotMatch(context.storageHealthPresentation().label, /正常|健康/);
 });
 
 test("missing schemaVersion is rejected", function () {
@@ -415,6 +453,16 @@ test("financial health rewards a complete on-plan month", function () {
   assert.strictEqual(health.level, "稳定");
   assert.strictEqual(health.label, "月度执行健康度");
   assert.strictEqual(health.modelVersion, 1);
+});
+
+test("financial health remains unknown without a plan or current-month evidence", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(null);
+  var health = context.financialHealth("2026-08");
+  assert.strictEqual(health.score, null);
+  assert.strictEqual(health.level, "待评估");
+  assert.strictEqual(health.status, "insufficient");
+  assert.strictEqual(context.dashboardReadiness("2026-08").onboardingNeeded, true);
 });
 
 test("financial health applies budget, cash and snapshot adjustments", function () {
@@ -842,6 +890,114 @@ test("upcomingFinanceEvents returns empty without explicit future data", functio
   var context = createContext(null, { calculations: true });
   context.state = context.normalizeState(calculationAccountFixture());
   assert.deepStrictEqual(JSON.parse(JSON.stringify(context.upcomingFinanceEvents())), []);
+});
+
+test("R2.5 debt service rate uses only known next-30-day minimum payments", function () {
+  var context = createContext(null, { calculations: true });
+  var now = context.today(), month = now.slice(0, 7);
+  context.state = context.normalizeState(calculationAccountFixture({
+    incomes: [{ id: "salary", date: now, accountId: "living", source: "工资", amount: 2000 }],
+    liabilities: [
+      { id: "card", name: "信用卡", type: "信用卡", currentBalance: 3000, balanceDate: now, minimumPayment: 300, dueDate: testDateOffset(now, 5), status: "还款中" },
+      { id: "loan", name: "借款", type: "借款", currentBalance: 6000, balanceDate: now, minimumPayment: 200, dueDate: testDateOffset(now, 20), status: "还款中" }
+    ]
+  }));
+  var rate = context.dashboardMinimumDebtServiceRate(month);
+  assert.strictEqual(rate.minimumPayment, 500);
+  assert.strictEqual(rate.income, 2000);
+  assert.strictEqual(rate.rate, 25);
+  assert.strictEqual(rate.eventCount, 2);
+
+  context.state = context.normalizeState(calculationAccountFixture({ liabilities: [{ id: "card", name: "信用卡", type: "信用卡", currentBalance: 3000, balanceDate: now, minimumPayment: 300, dueDate: testDateOffset(now, 5), status: "还款中" }] }));
+  assert.strictEqual(context.dashboardMinimumDebtServiceRate(month).rate, null);
+});
+
+test("R2.5 next planned payday is explicit and does not imply actual receipt", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({ monthlyPlans: {
+    "2026-08": { plannedIncome: 3000, payday: 1 },
+    "2026-09": { plannedIncome: 5500, payday: 9 }
+  } }));
+  var next = context.dashboardNextPlannedPayday("2026-08-30");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(next)), { date: "2026-09-09", month: "2026-09", payday: 9, plannedIncome: 5500 });
+});
+
+test("R2.5 allocation execution compares planned pools with recorded assignment", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(validV5Backup({
+    accounts: [
+      { id: "living", name: "日常开支", type: "生活消费", budgetPercent: 60, fixedBudget: true, includeExpense: true, includeAsset: false },
+      { id: "save", name: "备用现金", type: "短期储蓄", budgetPercent: 40, fixedBudget: true, includeExpense: false, includeAsset: true }
+    ],
+    monthlyPlans: { "2026-05": { plannedIncome: 2000, payday: 5 } },
+    incomes: [{ id: "income", date: "2026-05-05", accountId: "living", source: "工资", amount: 1000 }],
+    allocations: [{ id: "allocation", date: "2026-05-05", toAccountId: "save", amount: 800 }]
+  }));
+  var execution = context.dashboardAllocationExecution("2026-05");
+  assert.strictEqual(execution.planned, 2000);
+  assert.strictEqual(execution.actual, 1800);
+  assert.strictEqual(execution.deviation, -200);
+  assert.deepStrictEqual(execution.pools.map(function (row) { return [row.id, row.planned, row.actual]; }), [["living", 1200, 1000], ["save", 800, 800]]);
+});
+
+test("R2.7 dashboard sample fixture is a complete finite v5 business scenario", function () {
+  var context = createContext(null, { calculations: true });
+  var result = context.prepareImportedState(dashboardSampleFixture());
+  assert.strictEqual(result.ok, true, (result.errors || []).join("\n"));
+  assert.deepStrictEqual(context.__store, {});
+  context.state = result.state;
+  assert.strictEqual(result.state.schemaVersion, 5);
+  assert.strictEqual(result.state.moneyAccounts.length, 2);
+  assert.strictEqual(result.state.incomes.length, 1);
+  assert.strictEqual(result.state.expenses.length, 7);
+  assert.strictEqual(result.state.allocations.length, 6);
+  assert.strictEqual(result.state.liabilities.length, 1);
+  assert.strictEqual(result.state.assetItems.length, 1);
+  assert.strictEqual(result.state.snapshots.length, 2);
+  assert.strictEqual(result.state.reconciliations.length, 1);
+
+  var events = context.upcomingFinanceEvents(30);
+  assert.ok(events.some(function (item) { return item.type === "renewal" && item.amount === 86.8; }));
+  assert.ok(events.some(function (item) { return item.type === "due" && item.amount === 460; }));
+  assert.ok(events.some(function (item) { return item.type === "payday" && item.amount === null; }));
+
+  var debtRate = context.dashboardMinimumDebtServiceRate("2026-08");
+  assert.ok(debtRate.rate > 0);
+  assert.strictEqual(debtRate.minimumPayment, 460);
+  assert.strictEqual(debtRate.income, 6888.6);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(context.dashboardNextPlannedPayday("2026-08-30"))), { date: "2026-09-09", month: "2026-09", payday: 9, plannedIncome: 6942.75 });
+
+  var snapshot = context.assetSnapshotSummary("2026-08");
+  assert.strictEqual(snapshot.performancePrincipal, 4004.7);
+  assert.strictEqual(snapshot.performanceAsset, 4215.6);
+  assert.strictEqual(snapshot.pnl, 210.9);
+  assert.ok(snapshot.roi > 0);
+
+  var change = context.wealthChange("2026-08"), attribution = context.wealthAttribution("2026-08");
+  assert.strictEqual(change.hasBaseline, true);
+  assert.strictEqual(attribution.totalChange, change.change);
+  assert.strictEqual(context.numberValue(attribution.cashflowContribution + attribution.investmentPnl + attribution.liabilityChange + attribution.otherChange + attribution.unexplained), attribution.totalChange);
+
+  var execution = context.dashboardAllocationExecution("2026-08");
+  assert.strictEqual(execution.planned, 6888.6);
+  assert.strictEqual(execution.actual, 6560.25);
+  assert.strictEqual(execution.deviation, -328.35);
+  [debtRate.rate, snapshot.performancePrincipal, snapshot.performanceAsset, snapshot.pnl, snapshot.roi, change.change, attribution.totalChange, execution.planned, execution.actual, execution.deviation].forEach(function (value) {
+    assert.ok(Number.isFinite(value), "core fixture metric must be finite: " + value);
+  });
+  assert.doesNotMatch(JSON.stringify({ debtRate: debtRate, snapshot: snapshot, change: change, attribution: attribution, execution: execution }), /NaN|Infinity|undefined/);
+});
+
+test("R2.7 dashboard sample fixture is outside the production script graph", function () {
+  var root = path.join(__dirname, "..");
+  var indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  assert.doesNotMatch(indexHtml, /dashboard-sample\.json/);
+  var scriptPattern = /<script\b[^>]*\bsrc="([^"]+\.js)(?:\?[^\"]*)?"[^>]*><\/script>/g;
+  var match;
+  while ((match = scriptPattern.exec(indexHtml))) {
+    var source = fs.readFileSync(path.join(root, match[1]), "utf8");
+    assert.doesNotMatch(source, /dashboard-sample\.json/);
+  }
 });
 
 test("unlinked cashflow remains an unexplained balancing difference", function () {

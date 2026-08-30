@@ -4,7 +4,7 @@
   --surface: #FFFDF8;
   --surface-soft: #F8F1E6;
   --text: #23201B;
-  --muted: #817866;
+  --muted: #756B59;
   --line: rgba(209, 184, 139, .36);
   --primary: #C9A66B;
   --primary-dark: #8E6A32;
@@ -13,9 +13,9 @@
   --champagne-line: rgba(201, 166, 107, .42);
   --paper-glass: rgba(255, 253, 248, .68);
   --paper-glass-strong: rgba(255, 253, 248, .84);
-  --success: #4F8A62;
-  --warning: #B28A3E;
-  --danger: #B85B50;
+  --success: #3F754F;
+  --warning: #85611F;
+  --danger: #A74840;
   --soft-green: #E9F0E8;
   --soft-gold: var(--accent-soft);
   --yellow: var(--accent);
@@ -85,6 +85,15 @@ button { cursor: pointer; }
   overflow: hidden;
 }
 .dashboard-home-mode footer { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto;
+    animation-duration: .01ms;
+    animation-iteration-count: 1;
+    transition-duration: .01ms;
+  }
+}
 /* ========== Header / Tabs / Views ========== */
 .app-header {
   display: grid;

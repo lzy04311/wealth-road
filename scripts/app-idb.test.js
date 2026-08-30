@@ -127,6 +127,21 @@ test("writes and reads the latest state backup", function () {
   });
 });
 
+test("verified backup round-trips a large state without truncation", function () {
+  var context = createContext(true);
+  var rows = [];
+  for (var i = 0; i < 6500; i += 1) rows.push({ id: "row-" + i, note: "往返-" + i + "-" + "x".repeat(180), amount: i });
+  var snapshot = { schemaVersion: 5, expenses: rows, rules: "large-roundtrip" };
+  return context.idbCreateVerifiedBackup(snapshot).then(function (ok) {
+    assert.strictEqual(ok, true);
+    return context.idbReadLatestBackup();
+  }).then(function (backup) {
+    assert.strictEqual(backup.state.expenses.length, 6500);
+    assert.strictEqual(backup.state.expenses[6499].note, rows[6499].note);
+    assert.strictEqual(JSON.stringify(backup.state), JSON.stringify(snapshot));
+  });
+});
+
 test("keeps only the newest backup limit", function () {
   var context = createContext(true);
   return context.idbOpen().then(function (db) {

@@ -95,8 +95,9 @@ function healthScoreRulesHtml() {
   var adjustments = model.adjustments;
   return "<h3>" + esc(model.label) + " · 评分规则</h3>"
     + "<p>模型版本 <b>v" + esc(model.version) + "</b>｜基准 <b>" + esc(model.baseScore) + "</b> 分</p>"
+    + "<p><b>没有月度计划且没有本月真实流水时不评分</b>，显示“待评估”，不会把缺失数据折算成低分或正常。</p>"
     + "<p>未填计划收入 <b>" + esc(healthScoreDelta(adjustments.missingPlannedIncome)) + "</b>｜收入达到计划的 " + esc(model.salaryReceivedRatio * 100) + "% <b>" + esc(healthScoreDelta(adjustments.salaryReceived)) + "</b> / 发薪日后 " + esc(model.salaryGraceDays) + " 天仍未达到 <b>" + esc(healthScoreDelta(adjustments.salaryLate)) + "</b></p>"
-    + "<p>消费预算超支 <b>" + esc(healthScoreDelta(adjustments.overBudget)) + "</b>｜预算使用低于 " + esc(model.lowSpendingRatio * 100) + "% <b>" + esc(healthScoreDelta(adjustments.lowSpending)) + "</b></p>"
+    + "<p>消费预算超支 <b>" + esc(healthScoreDelta(adjustments.overBudget)) + "</b>｜预算使用低于 " + esc(Math.round(model.lowSpendingRatio * 100)) + "% <b>" + esc(healthScoreDelta(adjustments.lowSpending)) + "</b></p>"
     + "<p>月度自由现金为负 <b>" + esc(healthScoreDelta(adjustments.negativeFreeCash)) + "</b> / 为正 <b>" + esc(healthScoreDelta(adjustments.positiveFreeCash)) + "</b></p>"
     + "<p>资产判断基线不完整 <b>" + esc(healthScoreDelta(adjustments.incompleteAssetBaseline)) + "</b></p>"
     + "<p>这是预算与现金流执行提示，不是综合投资或偿债风险评级。</p>";

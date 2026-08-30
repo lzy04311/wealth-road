@@ -5,6 +5,42 @@
 .data-card .subtitle { margin: 0; }
 .data-card .btn { align-self: flex-start; }
 .sync-card { grid-column: 1 / -1; }
+.data-storage-health {
+  display: grid;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+}
+.data-storage-health strong { font-size: .92rem; }
+.data-storage-health span { color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.experimental-sync-card { padding: 0; overflow: clip; }
+.experimental-sync-card > summary {
+  min-height: 64px;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.experimental-sync-card > summary::-webkit-details-marker { display: none; }
+.experimental-sync-card > summary::after { content: "展开"; color: var(--primary-dark); font-size: .78rem; font-weight: 700; }
+.experimental-sync-card[open] > summary::after { content: "收起"; }
+.experimental-sync-card > summary > span {
+  padding: 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--soft-gold);
+  color: var(--primary-dark);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.experimental-sync-card > summary > strong { color: var(--text); }
+.experimental-sync-card > summary > small { color: var(--muted); font-size: .76rem; font-weight: 500; }
+.experimental-sync-body { display: grid; gap: 14px; padding: 4px 18px 18px; border-top: 1px solid var(--line); }
 .sync-login-grid { grid-template-columns: minmax(180px, 1fr) minmax(140px, .7fr) minmax(260px, 1.2fr); }
 .sync-login-actions .actions { margin-top: 0; }
 .sync-meta-grid {
@@ -42,3 +78,10 @@ footer { margin-top: 28px; text-align: center; color: var(--muted); font-size: .
 .idb-audit-row { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface-soft); }
 .idb-audit-row .row-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .idb-audit-row .row-meta { margin-top: 4px; }
+
+@media (max-width: 560px) {
+  .experimental-sync-card > summary { grid-template-columns: auto minmax(0, 1fr); min-height: 72px; padding: 14px; }
+  .experimental-sync-card > summary > small { grid-column: 1 / -1; }
+  .experimental-sync-card > summary::after { grid-column: 2; grid-row: 1; justify-self: end; }
+  .experimental-sync-body { padding: 4px 14px 14px; }
+}

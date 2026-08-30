@@ -120,6 +120,30 @@ function idbReadLatestBackup() {
   });
 }
 
+// 覆盖数据前使用：写入后必须从 IndexedDB 读回并逐字段序列化比对，
+// 只有完成往返校验才可称为“已形成安全检查点”。
+function idbCreateVerifiedBackup(stateSnapshot) {
+  var snapshot;
+  var expected;
+  try {
+    snapshot = JSON.parse(JSON.stringify(stateSnapshot));
+    expected = JSON.stringify(snapshot);
+  } catch (err) {
+    return Promise.resolve(false);
+  }
+  var stamp = new Date().toISOString();
+  return idbOpen().then(function (db) {
+    if (!db) return false;
+    return idbWriteBackup(db, snapshot, stamp).then(function (written) {
+      if (!written) return false;
+      return idbListBackups(db).then(function (rows) {
+        var stored = rows.find(function (row) { return row.savedAt === stamp; });
+        return !!stored && JSON.stringify(stored.state) === expected;
+      });
+    });
+  }).catch(function () { return false; });
+}
+
 function idbWriteAudit(db, entry) {
   if (!db) return Promise.resolve(false);
   try {
@@ -182,7 +206,9 @@ function scheduleIdbBackup() {
     if (typeof state === "undefined" || !state) return;
     idbOpen().then(function (db) {
       if (!db) return;
-      return idbWriteBackup(db, state);
+      return idbWriteBackup(db, state).then(function () {
+        if (typeof refreshStorageHealth === "function") refreshStorageHealth();
+      });
     }).catch(function () {});
   }, IDB_BACKUP_DEBOUNCE_MS);
 }
@@ -224,6 +250,7 @@ function renderIdbPanel() {
       if (statusEl) statusEl.textContent = "已保存 " + rows.length + " 份自动备份，最多保留 " + IDB_MAX_BACKUPS + " 份";
       if (latestEl) latestEl.textContent = rows.length ? String(rows[0].savedAt).replace("T", " ").slice(0, 19) : "尚无备份";
       if (restoreBtn) restoreBtn.disabled = rows.length === 0;
+      if (typeof acceptStorageBackupSnapshot === "function") acceptStorageBackupSnapshot(rows);
     }).catch(function () {
       if (statusEl) statusEl.textContent = "读取自动备份失败";
       if (restoreBtn) restoreBtn.disabled = true;

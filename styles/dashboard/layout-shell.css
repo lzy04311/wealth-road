@@ -70,6 +70,8 @@
   z-index: 1;
 }
 
+.dashboard-strip-hint { display: none; }
+
 /* ===== Hover tooltip cards (quiet density) ===== */
 [data-dash-tip] {
   position: relative;
@@ -110,4 +112,3 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
-

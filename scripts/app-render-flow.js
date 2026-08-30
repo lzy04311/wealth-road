@@ -42,16 +42,18 @@ function renderFlowOverview(ctx) {
   var month = currentMonth();
   var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var s = renderCtx.summary;
+  var readiness = dashboardReadiness(month);
+  var actualText = readiness.hasCashflowEvidence ? null : "待记录";
   var ratio = s.hasPlannedIncome && s.plannedIncome > 0 ? s.income / s.plannedIncome : null;
   var salaryStatus = !s.hasPlannedIncome ? "等待填写计划收入" : (ratio >= 0.9 ? "工资已到账" : "等待工资到账");
   var systemStatus = !s.hasPlannedIncome ? "计划收入未填写" : (s.overBudget ? "消费预算超支" : (s.freeCash < 0 ? "待分配资金不足" : (s.freeCash > 0 ? "资金节奏正常" : "持续观察")));
 
-  byId("flowOvSurplus").textContent = money(s.freeCash);
-  byId("flowOvSurplus").className = s.freeCash >= 0 ? "positive" : "negative";
+  byId("flowOvSurplus").textContent = actualText || money(s.freeCash);
+  byId("flowOvSurplus").className = actualText ? "warning" : (s.freeCash >= 0 ? "positive" : "negative");
   byId("flowOvSurplusSub").textContent = s.hasPlannedIncome ? "计划收入 " + money(s.plannedIncome) : "填写计划收入后启动预算";
-  byId("flowOvIncome").textContent = money(s.income);
-  byId("flowOvExpense").textContent = money(s.expense);
-  byId("flowOvInvestment").textContent = money(s.investment);
+  byId("flowOvIncome").textContent = actualText || money(s.income);
+  byId("flowOvExpense").textContent = actualText || money(s.expense);
+  byId("flowOvInvestment").textContent = actualText || money(s.investment);
 
   var salaryEl = byId("flowOvSalary");
   salaryEl.textContent = salaryStatus;
@@ -86,7 +88,7 @@ function renderFlowOverview(ctx) {
     "<div class=\"flow-right-stat\"><span>预算结余</span><strong>" + (s.hasPlannedIncome ? money(s.budgetBalance) : "--") + "</strong></div>";
 
   // Review toggle summary
-  var reviewSummary = "收入 " + money(s.income) + " · 支出 " + money(s.expense) + " · 待分配 " + money(s.freeCash);
+  var reviewSummary = actualText ? "尚无本月真实流水，收入、支出与待分配均待记录" : ("收入 " + money(s.income) + " · 支出 " + money(s.expense) + " · 待分配 " + money(s.freeCash));
   if (s.overBudget) reviewSummary += " · 已超支";
   byId("flowReviewSummary").textContent = reviewSummary;
 
