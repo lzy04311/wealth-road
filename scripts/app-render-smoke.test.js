@@ -484,4 +484,194 @@ test("applying cloud state exports local backup first", function () {
   });
 });
 
+test("dashboard compass renders six wealth-semantic nodes with only existing page links", function () {
+  var context = createContext();
+  context.dashboardInvestmentMetric = function () { return { value: "+¥80.00", context: "本月损益", className: "positive" }; };
+  context.renderDashboardCompass(
+    { netCashFlow: 300 }, {},
+    { hasBaseline: true, change: 500 },
+    { investmentPnl: 80 },
+    { name: "应急金", progress: 60 },
+    [{}, {}, {}],
+    [{ title: "普通洞察", priority: "medium" }, { title: "优先洞察", priority: "high" }],
+    "资金状态"
+  );
+  var html = context.__elements.wealthCompassNodes.innerHTML;
+  assert.strictEqual((html.match(/<button\b/g) || []).length, 6);
+  ["财富变化", "现金流", "投资", "近期", "目标", "洞察"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  ["node-data", "node-flow", "node-invest", "node-assets", "node-goals", "node-accounts"].forEach(function (key) { assert.ok(html.includes(key), key); });
+  assert.strictEqual((html.match(/is-core/g) || []).length, 3);
+  assert.strictEqual((html.match(/is-aux/g) || []).length, 3);
+  assert.strictEqual((html.match(/class="node-name"/g) || []).length, 6);
+  assert.strictEqual((html.match(/<strong\b/g) || []).length, 6);
+  assert.strictEqual((html.match(/class="node-desc"/g) || []).length, 6);
+  assert.match(html, /\+¥500\.00/);
+  assert.match(html, /3项/);
+  assert.match(html, /60%/);
+  assert.match(html, /优先洞察/);
+  assert.strictEqual((html.match(/data-action="open-view"/g) || []).length, 3);
+  assert.strictEqual((html.match(/data-dashboard-node=/g) || []).length, 3);
+  assert.match(html, /data-view="flow"/);
+  assert.match(html, /data-view="investments"/);
+  assert.match(html, /data-view="goals"/);
+  assert.doesNotMatch(html, />备份</);
+});
+
+test("dashboard shows baseline pending instead of a fabricated zero change", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = context.monthOf(context.today());
+  context.state = context.normalizeState({ accounts: [{ id: "daily", name: "日常开支", type: "生活消费", includeExpense: true, includeAsset: false }] });
+  context.renderDashboard(context.buildRenderContext(context.currentMonth()));
+  assert.match(context.__elements.dashboardAssetChange.innerHTML, /基线待补/);
+  assert.match(context.__elements.wealthCompassNodes.innerHTML, /财富变化/);
+  assert.match(context.__elements.wealthCompassNodes.innerHTML, /基线待补/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /基线待补/);
+  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /本月财富变化[\s\S]*基线待补/);
+  assert.doesNotMatch(context.__elements.dashboardAssetChange.innerHTML, /\+¥0\.00/);
+  assert.doesNotMatch(context.__elements.dashboardTrendFacts.innerHTML, /\+¥0\.00/);
+});
+
+test("dashboard renders a verified current-month wealth change", function () {
+  var context = createContext();
+  var month = context.monthOf(context.today()), openingDate = context.calculationDateBefore(month + "-01");
+  context.__elements.currentMonth.value = month;
+  context.state = context.normalizeState({
+    accounts: [{ id: "daily", name: "日常开支", type: "生活消费", includeExpense: true, includeAsset: false }],
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: openingDate }],
+    incomes: [{ id: "income", date: context.today(), moneyAccountId: "bank", source: "工资", amount: 250 }]
+  });
+  context.renderDashboard(context.buildRenderContext(month));
+  assert.match(context.__elements.dashboardAssetChange.innerHTML, /\+¥250\.00/);
+  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /本月财富变化[\s\S]*\+¥250\.00/);
+  assert.match(context.__elements.wealthCompassNodes.innerHTML, /\+¥250\.00/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /本月财富变化/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /\+¥250\.00/);
+});
+
+test("dynamic insight card uses the highest priority fact and has an honest empty state", function () {
+  var context = createContext();
+  var html = context.dashboardDynamicInsightCard([
+    { title: "中优先级", detail: "中优先级详情", value: 200, type: "expense_anomaly", priority: "medium" },
+    { title: "高优先级", detail: "高优先级详情", value: 900, type: "unexplained_wealth_change", priority: "high" }
+  ]);
+  assert.match(html, /高优先级/);
+  assert.match(html, /高优先级详情/);
+  assert.doesNotMatch(html, /中优先级详情/);
+  var emptyHtml = context.dashboardDynamicInsightCard([]);
+  assert.match(emptyHtml, /本月平稳/);
+  assert.match(emptyHtml, /暂无显著变化/);
+});
+
+test("finance event card keeps unknown amounts out of any net-impact claim", function () {
+  var context = createContext();
+  var html = context.dashboardFinanceEventsCard([{ date: "2026-08-18", title: "发薪日", amount: null, direction: "in", sourceId: "salary" }]);
+  assert.match(html, /金额待定/);
+  assert.doesNotMatch(html, /净影响/);
+  var emptyHtml = context.dashboardFinanceEventsCard([]);
+  assert.match(emptyHtml, /0项 · 未来7天/);
+  assert.match(emptyHtml, /暂无明确事件/);
+});
+
+test("goal dashboard uses the nearest unfinished goal and preserves a real empty state", function () {
+  var context = createContext();
+  context.state = context.normalizeState({ accounts: [
+    { id: "near", name: "应急金", type: "应急金", includeAsset: true, openingBalance: 800, openingBalanceDate: "2026-01-01", valuationMethod: "流水余额", target: 1000 },
+    { id: "far", name: "长期储备", type: "短期储蓄", includeAsset: true, openingBalance: 200, openingBalanceDate: "2026-01-01", valuationMethod: "流水余额", target: 1000 }
+  ] });
+  var goal = context.dashboardPrimaryGoal("2026-08", context.state.accounts);
+  assert.strictEqual(goal.name, "应急金");
+  assert.strictEqual(goal.progress, 80);
+  assert.strictEqual(goal.remaining, 200);
+  assert.match(context.dashboardPrimaryGoalCard(goal), /¥800\.00 \/ ¥1,000\.00/);
+  var emptyHtml = context.dashboardPrimaryGoalCard(null);
+  assert.match(emptyHtml, /暂无目标/);
+  assert.doesNotMatch(emptyHtml, /0%/);
+});
+
+test("right dashboard renders four assigned regions and real portfolio labels", function () {
+  var context = createContext();
+  context.state = context.normalizeState({
+    accounts: [{ id: "long", name: "证券账户", type: "长期投资", includeAsset: true, valuationMethod: "净值快照" }],
+    investments: [{ id: "buy", date: "2026-05-05", accountId: "long", type: "投资", amount: 1000, product: "指数基金" }],
+    snapshots: [{ id: "snap", date: "2026-05-31", accountId: "long", marketValue: 1080, principal: 1000 }]
+  });
+  var rows = context.dashboardInvestmentPortfolioRows("2026-05", context.state.accounts);
+  assert.strictEqual(rows[0].name, "指数基金");
+  assert.strictEqual(rows[0].value, 1080);
+  context.renderDashboardRightCards("2026-05", rows, [], [], null);
+  var html = context.__elements.dashboardRightCards.innerHTML;
+  assert.strictEqual((html.match(/<article\b/g) || []).length, 4);
+  ["投资组合", "本月洞察", "近期事件", "目标进度"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  assert.match(html, /指数基金/);
+  assert.doesNotMatch(html, /资产结构|当前配置概览|备份与安全|月度执行健康/);
+});
+
+test("bottom strip exposes the six stage 8.2 semantic blocks", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = "2026-05";
+  context.dashboardInvestmentMetric = function () { return { value: "+¥50.00", context: "本月损益", className: "positive" }; };
+  context.renderDashboardBottomStrip(
+    { income: 1000, expense: 300, netCashFlow: 700, freeCash: 700 },
+    { roi: 5, performanceAsset: 1050 },
+    { hasBaseline: true, change: 750 },
+    { cashflowContribution: 700, investmentPnl: 50, liabilityChange: 0, otherChange: 0, unexplained: 0 },
+    { name: "应急金", current: 800, target: 1000, remaining: 200, progress: 80 }
+  );
+  var html = context.__elements.dashboardBottomStrip.innerHTML;
+  assert.strictEqual((html.match(/<article\b/g) || []).length, 6);
+  ["现金流总览", "收支结构", "投资回报", "财富变化", "目标进度", "本月一句话"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  assert.match(html, /收支贡献 \+¥700\.00/);
+  assert.match(html, /稳住节奏/);
+  assert.match(html, /慢就是快，复利是时间给耐心者的奖赏。/);
+  assert.doesNotMatch(html, /本月平稳/);
+  assert.doesNotMatch(html, /暂无显著变化/);
+  assert.doesNotMatch(html, /资产概览/);
+});
+
+test("monthly quote keeps its own static copy instead of factual insights", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = "2026-05";
+  context.dashboardInvestmentMetric = function () { return { value: "—", context: "数据不足", className: "warning" }; };
+  context.renderDashboardBottomStrip(
+    { income: 800, expense: 1000, netCashFlow: -200, freeCash: -200 },
+    { roi: null, performanceAsset: 0 },
+    { hasBaseline: false, change: null },
+    { cashflowContribution: 0, investmentPnl: 0, liabilityChange: 0, otherChange: 0, unexplained: 0 },
+    null
+  );
+  var html = context.__elements.dashboardBottomStrip.innerHTML;
+  assert.match(html, /本月一句话/);
+  assert.match(html, /稳住节奏/);
+  assert.match(html, /先守住现金流，再谈进攻。/);
+  assert.doesNotMatch(html, /本月平稳/);
+  assert.doesNotMatch(html, /暂无显著变化/);
+});
+
+test("left asset metrics label pending allocation by its real semantics", function () {
+  var context = createContext();
+  context.renderDashboardAssetCard(
+    "2026-08",
+    { freeCash: 456 },
+    { score: 82, className: "positive" },
+    1500,
+    { financialAssets: 1200, liabilities: 300, netWorth: 1500 },
+    { hasBaseline: true, change: 100 },
+    400
+  );
+  var html = context.__elements.dashboardAssetMetrics.innerHTML;
+  assert.match(html, /本月可分配/);
+  assert.match(html, /¥456\.00/);
+  assert.match(html, /收入减支出减投入/);
+  assert.doesNotMatch(html, /可动用资金/);
+});
+
+test("backup access and existing page navigation remain available outside the dashboard core", function () {
+  var html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  assert.ok((html.match(/data-action="open-view" data-view="data"/g) || []).length >= 2);
+  assert.match(html, /id="data" class="view"/);
+  ["flow", "investments", "goals", "assets", "accounts"].forEach(function (view) {
+    assert.match(html, new RegExp("id=\"" + view + "\" class=\"view\""), view);
+  });
+});
+
 testChain.then(function () {}, function () {});

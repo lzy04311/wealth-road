@@ -247,6 +247,27 @@ check("CSS important allowlist", function () {
   return "1 allowlisted declaration · .hidden-view";
 });
 
+check("dashboard compass visual contract", function () {
+  var compassSource = fs.readFileSync(path.join(root, "styles/dashboard/layout-main-center-right.css"), "utf8");
+  var dashboardResponsiveSource = fs.readFileSync(path.join(root, "styles/dashboard/responsive.css"), "utf8");
+  var renderSource = fs.readFileSync(path.join(root, "scripts/app-render-dashboard.js"), "utf8");
+  assert(compassSource.indexOf("--orbit-node-size: 100px") >= 0, "compass circles must size through --orbit-node-size");
+  ["node-data", "node-flow", "node-invest", "node-assets", "node-goals", "node-accounts"].forEach(function (name) {
+    assert(compassSource.indexOf("." + name) >= 0, name + " must keep its orbit slot");
+  });
+  assert(compassSource.indexOf('grid-template-areas:\n    "name name"') >= 0, "wealth change / recent / insight must render as lightweight two-line labels");
+  assert(compassSource.indexOf("cursor: default") >= 0, "non-navigating compass nodes must use the default cursor");
+  assert(compassSource.indexOf("scale(1.02)") >= 0, "compass hover must use the restrained 1.015-1.025 scale");
+  assert(compassSource.indexOf("translateY(-4px)") === -1, "compass nodes must not lift with translateY(-4px)");
+  assert(compassSource.indexOf("backdrop-filter: blur(4px)") >= 0, "compass circle glass must stay weak");
+  assert(compassSource.indexOf("top: 50%") >= 0, "compass core must stay centered within the orbit");
+  assert(compassSource.indexOf(".wealth-track.track-front") >= 0 && compassSource.indexOf("display: none") >= 0, "the full orbit ellipse must be removed in favor of broken arcs");
+  assert(compassSource.indexOf(".wealth-flow.flow-back-a") >= 0, "the asymmetric orbit must keep its secondary arc");
+  assert(dashboardResponsiveSource.indexOf("width: 108px") === -1, "compass node size must remain unified through the orbit variables");
+  assert(renderSource.indexOf("node-name") >= 0 && renderSource.indexOf("node-desc") >= 0, "compass nodes keep the three-layer name/value/context structure");
+  return "circle nodes · lightweight labels · restrained hover · state-point material";
+});
+
 check("retired product names", function () {
   var retiredNames = ["财富" + "志", "财富自由" + "之路", "财富" + "中枢", "money" + "-os", "wealth" + "-road", "通用个人资金管理网页" + " App"];
   var textExtensions = { ".css": true, ".html": true, ".js": true, ".json": true, ".md": true, ".svg": true };

@@ -274,18 +274,12 @@
   }
 
   .compass-core {
-    width: clamp(250px, 26vw, 320px);
-    height: clamp(250px, 26vw, 320px);
+    width: clamp(250px, 26vw, 300px);
+    height: clamp(250px, 26vw, 300px);
   }
 
   .compass-core strong {
     font-size: clamp(7rem, 9.8vw, 9.5rem);
-  }
-
-  .compass-node {
-    width: 108px;
-    min-height: 108px;
-    padding: 24px 12px 12px;
   }
 
   .dashboard-right-cards {

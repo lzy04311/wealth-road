@@ -648,3 +648,212 @@ test("fund-pool opening balance excludes earlier linked transactions", function 
   }));
   assert.strictEqual(context.accountBalance(context.state.accounts[0], "2026-08"), 80);
 });
+
+function testDateOffset(dateText, days) {
+  var parts = String(dateText).split("-").map(Number);
+  var date = new Date(parts[0], parts[1] - 1, parts[2] + days);
+  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+}
+
+function calculationAccountFixture(overrides) {
+  return Object.assign({
+    accounts: [{ id: "living", name: "日常开支", type: "生活消费", includeExpense: true, includeAsset: false, valuationMethod: "流水余额" }],
+    moneyAccounts: [], reconciliations: [], allocations: [], incomes: [], expenses: [], investments: [], transfers: [], snapshots: [], assetItems: [], liabilities: [], monthlyPlans: {}
+  }, overrides || {});
+}
+
+test("wealthChange does not invent a zero opening baseline", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({ incomes: [{ id: "income", date: "2026-05-05", source: "工资", amount: 1000 }] }));
+  var change = context.wealthChange("2026-05");
+  assert.strictEqual(change.hasBaseline, false);
+  assert.strictEqual(change.openingNetWorth, null);
+  assert.strictEqual(change.closingNetWorth, 1000);
+  assert.strictEqual(change.change, null);
+});
+
+test("wealth attribution uses external income minus consumption without investments", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    moneyAccounts: [{ id: "bank", name: "工资卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    incomes: [{ id: "income", date: "2026-05-05", moneyAccountId: "bank", source: "工资", amount: 500 }],
+    expenses: [{ id: "expense", date: "2026-05-06", moneyAccountId: "bank", accountId: "living", category: "餐饮", amount: 200 }]
+  }));
+  var change = context.wealthChange("2026-05"), attribution = context.wealthAttribution("2026-05");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(change)), { openingNetWorth: 1000, closingNetWorth: 1300, change: 300, changeRate: 30, hasBaseline: true });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(attribution)), { cashflowContribution: 300, investmentPnl: 0, liabilityChange: 0, otherChange: 0, unexplained: 0, totalChange: 300 });
+});
+
+test("new investment principal is an asset conversion rather than wealth growth", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    accounts: [{ id: "long", name: "长期投资", type: "长期投资", includeExpense: false, includeAsset: true, valuationMethod: "净值快照" }],
+    moneyAccounts: [
+      { id: "bank", name: "银行卡", type: "银行卡", openingBalance: 2000, openingBalanceDate: "2026-04-30" },
+      { id: "broker", name: "证券账户", type: "投资账户", openingBalance: 1000, openingBalanceDate: "2026-04-30" }
+    ],
+    investments: [{ id: "buy", date: "2026-05-10", accountId: "long", sourceMoneyAccountId: "bank", targetMoneyAccountId: "broker", type: "投资", amount: 500 }],
+    snapshots: [
+      { id: "opening", date: "2026-04-30", accountId: "long", marketValue: 1000, principal: 1000 },
+      { id: "closing", date: "2026-05-31", accountId: "long", marketValue: 1500, principal: 1500 }
+    ]
+  }));
+  var attribution = context.wealthAttribution("2026-05");
+  assert.strictEqual(attribution.investmentPnl, 0);
+  assert.strictEqual(attribution.totalChange, 0);
+  assert.strictEqual(attribution.unexplained, 0);
+});
+
+test("market gain without new principal is investment PnL", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    accounts: [{ id: "long", name: "长期投资", type: "长期投资", includeExpense: false, includeAsset: true, valuationMethod: "净值快照" }],
+    moneyAccounts: [{ id: "broker", name: "证券账户", type: "投资账户", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    snapshots: [
+      { id: "opening", date: "2026-04-30", accountId: "long", marketValue: 1000, principal: 1000 },
+      { id: "closing", date: "2026-05-31", accountId: "long", marketValue: 1100, principal: 1000 }
+    ]
+  }));
+  var attribution = context.wealthAttribution("2026-05");
+  assert.strictEqual(attribution.investmentPnl, 100);
+  assert.strictEqual(attribution.totalChange, 100);
+  assert.strictEqual(attribution.unexplained, 0);
+});
+
+test("a liability first measured during the month leaves the opening baseline unavailable", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    liabilities: [{ id: "loan", name: "借款", type: "借款", currentBalance: 300, balanceDate: "2026-05-15", status: "还款中" }]
+  }));
+  assert.strictEqual(context.wealthChange("2026-05").hasBaseline, false);
+  assert.strictEqual(context.wealthAttribution("2026-05").liabilityChange, null);
+});
+
+test("internal transfer does not change wealth attribution", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    moneyAccounts: [
+      { id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" },
+      { id: "wallet", name: "钱包", type: "支付账户", openingBalance: 200, openingBalanceDate: "2026-04-30" }
+    ],
+    transfers: [{ id: "move", date: "2026-05-10", fromMoneyAccountId: "bank", toMoneyAccountId: "wallet", amount: 300 }]
+  }));
+  var attribution = context.wealthAttribution("2026-05");
+  assert.strictEqual(attribution.cashflowContribution, 0);
+  assert.strictEqual(attribution.totalChange, 0);
+  assert.strictEqual(attribution.unexplained, 0);
+});
+
+test("dashboardInsights returns an empty array when no factual rule matches", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture());
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(context.dashboardInsights("2026-05"))), []);
+});
+
+test("dashboardInsights detects a material category increase", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({ expenses: [
+    { id: "feb", date: "2026-02-05", accountId: "living", category: "餐饮", amount: 100 },
+    { id: "mar", date: "2026-03-05", accountId: "living", category: "餐饮", amount: 120 },
+    { id: "apr", date: "2026-04-05", accountId: "living", category: "餐饮", amount: 80 },
+    { id: "may", date: "2026-05-05", accountId: "living", category: "餐饮", amount: 600 }
+  ] }));
+  var insight = context.dashboardInsights("2026-05").find(function (item) { return item.type === "expense_anomaly"; });
+  assert.ok(insight);
+  assert.strictEqual(insight.value, 600);
+});
+
+test("dashboardInsights skips a category with fewer than three historical month samples", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({ expenses: [
+    { id: "feb-food", date: "2026-02-05", accountId: "living", category: "餐饮", amount: 100 },
+    { id: "mar-food", date: "2026-03-05", accountId: "living", category: "餐饮", amount: 120 },
+    { id: "apr-other", date: "2026-04-05", accountId: "living", category: "交通", amount: 80 },
+    { id: "may-food", date: "2026-05-05", accountId: "living", category: "餐饮", amount: 600 }
+  ] }));
+  assert.ok(!context.dashboardInsights("2026-05").some(function (item) { return item.type === "expense_anomaly" && item.title === "餐饮支出上升"; }));
+});
+
+test("dashboardInsights reports stale investment data and a dominant cashflow source", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    accounts: [{ id: "long", name: "长期投资", type: "长期投资", includeExpense: false, includeAsset: true, valuationMethod: "净值快照" }],
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    incomes: [{ id: "income", date: "2026-05-05", moneyAccountId: "bank", source: "工资", amount: 800 }],
+    snapshots: [{ id: "old", date: "2026-04-30", accountId: "long", marketValue: 0, principal: 0 }]
+  }));
+  var insights = context.dashboardInsights("2026-05");
+  assert.ok(insights.some(function (item) { return item.type === "investment_snapshot_stale"; }));
+  assert.ok(insights.some(function (item) { return item.type === "wealth_driver" && item.value === 800; }));
+});
+
+test("reconciliation is an explicit other wealth change", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    reconciliations: [{ id: "check", date: "2026-05-10", moneyAccountId: "bank", bookBalance: 1000, actualBalance: 1050, adjustment: 50 }]
+  }));
+  var attribution = context.wealthAttribution("2026-05");
+  assert.strictEqual(attribution.otherChange, 50);
+  assert.strictEqual(attribution.totalChange, 50);
+  assert.strictEqual(attribution.unexplained, 0);
+});
+
+test("upcomingFinanceEvents unifies payday, subscription and repayment", function () {
+  var context = createContext(null, { calculations: true });
+  var now = context.today(), renewal = testDateOffset(now, 1), laterRenewal = testDateOffset(now, 10), repayment = testDateOffset(now, 2), payday = testDateOffset(now, 3), payMonth = payday.slice(0, 7), payDay = parseInt(payday.slice(8, 10), 10);
+  var plans = {};
+  plans[payMonth] = { plannedIncome: 5000, payday: payDay };
+  context.state = context.normalizeState(calculationAccountFixture({
+    monthlyPlans: plans,
+    assetItems: [
+      { id: "sub", kind: "电子订阅", name: "云服务", monthlyCost: 400, renewalDate: renewal, status: "在用", valuationMode: "不计入" },
+      { id: "later-sub", kind: "电子订阅", name: "季刊", monthlyCost: 20, renewalDate: laterRenewal, status: "在用", valuationMode: "不计入" }
+    ],
+    liabilities: [{ id: "card", name: "信用卡", type: "信用卡", currentBalance: 2000, balanceDate: now, minimumPayment: 600, dueDate: repayment, status: "还款中" }]
+  }));
+  var events = context.upcomingFinanceEvents(7);
+  assert.ok(events.some(function (item) { return item.type === "payday" && item.direction === "in" && item.amount === null; }));
+  assert.ok(events.some(function (item) { return item.type === "renewal" && item.amount === 400 && item.sourceId === "sub"; }));
+  assert.ok(events.some(function (item) { return item.type === "due" && item.amount === 600 && item.sourceId === "card"; }));
+  assert.ok(!events.some(function (item) { return item.sourceId === "later-sub"; }));
+  assert.ok(context.upcomingFinanceEvents(14).some(function (item) { return item.sourceId === "later-sub"; }));
+  assert.ok(events.every(function (item) { return item.daysLeft >= 0 && item.daysLeft <= 7; }));
+  assert.ok(context.dashboardInsights("2026-05").some(function (item) { return item.type === "upcoming_cash_events"; }));
+});
+
+test("dashboardInsights reports one explicit large outflow and ignores null amounts", function () {
+  var context = createContext(null, { calculations: true });
+  var now = context.today(), subscriptionDate = testDateOffset(now, 1), repaymentDate = testDateOffset(now, 2);
+  context.state = context.normalizeState(calculationAccountFixture({
+    assetItems: [{ id: "unknown-sub", kind: "电子订阅", name: "待定续费", monthlyCost: 0, renewalDate: subscriptionDate, status: "在用", valuationMode: "不计入" }],
+    liabilities: [{ id: "large-payment", name: "大额还款", type: "借款", currentBalance: 3000, balanceDate: now, minimumPayment: 1200, dueDate: repaymentDate, status: "还款中" }]
+  }));
+  var events = context.upcomingFinanceEvents(7);
+  assert.ok(events.some(function (item) { return item.sourceId === "unknown-sub" && item.amount === null; }));
+  var insight = context.dashboardInsights("2026-05").find(function (item) { return item.type === "upcoming_cash_events"; });
+  assert.ok(insight);
+  assert.strictEqual(insight.value, 1200);
+  assert.match(insight.detail, /已记录 1 项/);
+});
+
+test("upcomingFinanceEvents returns empty without explicit future data", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture());
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(context.upcomingFinanceEvents())), []);
+});
+
+test("unlinked cashflow remains an unexplained balancing difference", function () {
+  var context = createContext(null, { calculations: true });
+  context.state = context.normalizeState(calculationAccountFixture({
+    moneyAccounts: [{ id: "bank", name: "银行卡", type: "银行卡", openingBalance: 1000, openingBalanceDate: "2026-04-30" }],
+    expenses: [{ id: "cash", date: "2026-05-05", accountId: "living", moneyAccountId: "", category: "餐饮", amount: 600 }]
+  }));
+  var attribution = context.wealthAttribution("2026-05");
+  assert.strictEqual(attribution.cashflowContribution, -600);
+  assert.strictEqual(attribution.totalChange, 0);
+  assert.strictEqual(attribution.unexplained, 600);
+  assert.strictEqual(attribution.cashflowContribution + attribution.investmentPnl + attribution.liabilityChange + attribution.otherChange + attribution.unexplained, attribution.totalChange);
+  assert.ok(context.dashboardInsights("2026-05").some(function (item) { return item.type === "unexplained_wealth_change"; }));
+});
