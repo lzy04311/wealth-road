@@ -1,6 +1,6 @@
 "use strict";
 
-var CACHE_NAME = "caiji-pwa-v30";
+var CACHE_NAME = "caiji-pwa-v32";
 var APP_SHELL = [
   "./",
   "./index.html",

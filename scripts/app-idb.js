@@ -10,6 +10,7 @@ var IDB_VERSION = 1;
 var IDB_BACKUP_STORE = "state_backups";
 var IDB_AUDIT_STORE = "audit_log";
 var IDB_MAX_BACKUPS = 30;
+var IDB_MAX_AUDIT_ENTRIES = 1000;
 var IDB_BACKUP_DEBOUNCE_MS = 400;
 
 var idbConnection = null;
@@ -125,7 +126,31 @@ function idbWriteAudit(db, entry) {
     var tx = db.transaction(IDB_AUDIT_STORE, "readwrite");
     var store = tx.objectStore(IDB_AUDIT_STORE);
     store.add(Object.assign({ at: new Date().toISOString() }, entry || {}));
-    return idbTxToPromise(tx).then(function () { return true; });
+    return idbTxToPromise(tx).then(function () { return idbPruneAudit(db); });
+  } catch (err) {
+    return Promise.resolve(false);
+  }
+}
+
+function idbCropAuditList(list, max) {
+  var rows = (list || []).slice().sort(function (a, b) {
+    return numberValue(b.id) - numberValue(a.id);
+  });
+  return { keep: rows.slice(0, max), remove: rows.slice(max) };
+}
+
+function idbPruneAudit(db) {
+  if (!db) return Promise.resolve(false);
+  try {
+    var readTx = db.transaction(IDB_AUDIT_STORE, "readonly");
+    return idbRequestToPromise(readTx.objectStore(IDB_AUDIT_STORE).getAll()).then(function (rows) {
+      var plan = idbCropAuditList(rows, IDB_MAX_AUDIT_ENTRIES);
+      if (!plan.remove.length) return true;
+      var cropTx = db.transaction(IDB_AUDIT_STORE, "readwrite");
+      var store = cropTx.objectStore(IDB_AUDIT_STORE);
+      plan.remove.forEach(function (item) { store.delete(item.id); });
+      return idbTxToPromise(cropTx).then(function () { return true; });
+    }).catch(function () { return false; });
   } catch (err) {
     return Promise.resolve(false);
   }

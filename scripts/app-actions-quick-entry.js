@@ -5,6 +5,7 @@ function closeQuickModal() {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  if (typeof deactivateDialogFocus === "function") deactivateDialogFocus(modal);
   activeQuickType = "";
   document.querySelectorAll(".quick-form").forEach(function (form) { form.classList.remove("active"); });
 }
@@ -40,7 +41,8 @@ function openQuickEntry(type) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
   var target = byId(amountMap[type]);
-  if (target) target.focus();
+  if (typeof activateDialogFocus === "function") activateDialogFocus(modal, target);
+  else if (target) target.focus();
 }
 
 function bindQuickModalSubmit() {

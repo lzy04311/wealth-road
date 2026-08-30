@@ -81,13 +81,13 @@ function markCloudStateNeedsConfirmation(prepared) {
   setBackendSyncStatus("cloud-newer");
 }
 
-async function pushLocalStateToCloud(options) {
+async function pushLocalStateToCloud() {
   var ctx = getSyncClientAndUser();
   if (!ctx) {
     setBackendSyncStatus("local-only");
     return false;
   }
-  if (backendSyncState.unresolvedConflict && !(options && options.force)) {
+  if (backendSyncState.unresolvedConflict) {
     setBackendSyncStatus("conflict");
     return false;
   }
@@ -99,20 +99,20 @@ async function pushLocalStateToCloud(options) {
   backendSyncState.busy = true;
   renderBackendSyncStatus();
   try {
-    var updatedAt = new Date().toISOString();
     var stateSnapshot = JSON.parse(JSON.stringify(state));
-    var result = await ctx.client
-      .from(BACKEND_CONFIG.tableName)
-      .upsert({
-        user_id: ctx.user.id,
-        schema_version: CURRENT_SCHEMA_VERSION,
-        state: stateSnapshot,
-        updated_at: updatedAt
-      }, { onConflict: "user_id" })
-      .select("updated_at")
-      .single();
+    var result = await ctx.client.rpc("save_finance_state", {
+      p_schema_version: CURRENT_SCHEMA_VERSION,
+      p_state: stateSnapshot,
+      p_expected_updated_at: syncMeta && syncMeta.lastCloudUpdatedAt ? syncMeta.lastCloudUpdatedAt : null
+    }).single();
     if (result.error) throw result.error;
-    var cloudUpdatedAt = result.data && result.data.updated_at ? result.data.updated_at : updatedAt;
+    if (result.data && result.data.conflict) {
+      backendSyncState.unresolvedConflict = true;
+      backendSyncState.pendingCloudPush = false;
+      setBackendSyncStatus("conflict");
+      return false;
+    }
+    var cloudUpdatedAt = result.data && result.data.updated_at ? result.data.updated_at : new Date().toISOString();
     updateSyncMeta({ lastCloudUpdatedAt: cloudUpdatedAt, lastSyncedAt: new Date().toISOString() });
     backendSyncState.unresolvedConflict = false;
     backendSyncState.pendingCloudState = null;

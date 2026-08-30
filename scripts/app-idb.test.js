@@ -175,4 +175,22 @@ test("appends and reads audit log entries", function () {
   });
 });
 
+test("keeps the audit log within its retention limit", function () {
+  var context = createContext(true);
+  context.IDB_MAX_AUDIT_ENTRIES = 3;
+  return context.idbOpen().then(function (db) {
+    var chain = Promise.resolve();
+    for (var i = 0; i < 5; i++) {
+      chain = chain.then(function (index) {
+        return context.idbWriteAudit(db, { operation: "update", collection: "rules", summary: "row-" + index });
+      }.bind(null, i));
+    }
+    return chain.then(function () { return context.idbReadAudit(50); });
+  }).then(function (rows) {
+    assert.strictEqual(rows.length, 3);
+    assert.strictEqual(rows[0].summary, "row-4");
+    assert.strictEqual(rows[2].summary, "row-2");
+  });
+});
+
 testChain.then(function () {}, function () {});

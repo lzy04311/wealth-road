@@ -202,3 +202,47 @@ async function logoutBackend() {
     notify("已退出云同步");
   }
 }
+
+function reconfigureBackend() {
+  backendAuthState.client = null;
+  backendAuthState.session = null;
+  backendAuthState.user = null;
+  backendAuthState.initialized = false;
+  backendAuthState.status = "local-only";
+  backendAuthState.error = "";
+  if (typeof backendSyncState !== "undefined") {
+    backendSyncState.busy = false;
+    backendSyncState.status = "local-only";
+    backendSyncState.error = "";
+    backendSyncState.unresolvedConflict = false;
+    backendSyncState.pendingCloudState = null;
+    backendSyncState.pendingCloudPush = false;
+    backendSyncState.cloudPushScheduled = false;
+  }
+  initBackendAuth();
+}
+
+function applyBackendConfigFromForm() {
+  var urlEl = byId("backendConfigUrl");
+  var keyEl = byId("backendConfigAnonKey");
+  var scriptEl = byId("backendConfigScript");
+  var url = cleanText(urlEl ? urlEl.value : "", 200);
+  var key = cleanText(keyEl ? keyEl.value : "", 400);
+  var script = cleanText(scriptEl ? scriptEl.value : "", 300);
+  if (!url || !key || !script) { notify("请填写 Supabase URL、anon/publishable key 和同源客户端脚本"); return; }
+  if (!isAllowedBackendAnonKey(key)) { notify("只允许 Supabase anon/publishable key，禁止 service_role 或无法识别的密钥"); return; }
+  if (!isAllowedBackendClientScript(script)) { notify("客户端脚本必须是当前站点内的 .js 路径"); return; }
+  saveBackendConfig({ supabaseUrl: url, supabaseAnonKey: key, supabaseClientScript: script });
+  reconfigureBackend();
+  notify("云同步配置已保存");
+}
+
+function clearBackendConfigFromForm() {
+  clearBackendConfig();
+  reconfigureBackend();
+  ["backendConfigUrl", "backendConfigAnonKey", "backendConfigScript"].forEach(function (id) {
+    var el = byId(id);
+    if (el) el.value = "";
+  });
+  notify("已清除云同步配置，回到本地模式");
+}

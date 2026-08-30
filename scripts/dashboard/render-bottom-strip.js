@@ -1,24 +1,18 @@
-﻿"use strict";
+"use strict";
 
-function renderDashboardBottomStrip(s, assetSnap, savingRate, assetAccounts, targetAccounts, targetProgress) {
+function renderDashboardBottomStrip(s, assetSnap, change, attribution, primaryGoal) {
   var strip = byId("dashboardBottomStrip");
   if (!strip) return;
   var month = currentMonth();
   var expenseRows = dashboardExpenseCategoryRows(month);
-  var assetRows = dashboardAssetAllocationRows(month, assetAccounts);
   var sentence = s.freeCash < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。");
   var cashRate = s.income > 0 ? Math.max(0, Math.min(100, s.expense / s.income * 100)) : 0;
-  var savingProgress = Math.max(0, Math.min(100, savingRate || 0));
-  var monthLabel = String(month).slice(5, 7) + "月";
-  var totalTarget = sum(targetAccounts, function (item) { return numberValue(item.target); });
-  var monthlySaving = Math.max(0, numberValue(s.netCashFlow));
-  var targetForView = totalTarget > 0 ? totalTarget : Math.max(0, numberValue(s.plannedIncome));
   strip.innerHTML = [
     dashboardStripCashModule(s, cashRate),
     dashboardStripStructureModule(s, expenseRows),
-    dashboardStripInvestModule(assetSnap),
-    dashboardStripAllocationModule(assetRows, assetAccounts),
-    dashboardStripGoalModule(monthLabel, savingRate, savingProgress, monthlySaving, targetForView),
+    dashboardStripInvestModule(assetSnap, attribution),
+    dashboardStripWealthChangeModule(change, attribution),
+    dashboardStripGoalModule(primaryGoal),
     dashboardStripQuoteModule(sentence)
   ].join("");
 }
@@ -27,7 +21,7 @@ function dashboardStripCashModule(s, cashRate) {
   var flowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
   return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">现金流总览（本月）</span>"
+    + "<span class=\"dashboard-strip-title\">现金流总览</span>"
     + "<div class=\"dashboard-strip-body\">"
     + "<div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
     + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
@@ -52,41 +46,49 @@ function dashboardStripStructureModule(s, expenseRows) {
     + "</div></article>";
 }
 
-function dashboardStripInvestModule(assetSnap) {
-  var pnlText = assetSnap.pnl >= 0 ? "+" + money(assetSnap.pnl) : "-" + money(Math.abs(assetSnap.pnl));
+function dashboardStripInvestModule(assetSnap, attribution) {
+  var metric = dashboardInvestmentMetric(assetSnap, attribution);
   var roiText = assetSnap.roi == null ? "--" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-invest\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">投资回报（快照口径）</span>"
+    + "<span class=\"dashboard-strip-title\">投资回报</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-double\"><div><em>浮动盈亏</em><strong class=\"" + (assetSnap.roi == null ? "warning" : (assetSnap.pnl >= 0 ? "positive" : "negative")) + "\">" + esc(assetSnap.roi == null ? "数据不足" : pnlText) + "</strong></div><div><em>收益率</em><b>" + esc(roiText) + "</b></div></div>"
+    + "<div class=\"dashboard-strip-double\"><div><em>" + esc(metric.context) + "</em><strong class=\"" + esc(metric.className) + "\">" + esc(metric.value) + "</strong></div><div><em>当前收益率</em><b>" + esc(roiText) + "</b></div></div>"
     + "<div class=\"dashboard-strip-invest-line\">" + dashboardStripSparkline(assetSnap) + "</div>"
     + "</div>"
     + "</div></article>";
 }
 
-function dashboardStripAllocationModule(assetRows, assetAccounts) {
+function dashboardStripWealthChangeModule(change, attribution) {
+  if (!change.hasBaseline) {
+    return "<article class=\"dashboard-strip-item dashboard-strip-allocation\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">财富变化</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>本月财富变化</em><strong class=\"warning\">基线待补</strong></div><div class=\"dashboard-strip-foot\">暂不展示变化归因</div></div></div></article>";
+  }
+  var other = numberValue(attribution.otherChange + attribution.unexplained);
+  var rows = [
+    { label: "收支贡献", value: attribution.cashflowContribution },
+    { label: "投资损益", value: attribution.investmentPnl },
+    { label: "负债变化", value: attribution.liabilityChange },
+    { label: "其他/未归因", value: other }
+  ];
   return "<article class=\"dashboard-strip-item dashboard-strip-allocation\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">资产概览</span>"
+    + "<span class=\"dashboard-strip-title\">财富变化</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-allocation-row\">"
-    + "<div class=\"dashboard-strip-list\">" + dashboardStripTopList(assetRows.slice(0, 4), assetAccounts.length + " 个资产账户") + "</div>"
-    + "<div class=\"dashboard-strip-donut-center\">" + dashboardStripDonutCore(assetRows.slice(0, 4)) + "</div>"
-    + "</div>"
+    + "<div class=\"dashboard-strip-kv\"><em>本月财富变化</em><strong class=\"" + (change.change >= 0 ? "positive" : "negative") + "\">" + esc(dashboardSignedMoney(change.change)) + "</strong></div>"
+    + "<div class=\"dashboard-strip-list\">" + rows.map(function (row) { return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(row.label + " " + dashboardSignedMoney(row.value)) + "</span>"; }).join("") + "</div>"
     + "</div>"
     + "</div></article>";
 }
 
-function dashboardStripGoalModule(monthLabel, savingRate, savingProgress, monthlySaving, targetForView) {
-  var rateText = savingRate == null ? "--" : savingRate.toFixed(1) + "%";
+function dashboardStripGoalModule(goal) {
+  if (!goal) return "<article class=\"dashboard-strip-item dashboard-strip-goal\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">目标进度</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>主要目标</em><strong class=\"warning\">暂无目标</strong></div><div class=\"dashboard-strip-foot\">尚未设置未完成资金目标</div></div></div></article>";
   return "<article class=\"dashboard-strip-item dashboard-strip-goal\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">目标</span>"
+    + "<span class=\"dashboard-strip-title\">目标进度</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(monthLabel) + "储蓄率</span><strong class=\"positive\">" + esc(rateText) + "</strong></div>"
-    + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(savingProgress.toFixed(1)) + "%\"><b></b></div>"
-    + "<div class=\"dashboard-strip-goal-foot\"><span>本月储蓄 " + esc(money(monthlySaving)) + "</span><span>账户目标 " + esc(money(targetForView)) + "</span></div>"
+    + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(dashboardBriefText(goal.name, 8)) + "</span><strong class=\"positive\">" + esc(goal.progress.toFixed(0)) + "%</strong></div>"
+    + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(goal.progress.toFixed(1)) + "%\"><b></b></div>"
+    + "<div class=\"dashboard-strip-goal-foot\"><span>当前 " + esc(money(goal.current)) + "</span><span>剩余 " + esc(money(goal.remaining)) + "</span></div>"
     + "</div>"
     + "</div></article>";
 }
@@ -107,7 +109,7 @@ function dashboardStripDonutCore(rows) {
   if (!rows.length) {
     return "<div class=\"dashboard-strip-donut dashboard-strip-donut-lg dashboard-strip-donut-empty\"></div>";
   }
-  var palette = ["#B88A4A", "#D9B65D", "#F2E5CC", "#8F6334"];
+  var palette = ["#D5B98A", "#E0CA9E", "#EADAB8", "#F2E9D2"];
   var safeRows = rows.slice(0, 4).map(function (row) { return { name: row.name, pct: numberValue(row.pct) }; });
   var total = sum(safeRows, function (row) { return row.pct; });
   if (total < 99) safeRows.push({ name: "其他", pct: 100 - total });

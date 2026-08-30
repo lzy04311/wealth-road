@@ -1,4 +1,4 @@
-﻿@media (min-width: 901px) {
+@media (min-width: 901px) {
   #dashboardBottomStrip.dashboard-bottom-strip .dashboard-strip-item {
     align-items: center;
     justify-items: stretch;
@@ -235,7 +235,7 @@
   }
 
   .dashboard-total-asset {
-    font-size: clamp(3.75rem, 3.65vw, 4.25rem);
+    font-size: clamp(3.4rem, 3.3vw, 3.85rem);
   }
 
   .dashboard-change-row {
@@ -274,18 +274,12 @@
   }
 
   .compass-core {
-    width: clamp(250px, 26vw, 320px);
-    height: clamp(250px, 26vw, 320px);
+    width: clamp(250px, 26vw, 300px);
+    height: clamp(250px, 26vw, 300px);
   }
 
   .compass-core strong {
     font-size: clamp(7rem, 9.8vw, 9.5rem);
-  }
-
-  .compass-node {
-    width: 108px;
-    min-height: 108px;
-    padding: 24px 12px 12px;
   }
 
   .dashboard-right-cards {
@@ -308,7 +302,7 @@
   }
 
   .dashboard-donut::after {
-    inset: 29px;
+    inset: 15px;
   }
 
   .dashboard-bottom-strip {
@@ -539,7 +533,7 @@
   }
 
   .dashboard-total-asset {
-    font-size: 2.55rem;
+    font-size: 2.3rem;
     letter-spacing: 0;
   }
 
@@ -641,15 +635,15 @@
     width: 100%;
     min-height: 82px;
     transform: none;
-    grid-template-columns: 12px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "dot name"
-      "dot value"
-      "dot desc";
+      "name"
+      "value"
+      "desc";
     justify-items: start;
     text-align: left;
     border-radius: 16px;
-    padding: 10px;
+    padding: 10px 12px;
   }
 
   .dashboard-cockpit-page .compass-node::before {
@@ -666,18 +660,6 @@
 
   .dashboard-cockpit-page .node-desc {
     white-space: normal;
-  }
-
-  .node-dot {
-    position: relative;
-    transform: none;
-    width: 9px;
-    height: 9px;
-    grid-area: dot;
-  }
-
-  .node-dot::before {
-    inset: 0;
   }
 
   .compass-node:hover {

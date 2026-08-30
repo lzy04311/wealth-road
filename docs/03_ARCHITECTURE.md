@@ -28,7 +28,7 @@
 
 ### Browser Script Contract
 
-- 浏览器运行时使用 26 个 `defer` 经典脚本，不依赖构建工具或运行时模块加载器。
+- 浏览器运行时使用 27 个 `defer` 经典脚本，不依赖构建工具或运行时模块加载器。
 - 固定方向是 state / validation / storage -> calculations -> render -> actions -> optional auth and sync -> navigation / init / PWA。
 - 完整文件顺序和顶层声明唯一性由 `scripts/check-project.js` 精确校验；新增跨文件接口必须先确定所属层，不能依赖偶然加载顺序。
 

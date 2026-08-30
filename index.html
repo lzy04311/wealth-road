@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=30">
+  <link rel="stylesheet" href="styles.css?v=32">
 </head>
 <body>
   <div class="app">
@@ -108,7 +108,7 @@
               <div class="dashboard-brand-mark">财</div>
               <div>
                 <h2>财记</h2>
-                <p>本地优先资金管理</p>
+                <p>个人资产管理</p>
               </div>
             </div>
             <div id="dashboardStatusBar" class="dashboard-status-bar"></div>
@@ -124,7 +124,7 @@
             <section class="dashboard-asset-card dashboard-panel" aria-label="净资产">
               <div class="dashboard-panel-head">
                 <h3>净资产</h3>
-                <span id="dashboardAssetHealth" class="dashboard-pill">资产健康度 --</span>
+                <span id="dashboardAssetHealth" class="dashboard-pill">执行健康 --</span>
               </div>
               <strong id="dashboardTotalAsset" class="dashboard-total-asset">¥0.00</strong>
               <div id="dashboardAssetChange" class="dashboard-change-row"></div>
@@ -212,11 +212,11 @@
                   <circle class="wealth-pearl pearl-c" cx="596" cy="304" r="5" />
                   <circle class="wealth-pearl pearl-d" cx="282" cy="398" r="4" />
                 </svg>
-                <div id="wealthCompassNodes" class="compass-node-layer" aria-label="模块入口"></div>
+                <div id="wealthCompassNodes" class="compass-node-layer" aria-label="财富指标"></div>
               </div>
             </section>
 
-            <aside id="dashboardRightCards" class="dashboard-right-cards" aria-label="右侧状态卡"></aside>
+            <aside id="dashboardRightCards" class="dashboard-right-cards" aria-label="首页信息卡"></aside>
           </div>
 
           <section id="dashboardBottomStrip" class="dashboard-bottom-strip dashboard-panel" aria-label="本月数据带"></section>
@@ -758,11 +758,23 @@
           <div class="card data-card sync-card">
             <h2>多设备同步</h2>
             <p class="subtitle" id="backendAuthStatus">本地模式：云同步未初始化</p>
+            <div class="sync-config-block">
+              <div class="section-title compact"><div><h2>云同步配置</h2><p>填写 Supabase 项目 URL 与 anon/publishable key；配置只保存在本浏览器，不会提交到 Git</p></div></div>
+              <div class="form-grid sync-login-grid">
+                <div class="field"><label>Supabase URL</label><input type="url" id="backendConfigUrl" placeholder="https://xxxx.supabase.co"></div>
+                <div class="field"><label>anon / publishable key</label><input type="password" id="backendConfigAnonKey" placeholder="Supabase 公开 key"></div>
+                <div class="field"><label>同源客户端脚本</label><input type="text" id="backendConfigScript" placeholder="./scripts/vendor/supabase-js.js" required><small>必须是当前站点内的 supabase-js 文件</small></div>
+              </div>
+              <div class="actions">
+                <button class="btn primary small" type="button" id="backendSaveConfig">保存配置</button>
+                <button class="btn ghost small" type="button" id="backendClearConfig">清除配置</button>
+              </div>
+            </div>
             <div class="form-grid sync-login-grid">
               <div class="field"><label>邮箱</label><input type="email" id="backendLoginEmail" placeholder="name@example.com"></div>
               <div class="field"><label>验证码</label><input type="text" id="backendOtpToken" inputmode="numeric" placeholder="可选"></div>
               <div class="field sync-login-actions">
-                <label>操作</label>
+                <span class="field-label" aria-hidden="true">操作</span>
                 <div class="actions">
             <button class="btn ghost small" type="button" id="backendSendLogin">发送登录邮件</button>
                   <button class="btn ghost small" type="button" id="backendVerifyOtp">验证登录</button>
@@ -815,32 +827,32 @@
     <button id="actionFeedbackButton" type="button">撤销</button>
     <button class="action-feedback-close" type="button" data-action="dismiss-feedback" aria-label="关闭提示">×</button>
   </div>
-  <script defer src="scripts/app-state.js?v=27"></script>
-  <script defer src="scripts/app-ui-feedback.js?v=27"></script>
-  <script defer src="scripts/app-validators.js?v=26"></script>
-  <script defer src="scripts/app-migrations.js?v=26"></script>
-  <script defer src="scripts/app-idb.js?v=27"></script>
-  <script defer src="scripts/app-storage.js?v=26"></script>
-  <script defer src="scripts/app-backend-config.js?v=26"></script>
-  <script defer src="scripts/app-calculations.js?v=26"></script>
-  <script defer src="scripts/app-render-core.js?v=27"></script>
-  <script defer src="scripts/dashboard/dashboard-formatters.js?v=26"></script>
-  <script defer src="scripts/dashboard/render-bottom-strip.js?v=26"></script>
-  <script defer src="scripts/app-render-dashboard.js?v=26"></script>
-  <script defer src="scripts/app-render-assets.js?v=26"></script>
-  <script defer src="scripts/app-render-records.js?v=26"></script>
-  <script defer src="scripts/app-render-investments.js?v=26"></script>
-  <script defer src="scripts/app-render-monthly.js?v=26"></script>
-  <script defer src="scripts/app-render-flow.js?v=26"></script>
-  <script defer src="scripts/app-actions-data.js?v=26"></script>
-  <script defer src="scripts/app-actions-crud.js?v=26"></script>
-  <script defer src="scripts/app-actions-quick-entry.js?v=26"></script>
-  <script defer src="scripts/app-actions-modals.js?v=26"></script>
-  <script defer src="scripts/app-actions-forms.js?v=27"></script>
-  <script defer src="scripts/app-auth.js?v=26"></script>
-  <script defer src="scripts/app-sync.js?v=26"></script>
-  <script defer src="scripts/app-actions-navigation.js?v=26"></script>
-  <script defer src="scripts/app-actions.js?v=27"></script>
-  <script defer src="scripts/app-pwa.js?v=26"></script>
+  <script defer src="scripts/app-state.js?v=32"></script>
+  <script defer src="scripts/app-ui-feedback.js?v=32"></script>
+  <script defer src="scripts/app-validators.js?v=32"></script>
+  <script defer src="scripts/app-migrations.js?v=32"></script>
+  <script defer src="scripts/app-idb.js?v=32"></script>
+  <script defer src="scripts/app-storage.js?v=32"></script>
+  <script defer src="scripts/app-backend-config.js?v=32"></script>
+  <script defer src="scripts/app-calculations.js?v=32"></script>
+  <script defer src="scripts/app-render-core.js?v=32"></script>
+  <script defer src="scripts/dashboard/dashboard-formatters.js?v=32"></script>
+  <script defer src="scripts/dashboard/render-bottom-strip.js?v=32"></script>
+  <script defer src="scripts/app-render-dashboard.js?v=32"></script>
+  <script defer src="scripts/app-render-assets.js?v=32"></script>
+  <script defer src="scripts/app-render-records.js?v=32"></script>
+  <script defer src="scripts/app-render-investments.js?v=32"></script>
+  <script defer src="scripts/app-render-monthly.js?v=32"></script>
+  <script defer src="scripts/app-render-flow.js?v=32"></script>
+  <script defer src="scripts/app-actions-data.js?v=32"></script>
+  <script defer src="scripts/app-actions-crud.js?v=32"></script>
+  <script defer src="scripts/app-actions-quick-entry.js?v=32"></script>
+  <script defer src="scripts/app-actions-modals.js?v=32"></script>
+  <script defer src="scripts/app-actions-forms.js?v=32"></script>
+  <script defer src="scripts/app-auth.js?v=32"></script>
+  <script defer src="scripts/app-sync.js?v=32"></script>
+  <script defer src="scripts/app-actions-navigation.js?v=32"></script>
+  <script defer src="scripts/app-actions.js?v=32"></script>
+  <script defer src="scripts/app-pwa.js?v=32"></script>
 </body>
 </html>

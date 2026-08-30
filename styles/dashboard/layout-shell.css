@@ -1,4 +1,4 @@
-﻿.dashboard-cockpit-page {
+.dashboard-cockpit-page {
   --dashboard-core-lift: 50px;
   --dashboard-strip-rise: var(--dashboard-core-lift);
   --font-serif-zh: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", serif;
@@ -68,5 +68,46 @@
 .dashboard-bottom-nav-actions {
   position: relative;
   z-index: 1;
+}
+
+/* ===== Hover tooltip cards (quiet density) ===== */
+[data-dash-tip] {
+  position: relative;
+}
+
+[data-dash-tip]::after {
+  content: attr(data-dash-tip);
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 10px);
+  transform: translate(-50%, -4px);
+  z-index: 80;
+  width: max-content;
+  max-width: 250px;
+  padding: 9px 12px;
+  border: 1px solid rgba(232, 205, 156, .46);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 255, 255, .82), transparent 60%),
+    linear-gradient(145deg, rgba(255, 253, 248, .97), rgba(250, 244, 232, .93));
+  color: rgba(58, 50, 38, .92);
+  font-family: var(--font-sans-zh);
+  font-size: .72rem;
+  font-weight: 500;
+  line-height: 1.55;
+  white-space: pre-line;
+  text-align: left;
+  box-shadow:
+    0 12px 28px rgba(133, 100, 52, .13),
+    inset 0 1px 0 rgba(255, 255, 255, .82);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+[data-dash-tip]:hover::after,
+[data-dash-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 

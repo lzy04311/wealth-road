@@ -54,5 +54,5 @@ function renderAll() {
   renderGoals();
   renderFlow(renderContextCache);
   byId("rulesText").value = state.rules;
-  if (typeof renderIdbPanel === "function") renderIdbPanel();
+  if (typeof renderIdbPanel === "function" && byId("data").classList.contains("active")) renderIdbPanel();
 }

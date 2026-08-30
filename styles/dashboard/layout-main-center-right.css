@@ -115,7 +115,7 @@
 .dashboard-total-asset {
   color: #74522a;
   font-family: var(--font-number);
-  font-size: clamp(3.75rem, 3.75vw, 4.5rem);
+  font-size: clamp(3.4rem, 3.4vw, 4.05rem);
   line-height: 1;
   font-weight: 700;
   letter-spacing: -.04em;
@@ -181,9 +181,9 @@
 
 .dashboard-asset-metrics small {
   display: block;
-  color: rgba(129,120,102,.76);
+  color: rgba(129,120,102,.62);
   font-family: var(--font-sans-zh);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 400;
   line-height: 1.3;
   letter-spacing: 0;
@@ -346,26 +346,12 @@
 .dashboard-center-panel::before {
   inset: 6% 0;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(219,183,112,.13), transparent 22rem),
-    linear-gradient(28deg, transparent 0 39%, rgba(201,166,107,.078) 39.15% 39.32%, transparent 39.56%),
-    linear-gradient(152deg, transparent 0 39%, rgba(201,166,107,.070) 39.15% 39.32%, transparent 39.56%);
-  opacity: .58;
+    radial-gradient(ellipse at 50% 50%, rgba(219,183,112,.10), transparent 22rem);
+  opacity: .5;
 }
 
 .dashboard-center-panel::after {
-  z-index: 0;
-  left: 50%;
-  top: 50%;
-  width: min(70%, 500px, calc(100% - 120px));
-  max-height: calc(100% - 96px);
-  aspect-ratio: 1 / 1;
-  transform: translate(-50%, -50%);
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, transparent 0 42%, rgba(223,195,144,.080) 42.2% 42.45%, transparent 42.75%),
-    radial-gradient(circle, transparent 0 50%, rgba(223,195,144,.052) 50.2% 50.42%, transparent 50.72%),
-    radial-gradient(circle, transparent 0 59%, rgba(223,195,144,.038) 59.15% 59.34%, transparent 59.64%);
-  opacity: .76;
+  display: none;
 }
 
 .dashboard-center-orbit {
@@ -377,6 +363,7 @@
   border-radius: 36px;
   overflow: visible;
   background: none;
+  --orbit-node-size: 100px;
 }
 
 .wealth-core-visual {
@@ -477,11 +464,25 @@
 }
 
 .wealth-flow.flow-front-a {
-  display: none;
+  display: block;
+  stroke: rgba(212,178,118,.34);
+  opacity: .43;
+  transition: opacity .28s ease, stroke .28s ease;
 }
 
 .wealth-flow.flow-front-b {
-  display: none;
+  display: block;
+  stroke: rgba(212,178,118,.28);
+  opacity: .35;
+  transition: opacity .28s ease, stroke .28s ease;
+}
+
+.wealth-flow.flow-back-a {
+  display: block;
+  stroke: rgba(210,176,116,.26);
+  stroke-dasharray: 120 40 30 26;
+  opacity: .33;
+  transition: opacity .28s ease, stroke .28s ease;
 }
 
 .wealth-particles circle {
@@ -541,10 +542,10 @@
 .compass-core {
   position: absolute;
   left: 50%;
-  top: calc(50% + 20px);
+  top: 50%;
   z-index: 3;
-  width: clamp(250px, 28vw, 330px);
-  height: clamp(250px, 28vw, 330px);
+  width: clamp(250px, 28vw, 300px);
+  height: clamp(250px, 28vw, 300px);
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
@@ -561,7 +562,7 @@
     inset 14px 14px 30px rgba(255,255,255,.22),
     inset -10px -14px 22px rgba(145,94,31,.03),
     inset 0 0 18px rgba(255,250,236,.14);
-  transition: box-shadow .18s ease, transform .18s ease;
+  transition: box-shadow .3s ease, transform .3s ease;
   animation: wealthCoreBreath 9.5s ease-in-out infinite;
 }
 
@@ -583,7 +584,7 @@
   height: 30%;
   border-radius: 999px 999px 48% 48%;
   background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.52) 0%, rgba(255,255,255,.24) 46%, rgba(255,255,255,0) 100%);
-  opacity: .42;
+  opacity: .32;
   filter: blur(.25px);
   animation: compassGlassBreath 10s ease-in-out infinite;
 }
@@ -620,12 +621,11 @@
   line-height: 1;
   font-weight: 700;
   letter-spacing: -.02em;
-  filter: drop-shadow(0 0 8px rgba(238,196,112,.18));
+  filter: drop-shadow(0 0 5px rgba(238,196,112,.12));
   text-shadow:
-    0 1px 0 rgba(255,247,220,.34),
-    0 2px 4px rgba(95,59,18,.11),
-    0 0 10px rgba(224,180,92,.14),
-    0 0 20px rgba(244,216,154,.16);
+    0 1px 0 rgba(255,247,220,.30),
+    0 2px 4px rgba(95,59,18,.10),
+    0 0 7px rgba(224,180,92,.10);
 }
 
 .compass-core span:last-child {
@@ -642,13 +642,13 @@
 }
 
 @keyframes compassGlassBreath {
-  0%, 100% { opacity: .30; transform: translateY(0) scale(1); }
-  50% { opacity: .46; transform: translateY(-2px) scale(1.015); }
+  0%, 100% { opacity: .24; transform: translateY(0) scale(1); }
+  50% { opacity: .36; transform: translateY(-2px) scale(1.015); }
 }
 
 @keyframes wealthCoreBreath {
   0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.012); }
+  50% { transform: translate(-50%, -50%) scale(1.008); }
 }
 
 @keyframes wealthTrackDrift {
@@ -677,8 +677,8 @@
   position: absolute;
   left: var(--x);
   top: var(--y);
-  width: 96px;
-  min-height: 96px;
+  width: var(--orbit-node-size);
+  min-height: var(--orbit-node-size);
   transform: translate(-50%, -50%);
   display: grid;
   grid-template-columns: 1fr;
@@ -689,16 +689,30 @@
   align-content: center;
   justify-items: start;
   text-align: center;
-  border: 1px solid rgba(201,166,107,.18);
+  border: 1px solid rgba(180, 160, 120, .16);
   border-radius: 999px;
-  padding: 23px 12px 12px;
+  padding: 16px 8px 9px;
   background:
-    radial-gradient(circle at 22% 14%, rgba(255,255,255,.56), transparent 46%),
-    rgba(255,253,248,.46);
-  box-shadow: 0 6px 14px rgba(133,100,52,.028), inset 0 1px 0 rgba(255,255,255,.52);
-  backdrop-filter: blur(15px) saturate(1.04);
-  -webkit-backdrop-filter: blur(15px) saturate(1.04);
-  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    radial-gradient(circle at 24% 12%, rgba(255,255,255,.42), transparent 52%),
+    linear-gradient(158deg, rgba(255,253,248,.42), rgba(251,246,236,.16));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.44),
+    0 2px 6px rgba(133,100,52,.024);
+  backdrop-filter: blur(4px) saturate(1.0);
+  -webkit-backdrop-filter: blur(4px) saturate(1.0);
+  transition: transform .28s ease, border-color .28s ease, background .28s ease, box-shadow .28s ease, opacity .28s ease;
+}
+
+.compass-node.node-flow,
+.compass-node.node-invest,
+.compass-node.node-goals {
+  cursor: pointer;
+}
+
+.compass-node.node-data,
+.compass-node.node-assets,
+.compass-node.node-accounts {
+  cursor: default;
 }
 
 .compass-node::before {
@@ -710,63 +724,86 @@
   height: 1px;
   transform-origin: left center;
   transform: rotate(var(--link-r, 0deg));
-  background: none;
+  background: linear-gradient(90deg, rgba(201,166,107,.34), rgba(201,166,107,.05));
+  opacity: 0;
   pointer-events: none;
   z-index: -1;
+  transition: opacity .28s ease;
 }
 
-.compass-node:hover {
-  border-color: rgba(201,166,107,.58);
+.compass-node.node-flow:hover,
+.compass-node.node-invest:hover,
+.compass-node.node-goals:hover,
+.compass-node:focus-visible {
+  border-color: rgba(192, 168, 126, .38);
   background:
-    radial-gradient(circle at 22% 14%, rgba(255,255,255,.76), transparent 46%),
-    rgba(255,253,248,.80);
-  transform: translate(-50%, calc(-50% - 3px));
-  box-shadow: 0 9px 20px rgba(133,100,52,.075), inset 0 1px 0 rgba(255,255,255,.70);
+    radial-gradient(circle at 24% 12%, rgba(255,255,255,.52), transparent 52%),
+    linear-gradient(158deg, rgba(255,253,248,.52), rgba(251,246,236,.22));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.50),
+    0 3px 10px rgba(133,100,52,.038);
 }
 
-.node-dot {
-  grid-area: dot;
-  position: absolute;
-  left: 50%;
-  top: -10px;
-  transform: translateX(-50%);
-  width: 27px;
-  height: 27px;
-  border-radius: 999px;
-  border: 1px solid rgba(201,166,107,.24);
-  background:
-    radial-gradient(circle at 35% 28%, rgba(255,255,255,.86), transparent 44%),
-    rgba(255,253,248,.82);
-  box-shadow: 0 4px 9px rgba(133,100,52,.035), inset 0 1px 0 rgba(255,255,255,.68);
+@media (min-width: 901px) {
+  .compass-node.node-flow:hover,
+  .compass-node.node-invest:hover,
+  .compass-node.node-goals:hover,
+  .compass-node.node-flow:focus-visible,
+  .compass-node.node-invest:focus-visible,
+  .compass-node.node-goals:focus-visible {
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+
+  .compass-node.node-flow:hover::before,
+  .compass-node.node-invest:hover::before,
+  .compass-node.node-goals:hover::before {
+    opacity: 1;
+  }
 }
 
-.node-dot::before {
-  content: "";
-  position: absolute;
-  inset: 9px;
-  border-radius: inherit;
-  background: #9F7338;
-  box-shadow: 0 0 0 4px rgba(201,166,107,.08), 0 0 10px rgba(201,166,107,.12);
+/* node hover → 轨迹与中央“财”的克制联动 */
+.dashboard-center-orbit:has(.node-flow:hover, .node-invest:hover, .node-goals:hover) .wealth-flow.flow-front-a {
+  opacity: .52;
+  stroke: rgba(212, 178, 118, .40);
+}
+
+.dashboard-center-orbit:has(.node-flow:hover, .node-invest:hover, .node-goals:hover) .wealth-flow.flow-front-b {
+  opacity: .44;
+  stroke: rgba(212, 178, 118, .34);
+}
+
+.dashboard-center-orbit:has(.node-flow:hover, .node-invest:hover, .node-goals:hover) .wealth-flow.flow-back-a {
+  opacity: .42;
+  stroke: rgba(210, 176, 116, .34);
+}
+
+.dashboard-center-orbit:has(.node-flow:hover, .node-invest:hover, .node-goals:hover) .compass-core {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.64),
+    inset 14px 14px 30px rgba(255,255,255,.22),
+    inset -10px -14px 22px rgba(145,94,31,.03),
+    inset 0 0 18px rgba(255,250,236,.14),
+    0 0 20px rgba(222,184,112,.14);
 }
 
 .node-name {
   grid-area: name;
-  color: var(--text);
+  color: rgba(96, 86, 71, .85);
   justify-self: center;
   font-family: var(--font-sans-zh);
-  font-size: .75rem;
-  font-weight: 650;
+  font-size: .67rem;
+  font-weight: 500;
   line-height: 1.18;
-  letter-spacing: 0;
+  letter-spacing: .02em;
 }
 
 .node-desc {
   grid-area: desc;
   justify-self: center;
-  color: var(--muted);
+  color: rgba(129, 119, 99, .44);
   font-family: var(--font-sans-zh);
-  font-size: .61rem;
-  font-weight: 500;
+  font-size: .56rem;
+  font-weight: 400;
   line-height: 1.28;
   white-space: nowrap;
   overflow: hidden;
@@ -776,11 +813,11 @@
 .compass-node strong {
   grid-area: value;
   justify-self: center;
-  margin-top: 4px;
+  margin-top: 2px;
   margin-bottom: 2px;
-  color: var(--tone-color, #8E6A32);
+  color: var(--tone-color, #675A46);
   font-family: var(--font-number);
-  font-size: .70rem;
+  font-size: 1.02rem;
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -.02em;
@@ -791,12 +828,141 @@
   text-overflow: ellipsis;
 }
 
-.node-data { --x: 16%; --y: 20%; --link-r: 28deg; --link-w: 124px; }
-.node-flow { --x: 10%; --y: 54%; --link-r: 0deg; --link-w: 138px; }
-.node-goals { --x: 16%; --y: 88%; --link-r: -28deg; --link-w: 124px; }
-.node-invest { --x: 84%; --y: 20%; --link-r: 152deg; --link-w: 124px; }
-.node-assets { --x: 90%; --y: 54%; --link-r: 180deg; --link-w: 138px; }
-.node-accounts { --x: 84%; --y: 88%; --link-r: -152deg; --link-w: 124px; }
+.compass-node.node-goals strong.positive,
+.compass-node.node-accounts strong.positive {
+  color: #675A46;
+}
+
+.compass-node.node-invest strong.positive {
+  color: #5E8A6B;
+  font-weight: 650;
+}
+
+/* 轻量状态标签：财富变化 / 近期 / 洞察 */
+.compass-node.node-data,
+.compass-node.node-assets,
+.compass-node.node-accounts {
+  width: auto;
+  min-height: 0;
+  padding: 2px 0 2px 15px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "name name"
+    "value desc";
+  column-gap: 7px;
+  row-gap: 4px;
+  align-content: center;
+  align-items: baseline;
+  justify-items: start;
+  text-align: left;
+}
+
+.compass-node.node-data::before,
+.compass-node.node-assets::before,
+.compass-node.node-accounts::before {
+  left: 0;
+  top: 8px;
+  width: 5px;
+  height: 5px;
+  transform: none;
+  border-radius: 50%;
+  background: rgba(196, 166, 110, .58);
+  box-shadow: 0 0 0 3px rgba(201, 166, 107, .10);
+  opacity: 1;
+  z-index: 0;
+}
+
+.compass-node.node-data::after,
+.compass-node.node-assets::after,
+.compass-node.node-accounts::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--link-w, 38px);
+  height: 1px;
+  transform-origin: left center;
+  transform: rotate(var(--link-r, 0deg));
+  background: linear-gradient(90deg, rgba(201, 166, 107, .22), rgba(201, 166, 107, 0));
+  opacity: .42;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.compass-node.node-data .node-name,
+.compass-node.node-assets .node-name,
+.compass-node.node-accounts .node-name {
+  justify-self: start;
+  color: rgba(116, 104, 86, .78);
+  font-size: .7rem;
+  font-weight: 500;
+  letter-spacing: .05em;
+}
+
+.compass-node.node-data .node-desc,
+.compass-node.node-assets .node-desc,
+.compass-node.node-accounts .node-desc {
+  justify-self: start;
+  color: rgba(129, 119, 99, .52);
+  font-size: .64rem;
+}
+
+.compass-node.node-data strong,
+.compass-node.node-assets strong,
+.compass-node.node-accounts strong {
+  justify-self: start;
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.compass-node.node-accounts {
+  grid-template-areas:
+    "name name"
+    "desc value";
+}
+
+.compass-node.node-accounts .node-desc {
+  color: #675A46;
+  font-size: 1.08rem;
+  line-height: 1.05;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.compass-node.node-accounts strong,
+.compass-node.node-accounts strong.positive {
+  color: rgba(129, 119, 99, .52);
+  font-size: .62rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.compass-node.node-data:focus-visible,
+.compass-node.node-assets:focus-visible,
+.compass-node.node-accounts:focus-visible {
+  border: 0;
+  background: none;
+  box-shadow: none;
+  outline: 1px solid rgba(201, 166, 107, .5);
+  outline-offset: 3px;
+}
+
+.node-data { --x: 14%; --y: 8%; --link-r: 198deg; --link-w: 38px; }
+.node-flow { --x: 13%; --y: 46%; --link-r: 3deg; --link-w: 150px; }
+.node-invest { --x: 84%; --y: 21%; --link-r: 146deg; --link-w: 130px; }
+.node-goals { --x: 84%; --y: 94%; --link-r: -156deg; --link-w: 130px; }
+.node-assets { --x: 14%; --y: 84%; --link-r: 160deg; --link-w: 34px; }
+.node-accounts { --x: 84%; --y: 74%; --link-r: 20deg; --link-w: 34px; }
 
 .dashboard-right-cards {
   min-width: 0;
@@ -896,6 +1062,35 @@
   line-height: 1.38;
 }
 
+.dashboard-card-sub {
+  margin: -2px 0 0;
+  color: rgba(129,120,102,.78);
+  font-family: var(--font-sans-zh);
+  font-size: .74rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.dashboard-insight-metric {
+  margin-top: -3px;
+  color: rgba(129,120,102,.72);
+  font-family: var(--font-sans-zh);
+  font-size: .74rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.dashboard-insight-card .dashboard-insight-status {
+  color: rgba(129,120,102,.64);
+  font-size: .72rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.dashboard-insight-card {
+  grid-template-rows: auto auto auto auto minmax(0, auto);
+}
+
 .dashboard-link {
   justify-self: start;
   align-self: end;
@@ -911,8 +1106,7 @@
 .asset-structure-detail {
   justify-self: end;
   align-self: end;
-  margin-right: 7px;
-  margin-bottom: 3px;
+  margin: 2px 14px 8px 0;
   min-height: 22px;
   border: 0;
   background: transparent;
@@ -925,10 +1119,18 @@
   cursor: pointer;
 }
 
+.dashboard-structure-body {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 6px;
+  align-content: start;
+  min-height: 0;
+}
+
 .dashboard-structure {
   display: grid;
   grid-template-columns: 118px 1fr;
-  gap: 18px;
+  gap: 22px;
   align-items: center;
   min-height: 0;
 }
@@ -938,28 +1140,53 @@
   aspect-ratio: 1 / 1;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 34% 24%, rgba(255,255,255,.76), transparent 23%),
-    radial-gradient(circle at 50% 50%, transparent 0 42%, rgba(255,253,248,.34) 43% 50%, transparent 51%),
-    radial-gradient(circle at 50% 50%, transparent 0 72%, rgba(116,82,42,.08) 100%),
+    radial-gradient(circle at 34% 24%, rgba(255,255,255,.34), transparent 30%),
     conic-gradient(var(--dashboard-donut));
   position: relative;
-  box-shadow:
-    inset 0 0 0 1px rgba(201,166,107,.16),
-    inset 0 -10px 22px rgba(116,82,42,.070),
-    0 7px 16px rgba(133,100,52,.038);
+  box-shadow: inset 0 0 0 1px rgba(214,183,135,.10);
 }
 
 .dashboard-donut::after {
   content: "";
   position: absolute;
-  inset: 31px;
+  inset: 15px;
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 36% 24%, rgba(255,255,255,.82), transparent 48%),
-    rgba(255,253,248,.88);
-  box-shadow:
-    inset 0 0 0 1px rgba(201,166,107,.07),
-    0 0 16px rgba(255,253,248,.34);
+  background: rgba(255,253,248,.92);
+}
+
+.dashboard-donut-center {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.dashboard-donut-center strong {
+  color: #9A7B4A;
+  font-family: var(--font-number);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.dashboard-donut-center span {
+  color: rgba(129,120,102,.68);
+  font-family: var(--font-sans-zh);
+  font-size: .66rem;
+  font-weight: 500;
+  line-height: 1.2;
+  max-width: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dashboard-structure-list {
@@ -1112,7 +1339,15 @@
 }
 
 .dashboard-health-actions .dashboard-link {
-  font-size: .72rem;
+  font-size: .7rem;
+  font-weight: 500;
+  color: rgba(142,106,50,.78);
+  opacity: .82;
+  transition: opacity .2s ease;
+}
+
+.dashboard-health-actions .dashboard-link:hover {
+  opacity: 1;
 }
 
 .dashboard-goal-visual {
@@ -1130,9 +1365,9 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle, rgba(255,253,248,.88) 0 52%, transparent 53%),
-    conic-gradient(rgba(185,141,78,.88) var(--goal-progress), rgba(201,166,107,.13) 0);
-  box-shadow: inset 0 0 0 1px rgba(201,166,107,.13);
+    radial-gradient(circle, rgba(255,253,248,.92) 0 60%, transparent 61%),
+    conic-gradient(#D5B98A var(--goal-progress), #F3EBD9 0);
+  box-shadow: inset 0 0 0 1px rgba(214,183,135,.10);
 }
 
 .dashboard-goal-ring span {
@@ -1222,4 +1457,3 @@
   font-size: .76rem;
   line-height: 1.4;
 }
-
