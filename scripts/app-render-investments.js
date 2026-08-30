@@ -6,24 +6,25 @@ function renderInvestments(ctx) {
   var records = state.investments.filter(function (item) { return item.month === month; });
   var net = sum(records, function (item) { return item.type === "转出" ? -item.amount : item.amount; });
   var inTotal = sum(records, function (item) { return item.type === "转出" ? 0 : item.amount; });
+  var hasInvestmentEvidence = dashboardHasInvestmentData();
 
   // Layer 1: Cockpit
   var snap = renderCtx.snapshot;
-  byId("investCockpitValue").textContent = money(snap.performanceAsset);
-  byId("investCockpitPrincipal").textContent = money(snap.performancePrincipal);
-  byId("investCockpitPnl").textContent = money(snap.pnl);
-  byId("investCockpitPnl").className = snap.pnl >= 0 ? "positive" : "negative";
+  byId("investCockpitValue").textContent = hasInvestmentEvidence ? money(snap.performanceAsset) : "待记录";
+  byId("investCockpitPrincipal").textContent = hasInvestmentEvidence ? money(snap.performancePrincipal) : "待记录";
+  byId("investCockpitPnl").textContent = hasInvestmentEvidence ? money(snap.pnl) : "待评估";
+  byId("investCockpitPnl").className = hasInvestmentEvidence ? (snap.pnl >= 0 ? "positive" : "negative") : "warning";
   byId("investCockpitRoi").textContent = snap.roi != null ? (snap.roi >= 0 ? "+" : "") + snap.roi.toFixed(2) + "%" : "--";
-  byId("investCockpitRoi").className = (snap.roi || 0) >= 0 ? "positive" : "negative";
-  byId("investStatNetIn").textContent = money(net);
+  byId("investCockpitRoi").className = snap.roi == null ? "warning" : (snap.roi >= 0 ? "positive" : "negative");
+  byId("investStatNetIn").textContent = records.length ? money(net) : "待记录";
   byId("investStatMonthChange").textContent = snap.monthChange != null ? money(snap.monthChange) : "快照不足";
   byId("investStatMonthChange").className = (snap.monthChange || 0) >= 0 ? "positive" : (snap.monthChange != null ? "negative" : "warning");
 
   // Layer 2: Portfolio cards
   var assetAccounts = state.accounts.filter(function (a) { return a.includeAsset && !a.archived && a.valuationMethod === "净值快照"; });
   var lastDates = [];
-  byId("investStatAccountCount").textContent = assetAccounts.length + " 个";
-  byId("investPortfolioSummary").textContent = assetAccounts.length + " 个净值账户 · 总市值 " + money(snap.performanceAsset);
+  byId("investStatAccountCount").textContent = hasInvestmentEvidence ? assetAccounts.length + " 个" : "待建账";
+  byId("investPortfolioSummary").textContent = hasInvestmentEvidence ? assetAccounts.length + " 个净值账户 · 总市值 " + money(snap.performanceAsset) : "尚无持仓或净值证据，模板资金池不计作真实资产";
 
   byId("investPortfolioGrid").innerHTML = assetAccounts.length ? assetAccounts.map(function (account) {
     var av = accountAssetValueForMonth(account, month);
@@ -40,12 +41,12 @@ function renderInvestments(ctx) {
       + "<div class=\"ip-card-title\"><h3>" + esc(account.name) + "</h3><p>" + esc(account.type) + "</p></div>"
       + (hasSnapshot ? "<span class=\"ip-card-badge ok\">已更新</span>" : "<span class=\"ip-card-badge stale\">待更新净值</span>")
       + "</div>"
-      + "<div class=\"ip-card-hero\"><span>当前市值</span><strong>" + money(av.value) + "</strong></div>"
+      + "<div class=\"ip-card-hero\"><span>当前市值</span><strong>" + (hasSnapshot || monthlyInv !== 0 ? money(av.value) : "待记录") + "</strong></div>"
       + "<div class=\"ip-card-metrics\">"
-      + "<div><span>累计本金</span><strong>" + money(av.principal) + "</strong></div>"
-      + "<div><span>浮动盈亏</span><strong class=\"" + (cardPnl >= 0 ? "positive" : "negative") + "\">" + money(cardPnl) + "</strong></div>"
+      + "<div><span>累计本金</span><strong>" + (hasSnapshot || monthlyInv !== 0 ? money(av.principal) : "待记录") + "</strong></div>"
+      + "<div><span>浮动盈亏</span><strong class=\"" + (hasSnapshot ? (cardPnl >= 0 ? "positive" : "negative") : "warning") + "\">" + (hasSnapshot ? money(cardPnl) : "待评估") + "</strong></div>"
       + "<div><span>收益率</span><strong class=\"" + ((cardRoi || 0) >= 0 ? "positive" : "negative") + "\">" + (cardRoi != null ? (cardRoi >= 0 ? "+" : "") + cardRoi.toFixed(2) + "%" : "--") + "</strong></div>"
-      + "<div><span>本月变化</span><strong class=\"" + (monthlyInv >= 0 ? "positive" : "negative") + "\">" + money(monthlyInv) + "</strong></div>"
+      + "<div><span>本月变化</span><strong class=\"" + (monthlyInv === 0 ? "warning" : (monthlyInv >= 0 ? "positive" : "negative")) + "\">" + (monthlyInv === 0 ? "待记录" : money(monthlyInv)) + "</strong></div>"
       + "</div>"
       + "<div class=\"ip-card-foot\"><span>" + (hasSnapshot ? "最近更新：" + av.snapshotDate : "暂无净值快照") + "</span></div>"
       + "</div>";
@@ -66,10 +67,10 @@ function renderInvestments(ctx) {
     return latestSnapshotForAccount(a.id) !== null;
   }).length;
   byId("investRightStats").innerHTML =
-    "<div class=\"invest-right-stat\"><span>总市值</span><strong>" + money(snap.performanceAsset) + "</strong></div>" +
-    "<div class=\"invest-right-stat\"><span>总本金</span><strong>" + money(snap.performancePrincipal) + "</strong></div>" +
-    "<div class=\"invest-right-stat\"><span>盈亏</span><strong class=\"" + (snap.pnl >= 0 ? "positive" : "negative") + "\">" + money(snap.pnl) + "</strong></div>" +
-    "<div class=\"invest-right-stat\"><span>收益率</span><strong class=\"" + ((snap.roi || 0) >= 0 ? "positive" : "negative") + "\">" + (snap.roi != null ? (snap.roi >= 0 ? "+" : "") + snap.roi.toFixed(2) + "%" : "--") + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>总市值</span><strong>" + (hasInvestmentEvidence ? money(snap.performanceAsset) : "待记录") + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>总本金</span><strong>" + (hasInvestmentEvidence ? money(snap.performancePrincipal) : "待记录") + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>盈亏</span><strong class=\"" + (hasInvestmentEvidence ? (snap.pnl >= 0 ? "positive" : "negative") : "warning") + "\">" + (hasInvestmentEvidence ? money(snap.pnl) : "待评估") + "</strong></div>" +
+    "<div class=\"invest-right-stat\"><span>收益率</span><strong class=\"" + (snap.roi == null ? "warning" : (snap.roi >= 0 ? "positive" : "negative")) + "\">" + (snap.roi != null ? (snap.roi >= 0 ? "+" : "") + snap.roi.toFixed(2) + "%" : "待评估") + "</strong></div>" +
     "<div class=\"invest-right-stat\"><span>已更新账户</span><strong>" + accountsWithSnap + "/" + assetAccounts.length + "</strong></div>";
 
   // Layer 4: Records

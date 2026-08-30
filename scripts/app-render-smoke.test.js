@@ -124,6 +124,10 @@ function createContext() {
   return context;
 }
 
+function dashboardSampleFixture() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, "..", "tests", "fixtures", "dashboard-sample.json"), "utf8"));
+}
+
 var testChain = Promise.resolve();
 function test(name, fn) {
   testChain = testChain.then(function () {
@@ -497,7 +501,8 @@ test("dashboard compass renders six wealth-semantic nodes with only existing pag
     "资金状态"
   );
   var html = context.__elements.wealthCompassNodes.innerHTML;
-  assert.strictEqual((html.match(/<button\b/g) || []).length, 6);
+  assert.strictEqual((html.match(/<button\b/g) || []).length, 3);
+  assert.strictEqual((html.match(/<div\b[^>]*role="status"/g) || []).length, 3);
   ["财富变化", "现金流", "投资", "近期", "目标", "洞察"].forEach(function (label) { assert.ok(html.includes(label), label); });
   ["node-data", "node-flow", "node-invest", "node-assets", "node-goals", "node-accounts"].forEach(function (key) { assert.ok(html.includes(key), key); });
   assert.strictEqual((html.match(/is-core/g) || []).length, 3);
@@ -510,7 +515,7 @@ test("dashboard compass renders six wealth-semantic nodes with only existing pag
   assert.match(html, /60%/);
   assert.match(html, /优先洞察/);
   assert.strictEqual((html.match(/data-action="open-view"/g) || []).length, 3);
-  assert.strictEqual((html.match(/data-dashboard-node=/g) || []).length, 3);
+  assert.doesNotMatch(html, /data-dashboard-node=/);
   assert.match(html, /data-view="flow"/);
   assert.match(html, /data-view="investments"/);
   assert.match(html, /data-view="goals"/);
@@ -525,8 +530,8 @@ test("dashboard shows baseline pending instead of a fabricated zero change", fun
   assert.match(context.__elements.dashboardAssetChange.innerHTML, /基线待补/);
   assert.match(context.__elements.wealthCompassNodes.innerHTML, /财富变化/);
   assert.match(context.__elements.wealthCompassNodes.innerHTML, /基线待补/);
-  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /基线待补/);
-  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /本月财富变化[\s\S]*基线待补/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /等待形成完整基线/);
+  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /最低偿债率[\s\S]*待记录/);
   assert.doesNotMatch(context.__elements.dashboardAssetChange.innerHTML, /\+¥0\.00/);
   assert.doesNotMatch(context.__elements.dashboardTrendFacts.innerHTML, /\+¥0\.00/);
 });
@@ -542,24 +547,27 @@ test("dashboard renders a verified current-month wealth change", function () {
   });
   context.renderDashboard(context.buildRenderContext(month));
   assert.match(context.__elements.dashboardAssetChange.innerHTML, /\+¥250\.00/);
-  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /本月财富变化[\s\S]*\+¥250\.00/);
+  assert.match(context.__elements.dashboardTrendFacts.innerHTML, /最低偿债率/);
   assert.match(context.__elements.wealthCompassNodes.innerHTML, /\+¥250\.00/);
-  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /本月财富变化/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /财富归因/);
   assert.match(context.__elements.dashboardBottomStrip.innerHTML, /\+¥250\.00/);
 });
 
-test("dynamic insight card uses the highest priority fact and has an honest empty state", function () {
+test("future outflow card only shows known subscription and minimum-payment outflows", function () {
   var context = createContext();
-  var html = context.dashboardDynamicInsightCard([
-    { title: "中优先级", detail: "中优先级详情", value: 200, type: "expense_anomaly", priority: "medium" },
-    { title: "高优先级", detail: "高优先级详情", value: 900, type: "unexplained_wealth_change", priority: "high" }
+  var html = context.dashboardFutureOutflowCard([
+    { type: "renewal", direction: "out", amount: 40, title: "云服务续费" },
+    { type: "due", direction: "out", amount: 600, title: "信用卡还款" },
+    { type: "payday", direction: "in", amount: null, title: "发薪日" }
   ]);
-  assert.match(html, /高优先级/);
-  assert.match(html, /高优先级详情/);
-  assert.doesNotMatch(html, /中优先级详情/);
-  var emptyHtml = context.dashboardDynamicInsightCard([]);
-  assert.match(emptyHtml, /本月平稳/);
-  assert.match(emptyHtml, /暂无显著变化/);
+  assert.match(html, /未来30天/);
+  assert.match(html, /未来30天已知流出/);
+  assert.match(html, /¥640\.00/);
+  assert.match(html, /订阅 ¥40\.00/);
+  assert.match(html, /最低还款 ¥600\.00/);
+  assert.doesNotMatch(html, /预计总支出|未来总支出/);
+  var emptyHtml = context.dashboardFutureOutflowCard([]);
+  assert.match(emptyHtml, /暂无已记录流出/);
 });
 
 test("finance event card keeps unknown amounts out of any net-impact claim", function () {
@@ -568,8 +576,8 @@ test("finance event card keeps unknown amounts out of any net-impact claim", fun
   assert.match(html, /金额待定/);
   assert.doesNotMatch(html, /净影响/);
   var emptyHtml = context.dashboardFinanceEventsCard([]);
-  assert.match(emptyHtml, /0项 · 未来7天/);
-  assert.match(emptyHtml, /暂无明确事件/);
+  assert.match(emptyHtml, /无已记录事项/);
+  assert.match(emptyHtml, /添加续费、还款或发薪计划后显示/);
 });
 
 test("goal dashboard uses the nearest unfinished goal and preserves a real empty state", function () {
@@ -601,9 +609,26 @@ test("right dashboard renders four assigned regions and real portfolio labels", 
   context.renderDashboardRightCards("2026-05", rows, [], [], null);
   var html = context.__elements.dashboardRightCards.innerHTML;
   assert.strictEqual((html.match(/<article\b/g) || []).length, 4);
-  ["投资组合", "本月洞察", "近期事件", "目标进度"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  ["投资组合", "未来30天", "近期事件", "目标进度"].forEach(function (label) { assert.ok(html.includes(label), label); });
   assert.match(html, /指数基金/);
   assert.doesNotMatch(html, /资产结构|当前配置概览|备份与安全|月度执行健康/);
+});
+
+test("R2.7 complete dashboard sample renders all data-backed modules", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = "2026-08";
+  context.state = context.normalizeState(dashboardSampleFixture());
+  context.renderDashboard(context.buildRenderContext("2026-08"));
+  var html = Object.keys(context.__elements).map(function (id) { return context.__elements[id].innerHTML || ""; }).join("\n");
+  ["最低偿债率", "下次计划发薪", "未来30天", "本金", "浮动盈亏", "财富归因", "资金池执行", "应急金"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  assert.match(html, /最低偿债率[\s\S]*6\.7%/);
+  assert.match(html, /下次计划发薪[\s\S]*09\.09 · ¥6,942\.75/);
+  assert.match(context.__elements.dashboardRightCards.innerHTML, /未来30天已知流出/);
+  assert.match(context.__elements.dashboardRightCards.innerHTML, /¥546\.80/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /计划分配/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /实际分配/);
+  assert.match(context.__elements.dashboardBottomStrip.innerHTML, /偏差 -¥328\.35/);
+  assert.doesNotMatch(html, /NaN|undefined|\[object Object\]/);
 });
 
 test("bottom strip exposes the six stage 8.2 semantic blocks", function () {
@@ -619,7 +644,9 @@ test("bottom strip exposes the six stage 8.2 semantic blocks", function () {
   );
   var html = context.__elements.dashboardBottomStrip.innerHTML;
   assert.strictEqual((html.match(/<article\b/g) || []).length, 6);
-  ["现金流总览", "收支结构", "投资回报", "财富变化", "目标进度", "本月一句话"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  ["现金流总览", "收支结构", "投资回报", "财富归因", "资金池执行", "本月一句话"].forEach(function (label) { assert.ok(html.includes(label), label); });
+  assert.match(html, /本金/);
+  assert.match(html, /浮动盈亏/);
   assert.match(html, /收支贡献 \+¥700\.00/);
   assert.match(html, /稳住节奏/);
   assert.match(html, /慢就是快，复利是时间给耐心者的奖赏。/);
@@ -659,10 +686,32 @@ test("left asset metrics label pending allocation by its real semantics", functi
     400
   );
   var html = context.__elements.dashboardAssetMetrics.innerHTML;
-  assert.match(html, /本月可分配/);
+  assert.match(html, /本月待分配/);
   assert.match(html, /¥456\.00/);
   assert.match(html, /收入减支出减投入/);
   assert.doesNotMatch(html, /可动用资金/);
+});
+
+test("first-use dashboard separates unknown values and renders an actionable guide", function () {
+  var context = createContext();
+  context.__elements.currentMonth.value = "2026-08";
+  context.state = context.normalizeState(null);
+  context.renderDashboard(context.buildRenderContext("2026-08"));
+  assert.match(context.__elements.dashboardAssetHealth.textContent, /待评估/);
+  assert.strictEqual(context.__elements.dashboardTotalAsset.textContent, "待建账");
+  assert.match(context.__elements.dashboardAssetMetrics.innerHTML, /待记录/);
+  assert.match(context.__elements.dashboardRightCards.innerHTML, /先建立三条真实基线/);
+  assert.match(context.__elements.dashboardRightCards.innerHTML, /去建账户/);
+  assert.doesNotMatch(context.__elements.wealthCompassNodes.innerHTML, /本月平稳|0项/);
+  assert.doesNotMatch(context.__elements.dashboardBottomStatus.innerHTML, /账目结构正常|本地可用/);
+});
+
+test("fallback backup copy never claims an unverifiable browser download succeeded", function () {
+  var context = createContext();
+  var message = context.backupResultMessage({ ok: true, verified: false, bytes: 2048 });
+  assert.match(message, /已发起浏览器下载/);
+  assert.match(message, /下载列表确认/);
+  assert.doesNotMatch(message, /备份已成功|备份已保存/);
 });
 
 test("backup access and existing page navigation remain available outside the dashboard core", function () {

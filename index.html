@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="styles.css?v=32">
+  <link rel="stylesheet" href="styles.css?v=33">
 </head>
 <body>
   <div class="app">
@@ -124,9 +124,9 @@
             <section class="dashboard-asset-card dashboard-panel" aria-label="净资产">
               <div class="dashboard-panel-head">
                 <h3>净资产</h3>
-                <span id="dashboardAssetHealth" class="dashboard-pill">执行健康 --</span>
+                <button id="dashboardAssetHealth" class="dashboard-pill dashboard-health-trigger" type="button" data-health-detail="all" aria-label="查看执行健康评分说明">执行健康 · 待评估</button>
               </div>
-              <strong id="dashboardTotalAsset" class="dashboard-total-asset">¥0.00</strong>
+              <strong id="dashboardTotalAsset" class="dashboard-total-asset">待建账</strong>
               <div id="dashboardAssetChange" class="dashboard-change-row"></div>
               <div id="dashboardAssetMetrics" class="dashboard-asset-metrics"></div>
               <div class="dashboard-mini-chart-block">
@@ -219,7 +219,8 @@
             <aside id="dashboardRightCards" class="dashboard-right-cards" aria-label="首页信息卡"></aside>
           </div>
 
-          <section id="dashboardBottomStrip" class="dashboard-bottom-strip dashboard-panel" aria-label="本月数据带"></section>
+          <div id="dashboardStripHint" class="dashboard-strip-hint">左右滑动查看全部 6 项 <span aria-hidden="true">→</span></div>
+          <section id="dashboardBottomStrip" class="dashboard-bottom-strip dashboard-panel" aria-label="本月数据带" aria-describedby="dashboardStripHint" tabindex="0"></section>
           <nav class="dashboard-bottom-nav dashboard-panel" aria-label="底部状态与导航">
             <div id="dashboardBottomStatus" class="dashboard-bottom-status" aria-label="底部状态入口"></div>
             <div class="dashboard-bottom-nav-actions" aria-label="页面导航入口">
@@ -322,13 +323,13 @@
         <section class="flow-topbar">
           <div class="flow-topbar-hero">
             <span>待分配资金</span>
-            <strong id="flowOvSurplus">¥0.00</strong>
+            <strong id="flowOvSurplus">待记录</strong>
             <span id="flowOvSurplusSub"></span>
           </div>
           <div class="flow-topbar-stats">
-            <div class="flow-stat"><span>本月收入</span><strong id="flowOvIncome">¥0.00</strong></div>
-            <div class="flow-stat"><span>本月支出</span><strong id="flowOvExpense">¥0.00</strong></div>
-            <div class="flow-stat"><span>本月投资</span><strong id="flowOvInvestment">¥0.00</strong></div>
+            <div class="flow-stat"><span>本月收入</span><strong id="flowOvIncome">待记录</strong></div>
+            <div class="flow-stat"><span>本月支出</span><strong id="flowOvExpense">待记录</strong></div>
+            <div class="flow-stat"><span>本月投资</span><strong id="flowOvInvestment">待记录</strong></div>
             <div class="flow-stat"><span>工资到账</span><strong id="flowOvSalary">--</strong></div>
             <div class="flow-stat"><span>资金状态</span><strong id="flowOvStatus">--</strong></div>
           </div>
@@ -421,11 +422,11 @@
                 <span id="monthlyReportStatus" class="status-pill">持续观察</span>
               </div>
               <div class="monthly-report-grid">
-                <div><span>本月实际收入</span><strong id="mrIncome">¥0.00</strong></div>
-                <div><span>本月支出</span><strong id="mrExpense">¥0.00</strong></div>
-                <div><span>本月投入/储蓄</span><strong id="mrInvestment">¥0.00</strong></div>
-                <div><span>待分配资金</span><strong id="mrSurplus">¥0.00</strong></div>
-                <div><span>月末净资产</span><strong id="mrAsset">¥0.00</strong></div>
+                <div><span>本月实际收入</span><strong id="mrIncome">待记录</strong></div>
+                <div><span>本月支出</span><strong id="mrExpense">待记录</strong></div>
+                <div><span>本月投入/储蓄</span><strong id="mrInvestment">待记录</strong></div>
+                <div><span>待分配资金</span><strong id="mrSurplus">待记录</strong></div>
+                <div><span>月末净资产</span><strong id="mrAsset">待建账</strong></div>
                 <div><span>工资到账状态</span><strong id="mrSalary">等待填写计划收入</strong></div>
                 <div><span>系统状态判断</span><strong id="mrSystem">持续观察</strong></div>
               </div>
@@ -433,15 +434,15 @@
               <div class="monthly-mini-grid">
                 <article class="card monthly-mini-card">
                   <h3>收入执行</h3>
-                  <p id="mrIncomeExec">计划收入：待填写计划收入｜实际收入：¥0.00｜到账比例：--</p>
+                  <p id="mrIncomeExec">计划收入：待填写计划收入｜实际收入：待记录｜到账比例：--</p>
                 </article>
                 <article class="card monthly-mini-card">
                   <h3>预算执行</h3>
-                  <p id="mrBudgetExec">消费预算：待填写计划收入｜总支出：¥0.00｜预算结余：待填写计划收入</p>
+                  <p id="mrBudgetExec">消费预算：待填写计划收入｜总支出：待记录｜预算结余：待填写计划收入</p>
                 </article>
                 <article class="card monthly-mini-card">
                   <h3>资产动作</h3>
-                  <p id="mrAssetExec">本月投入/储蓄：¥0.00｜资产账户数量：0｜目标推进数量：0</p>
+                  <p id="mrAssetExec">本月投入/储蓄：待记录｜金融资产：待建账｜净资产：待建账</p>
                 </article>
               </div>
             </div>
@@ -496,15 +497,15 @@
         <section class="invest-topbar">
           <div class="invest-topbar-hero">
             <span>投资总市值</span>
-            <strong id="investCockpitValue">¥0.00</strong>
+            <strong id="investCockpitValue">待记录</strong>
             <div class="invest-topbar-meta">
-              <span>累计本金 <strong id="investCockpitPrincipal">¥0.00</strong></span>
-              <span>浮动盈亏 <strong id="investCockpitPnl">¥0.00</strong></span>
+              <span>累计本金 <strong id="investCockpitPrincipal">待记录</strong></span>
+              <span>浮动盈亏 <strong id="investCockpitPnl">待评估</strong></span>
               <span>总收益率 <strong id="investCockpitRoi">--</strong></span>
             </div>
           </div>
           <div class="invest-topbar-stats">
-            <div class="invest-stat"><span>本月净投入</span><strong id="investStatNetIn">¥0.00</strong></div>
+            <div class="invest-stat"><span>本月净投入</span><strong id="investStatNetIn">待记录</strong></div>
             <div class="invest-stat"><span>本月净值变化</span><strong id="investStatMonthChange">--</strong></div>
             <div class="invest-stat"><span>资产账户</span><strong id="investStatAccountCount">0</strong></div>
             <div class="invest-stat"><span>最近更新</span><strong id="investStatLastUpdate">--</strong></div>
@@ -751,70 +752,73 @@
         <div class="card data-center-head data-health-hero">
           <span class="context-label">数据健康</span>
           <h2>你的数据由当前设备保管</h2>
-          <p class="subtitle">数据保存在当前浏览器 localStorage 中建议每周导出一次 JSON 备份导入会覆盖当前本地数据，请确认文件无误</p>
+          <p class="subtitle">主数据保存在当前浏览器；自动备份写入同一浏览器的独立存储。手动导出 JSON 才能抵御清理浏览器数据或设备损坏。</p>
+          <div class="data-storage-health" role="status" aria-live="polite">
+            <strong id="dataStorageHealthLabel" class="warning">存储状态待检测</strong>
+            <span id="dataStorageHealthDetail">正在检查本地写入和自动备份能力</span>
+          </div>
           <div class="notice data-save-note">最近保存时间：<strong id="dataLastSavedText">--</strong></div>
         </div>
         <div class="data-actions">
-          <div class="card data-card sync-card">
-            <h2>多设备同步</h2>
-            <p class="subtitle" id="backendAuthStatus">本地模式：云同步未初始化</p>
-            <div class="sync-config-block">
-              <div class="section-title compact"><div><h2>云同步配置</h2><p>填写 Supabase 项目 URL 与 anon/publishable key；配置只保存在本浏览器，不会提交到 Git</p></div></div>
-              <div class="form-grid sync-login-grid">
-                <div class="field"><label>Supabase URL</label><input type="url" id="backendConfigUrl" placeholder="https://xxxx.supabase.co"></div>
-                <div class="field"><label>anon / publishable key</label><input type="password" id="backendConfigAnonKey" placeholder="Supabase 公开 key"></div>
-                <div class="field"><label>同源客户端脚本</label><input type="text" id="backendConfigScript" placeholder="./scripts/vendor/supabase-js.js" required><small>必须是当前站点内的 supabase-js 文件</small></div>
-              </div>
-              <div class="actions">
-                <button class="btn primary small" type="button" id="backendSaveConfig">保存配置</button>
-                <button class="btn ghost small" type="button" id="backendClearConfig">清除配置</button>
-              </div>
-            </div>
-            <div class="form-grid sync-login-grid">
-              <div class="field"><label>邮箱</label><input type="email" id="backendLoginEmail" placeholder="name@example.com"></div>
-              <div class="field"><label>验证码</label><input type="text" id="backendOtpToken" inputmode="numeric" placeholder="可选"></div>
-              <div class="field sync-login-actions">
-                <span class="field-label" aria-hidden="true">操作</span>
-                <div class="actions">
-            <button class="btn ghost small" type="button" id="backendSendLogin">发送登录邮件</button>
-                  <button class="btn ghost small" type="button" id="backendVerifyOtp">验证登录</button>
-                  <button class="btn ghost small" type="button" id="backendLogout">退出</button>
-                </div>
-              </div>
-            </div>
-            <div class="notice data-save-note">云同步状态：<strong id="backendSyncStatus">本地可用，云同步待登录</strong></div>
-            <div class="sync-meta-grid">
-              <div><span>本地保存</span><strong id="backendLocalSavedAt">--</strong></div>
-              <div><span>云端同步</span><strong id="backendCloudSyncedAt">--</strong></div>
-            </div>
-            <div class="actions">
-              <button class="btn ghost" type="button" id="backendPullCloud">拉取云端</button>
-              <button class="btn ghost" type="button" id="backendPushLocal">上传本机</button>
-            </div>
-          </div>
           <div class="card data-card">
             <h2>导出数据</h2>
-            <p class="subtitle">导出完整 JSON，可用于备份或换电脑</p>
+            <p class="subtitle">导出完整 JSON。支持直接写入文件时会在关闭文件后确认；普通浏览器下载需到下载列表确认。</p>
             <button class="btn ghost" id="exportData">下载完整 JSON</button>
           </div>
-          <div class="card data-card import-card">
-            <h2>导入备份</h2>
-            <p class="subtitle">选择之前导出的 JSON 文件，将覆盖当前浏览器中的本地数据</p>
-            <div class="notice import-warning">导入前系统会先自动导出当前数据作为备份</div>
-            <input type="file" id="importFile" accept="application/json,.json">
-            <div class="actions"><button class="btn ghost" id="importData">导入 JSON 数据</button></div>
-          </div>
           <div class="card data-card idb-backup-card">
-            <h2>自动备份</h2>
+            <h2>自动备份与恢复</h2>
             <p class="subtitle" id="idbBackupStatus">读取自动备份状态中…</p>
             <div class="notice data-save-note">最新自动备份：<strong id="idbBackupLatest">--</strong></div>
             <div class="actions"><button class="btn ghost" type="button" id="idbRestoreLatest">从最新备份恢复</button></div>
+          </div>
+          <div class="card data-card import-card">
+            <h2>导入备份</h2>
+            <p class="subtitle">选择之前导出的 JSON 文件，将覆盖当前浏览器中的本地数据，最大 16 MB。</p>
+            <div class="notice import-warning">覆盖前会写入并读回校验一个本机检查点，同时发起当前数据的 JSON 下载。</div>
+            <input type="file" id="importFile" accept="application/json,.json">
+            <div class="actions"><button class="btn ghost" id="importData">校验并导入 JSON</button></div>
           </div>
           <div class="card data-card idb-audit-card">
             <h2>操作记录</h2>
             <p class="subtitle">最近的本机操作审计，便于追溯</p>
             <div id="idbAuditList" class="idb-audit-list"></div>
           </div>
+          <details class="card data-card sync-card experimental-sync-card">
+            <summary><span>实验性功能</span><strong>多设备云同步</strong><small>默认关闭；本地备份与恢复不依赖它</small></summary>
+            <div class="experimental-sync-body">
+              <p class="subtitle" id="backendAuthStatus">本地模式：云同步未初始化</p>
+              <div class="sync-config-block">
+                <div class="section-title compact"><div><h2>云同步配置</h2><p>填写 Supabase 项目 URL 与 anon/publishable key；配置只保存在本浏览器，不会提交到 Git</p></div></div>
+                <div class="form-grid sync-login-grid">
+                  <div class="field"><label>Supabase URL</label><input type="url" id="backendConfigUrl" placeholder="https://xxxx.supabase.co"></div>
+                  <div class="field"><label>anon / publishable key</label><input type="password" id="backendConfigAnonKey" placeholder="Supabase 公开 key"></div>
+                  <div class="field"><label>同源客户端脚本</label><input type="text" id="backendConfigScript" placeholder="./scripts/vendor/supabase-js.js" required><small>必须是当前站点内的 supabase-js 文件</small></div>
+                </div>
+                <div class="actions">
+                  <button class="btn primary small" type="button" id="backendSaveConfig">保存配置</button>
+                  <button class="btn ghost small" type="button" id="backendClearConfig">清除配置</button>
+                </div>
+              </div>
+              <div class="form-grid sync-login-grid">
+                <div class="field"><label>邮箱</label><input type="email" id="backendLoginEmail" placeholder="name@example.com"></div>
+                <div class="field"><label>验证码</label><input type="text" id="backendOtpToken" inputmode="numeric" placeholder="可选"></div>
+                <div class="field sync-login-actions"><span class="field-label" aria-hidden="true">操作</span><div class="actions">
+                  <button class="btn ghost small" type="button" id="backendSendLogin">发送登录邮件</button>
+                  <button class="btn ghost small" type="button" id="backendVerifyOtp">验证登录</button>
+                  <button class="btn ghost small" type="button" id="backendLogout">退出</button>
+                </div></div>
+              </div>
+              <div class="notice data-save-note">云同步状态：<strong id="backendSyncStatus">本地可用，云同步待登录</strong></div>
+              <div class="sync-meta-grid">
+                <div><span>本地保存</span><strong id="backendLocalSavedAt">--</strong></div>
+                <div><span>云端同步</span><strong id="backendCloudSyncedAt">--</strong></div>
+              </div>
+              <div class="actions">
+                <button class="btn ghost" type="button" id="backendPullCloud">拉取云端</button>
+                <button class="btn ghost" type="button" id="backendPushLocal">上传本机</button>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
     </main>
@@ -827,32 +831,32 @@
     <button id="actionFeedbackButton" type="button">撤销</button>
     <button class="action-feedback-close" type="button" data-action="dismiss-feedback" aria-label="关闭提示">×</button>
   </div>
-  <script defer src="scripts/app-state.js?v=32"></script>
-  <script defer src="scripts/app-ui-feedback.js?v=32"></script>
-  <script defer src="scripts/app-validators.js?v=32"></script>
-  <script defer src="scripts/app-migrations.js?v=32"></script>
-  <script defer src="scripts/app-idb.js?v=32"></script>
-  <script defer src="scripts/app-storage.js?v=32"></script>
-  <script defer src="scripts/app-backend-config.js?v=32"></script>
-  <script defer src="scripts/app-calculations.js?v=32"></script>
-  <script defer src="scripts/app-render-core.js?v=32"></script>
-  <script defer src="scripts/dashboard/dashboard-formatters.js?v=32"></script>
-  <script defer src="scripts/dashboard/render-bottom-strip.js?v=32"></script>
-  <script defer src="scripts/app-render-dashboard.js?v=32"></script>
-  <script defer src="scripts/app-render-assets.js?v=32"></script>
-  <script defer src="scripts/app-render-records.js?v=32"></script>
-  <script defer src="scripts/app-render-investments.js?v=32"></script>
-  <script defer src="scripts/app-render-monthly.js?v=32"></script>
-  <script defer src="scripts/app-render-flow.js?v=32"></script>
-  <script defer src="scripts/app-actions-data.js?v=32"></script>
-  <script defer src="scripts/app-actions-crud.js?v=32"></script>
-  <script defer src="scripts/app-actions-quick-entry.js?v=32"></script>
-  <script defer src="scripts/app-actions-modals.js?v=32"></script>
-  <script defer src="scripts/app-actions-forms.js?v=32"></script>
-  <script defer src="scripts/app-auth.js?v=32"></script>
-  <script defer src="scripts/app-sync.js?v=32"></script>
-  <script defer src="scripts/app-actions-navigation.js?v=32"></script>
-  <script defer src="scripts/app-actions.js?v=32"></script>
-  <script defer src="scripts/app-pwa.js?v=32"></script>
+  <script defer src="scripts/app-state.js?v=33"></script>
+  <script defer src="scripts/app-ui-feedback.js?v=33"></script>
+  <script defer src="scripts/app-validators.js?v=33"></script>
+  <script defer src="scripts/app-migrations.js?v=33"></script>
+  <script defer src="scripts/app-idb.js?v=33"></script>
+  <script defer src="scripts/app-storage.js?v=33"></script>
+  <script defer src="scripts/app-backend-config.js?v=33"></script>
+  <script defer src="scripts/app-calculations.js?v=33"></script>
+  <script defer src="scripts/app-render-core.js?v=33"></script>
+  <script defer src="scripts/dashboard/dashboard-formatters.js?v=33"></script>
+  <script defer src="scripts/dashboard/render-bottom-strip.js?v=33"></script>
+  <script defer src="scripts/app-render-dashboard.js?v=33"></script>
+  <script defer src="scripts/app-render-assets.js?v=33"></script>
+  <script defer src="scripts/app-render-records.js?v=33"></script>
+  <script defer src="scripts/app-render-investments.js?v=33"></script>
+  <script defer src="scripts/app-render-monthly.js?v=33"></script>
+  <script defer src="scripts/app-render-flow.js?v=33"></script>
+  <script defer src="scripts/app-actions-data.js?v=33"></script>
+  <script defer src="scripts/app-actions-crud.js?v=33"></script>
+  <script defer src="scripts/app-actions-quick-entry.js?v=33"></script>
+  <script defer src="scripts/app-actions-modals.js?v=33"></script>
+  <script defer src="scripts/app-actions-forms.js?v=33"></script>
+  <script defer src="scripts/app-auth.js?v=33"></script>
+  <script defer src="scripts/app-sync.js?v=33"></script>
+  <script defer src="scripts/app-actions-navigation.js?v=33"></script>
+  <script defer src="scripts/app-actions.js?v=33"></script>
+  <script defer src="scripts/app-pwa.js?v=33"></script>
 </body>
 </html>

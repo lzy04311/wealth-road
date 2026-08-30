@@ -83,6 +83,7 @@ test("manifest declares standalone app icons", function () {
   assert.strictEqual(manifest.display, "standalone");
   assert.strictEqual(manifest.start_url, "./index.html");
   assert.strictEqual(manifest.scope, "./");
+  assert.strictEqual(manifest.orientation, "any");
   assert.ok(Array.isArray(manifest.icons));
   assert.ok(manifest.icons.some(function (icon) {
     return icon.src === "icons/icon-192.png" && icon.sizes === "192x192";
@@ -90,6 +91,16 @@ test("manifest declares standalone app icons", function () {
   assert.ok(manifest.icons.some(function (icon) {
     return icon.src === "icons/icon-512.png" && icon.sizes === "512x512";
   }));
+});
+
+test("data safety actions precede collapsed experimental cloud sync", function () {
+  var html = readText("index.html");
+  var exportAt = html.indexOf('id="exportData"');
+  var backupAt = html.indexOf('id="idbRestoreLatest"');
+  var importAt = html.indexOf('id="importData"');
+  var cloudAt = html.indexOf('class="card data-card sync-card experimental-sync-card"');
+  assert.ok(exportAt > 0 && backupAt > exportAt && importAt > backupAt && cloudAt > importAt);
+  assert.match(html, /<details class="card data-card sync-card experimental-sync-card">/);
 });
 
 test("manifest icon files exist", function () {

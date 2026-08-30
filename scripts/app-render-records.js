@@ -188,7 +188,7 @@ function renderExpenses(ctx) {
   var month = currentMonth(), allRecords = state.expenses.filter(function (item) { return item.month === month; }), records = filterFlowRecords(allRecords, "expense"), total = sum(records, function (item) { return item.amount; }), monthTotal = sum(allRecords, function (item) { return item.amount; });
   var renderCtx = ctx && ctx.month === month ? ctx : getRenderContext(month);
   var s = renderCtx.summary;
-  byId("expenseModuleSummary").innerHTML = pill("本月记录", allRecords.length + " 条") + pill("支出合计", money(monthTotal)) + pill("预算状态", s.overBudget ? "已超支" : "正常");
+  byId("expenseModuleSummary").innerHTML = pill("本月记录", allRecords.length + " 条") + pill("支出合计", money(monthTotal)) + pill("预算状态", !s.hasPlannedIncome ? "待计划" : (s.overBudget ? "已超支" : "已核算"));
   if (s.orphanExpenseCount > 0) byId("expenseModuleSummary").innerHTML += "<span class=\"summary-pill warning\">发现 " + s.orphanExpenseCount + " 条孤立支出（" + money(s.orphanExpenseTotal) + "），已计入总支出，需修复分类账户。</span>";
   byId("expenseSummary").textContent = flowRecordSummary(allRecords, records, total, "合计");
   byId("expenseList").innerHTML = recordList(records, "expense", !!flowRecordSearch);

@@ -8,7 +8,7 @@ function updateSaveStatusUI() {
   var text = savedTimeText(lastSavedAt);
   var topEl = byId("saveStatusText");
   var dataEl = byId("dataLastSavedText");
-  if (topEl) topEl.textContent = "已保存";
+  if (topEl) topEl.textContent = lastSavedAt ? "已保存" : "尚未保存";
   if (dataEl) dataEl.textContent = text;
 }
 

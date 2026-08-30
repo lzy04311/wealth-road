@@ -1,23 +1,26 @@
 "use strict";
 
-function renderDashboardBottomStrip(s, assetSnap, change, attribution, primaryGoal) {
+function renderDashboardBottomStrip(s, assetSnap, change, attribution, primaryGoal, readiness) {
   var strip = byId("dashboardBottomStrip");
   if (!strip) return;
   var month = currentMonth();
   var expenseRows = dashboardExpenseCategoryRows(month);
-  var sentence = s.freeCash < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。");
+  var sentence = readiness && readiness.onboardingNeeded ? "先完成实际账户、月度计划和第一笔记录。" : (s.freeCash < 0 ? "先守住现金流，再谈进攻。" : (assetSnap.roi != null && assetSnap.roi > 0 ? "慢就是快，复利是时间给耐心者的奖赏。" : "让每一笔钱回到它该去的位置。"));
   var cashRate = s.income > 0 ? Math.max(0, Math.min(100, s.expense / s.income * 100)) : 0;
   strip.innerHTML = [
-    dashboardStripCashModule(s, cashRate),
+    dashboardStripCashModule(s, cashRate, readiness),
     dashboardStripStructureModule(s, expenseRows),
     dashboardStripInvestModule(assetSnap, attribution),
-    dashboardStripWealthChangeModule(change, attribution),
-    dashboardStripGoalModule(primaryGoal),
-    dashboardStripQuoteModule(sentence)
+    dashboardStripWealthAttributionModule(change, attribution),
+    dashboardStripAllocationModule(dashboardAllocationExecution(month), readiness),
+    dashboardStripQuoteModule(sentence, readiness)
   ].join("");
 }
 
-function dashboardStripCashModule(s, cashRate) {
+function dashboardStripCashModule(s, cashRate, readiness) {
+  if (readiness && !readiness.hasCashflowEvidence) {
+    return "<article class=\"dashboard-strip-item dashboard-strip-cash\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">现金流总览</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"warning\">待记录</strong></div><div class=\"dashboard-strip-foot\">记录收入与支出后计算本月现金流</div></div></div></article>";
+  }
   var flowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
   return "<article class=\"dashboard-strip-item dashboard-strip-cash\">"
     + "<div class=\"dashboard-strip-block\">"
@@ -26,7 +29,7 @@ function dashboardStripCashModule(s, cashRate) {
     + "<div class=\"dashboard-strip-kv\"><em>收入减支出</em><strong class=\"" + (s.netCashFlow >= 0 ? "positive" : "negative") + "\">" + flowText + "</strong></div>"
     + "<div class=\"dashboard-strip-bar\" style=\"--strip-income-ratio:" + esc((100 - cashRate).toFixed(1)) + "%\"></div>"
     + "<div class=\"dashboard-strip-split\"><span>收入 " + esc(money(s.income)) + "</span><span>支出 " + esc(money(s.expense)) + "</span></div>"
-    + "<div class=\"dashboard-strip-foot\">待分配 " + esc(money(s.freeCash)) + "</div>"
+    + "<div class=\"dashboard-strip-foot\">本月待分配 " + esc(money(s.freeCash)) + "</div>"
     + "</div>"
     + "</div></article>";
 }
@@ -47,58 +50,69 @@ function dashboardStripStructureModule(s, expenseRows) {
 }
 
 function dashboardStripInvestModule(assetSnap, attribution) {
-  var metric = dashboardInvestmentMetric(assetSnap, attribution);
+  var hasSnapshotData = !!assetSnap.performanceReady;
+  var principalText = hasSnapshotData ? money(assetSnap.performancePrincipal) : "—";
+  var pnlText = hasSnapshotData ? dashboardSignedMoney(assetSnap.pnl) : "—";
+  var pnlClass = !hasSnapshotData ? "warning" : (assetSnap.pnl >= 0 ? "positive" : "negative");
   var roiText = assetSnap.roi == null ? "--" : (assetSnap.roi >= 0 ? "+" : "") + assetSnap.roi.toFixed(2) + "%";
   return "<article class=\"dashboard-strip-item dashboard-strip-invest\">"
     + "<div class=\"dashboard-strip-block\">"
     + "<span class=\"dashboard-strip-title\">投资回报</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-double\"><div><em>" + esc(metric.context) + "</em><strong class=\"" + esc(metric.className) + "\">" + esc(metric.value) + "</strong></div><div><em>当前收益率</em><b>" + esc(roiText) + "</b></div></div>"
+    + "<div class=\"dashboard-strip-double\"><div><em>本金</em><strong>" + esc(principalText) + "</strong></div><div><em>浮动盈亏</em><strong class=\"" + pnlClass + "\">" + esc(pnlText) + "</strong></div></div>"
+    + "<div class=\"dashboard-strip-sub\">当前收益率 " + esc(roiText) + "</div>"
     + "<div class=\"dashboard-strip-invest-line\">" + dashboardStripSparkline(assetSnap) + "</div>"
     + "</div>"
     + "</div></article>";
 }
 
-function dashboardStripWealthChangeModule(change, attribution) {
+function dashboardStripWealthAttributionModule(change, attribution) {
   if (!change.hasBaseline) {
-    return "<article class=\"dashboard-strip-item dashboard-strip-allocation\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">财富变化</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>本月财富变化</em><strong class=\"warning\">基线待补</strong></div><div class=\"dashboard-strip-foot\">暂不展示变化归因</div></div></div></article>";
+    return "<article class=\"dashboard-strip-item dashboard-strip-allocation\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">财富归因</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>本月净变化</em><strong class=\"warning\">等待形成完整基线</strong></div><div class=\"dashboard-strip-foot\">基线完整后展示收支、投资、负债与调整</div></div></div></article>";
   }
-  var other = numberValue(attribution.otherChange + attribution.unexplained);
-  var rows = [
+  var explanatoryRows = [
     { label: "收支贡献", value: attribution.cashflowContribution },
     { label: "投资损益", value: attribution.investmentPnl },
     { label: "负债变化", value: attribution.liabilityChange },
-    { label: "其他/未归因", value: other }
-  ];
+    { label: "核对调整", value: attribution.otherChange }
+  ].sort(function (a, b) { return Math.abs(numberValue(b.value)) - Math.abs(numberValue(a.value)); }).slice(0, 2);
+  explanatoryRows.push({ label: "未解释变化", value: attribution.unexplained });
   return "<article class=\"dashboard-strip-item dashboard-strip-allocation\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">财富变化</span>"
+    + "<span class=\"dashboard-strip-title\">财富归因</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-kv\"><em>本月财富变化</em><strong class=\"" + (change.change >= 0 ? "positive" : "negative") + "\">" + esc(dashboardSignedMoney(change.change)) + "</strong></div>"
-    + "<div class=\"dashboard-strip-list\">" + rows.map(function (row) { return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(row.label + " " + dashboardSignedMoney(row.value)) + "</span>"; }).join("") + "</div>"
+    + "<div class=\"dashboard-strip-kv\"><em>本月净变化</em><strong class=\"" + (change.change >= 0 ? "positive" : "negative") + "\">" + esc(dashboardSignedMoney(change.change)) + "</strong></div>"
+    + "<div class=\"dashboard-strip-list\">" + explanatoryRows.map(function (row) { return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(row.label + " " + dashboardSignedMoney(row.value)) + "</span>"; }).join("") + "</div>"
     + "</div>"
     + "</div></article>";
 }
 
-function dashboardStripGoalModule(goal) {
-  if (!goal) return "<article class=\"dashboard-strip-item dashboard-strip-goal\"><div class=\"dashboard-strip-block\"><span class=\"dashboard-strip-title\">目标进度</span><div class=\"dashboard-strip-body\"><div class=\"dashboard-strip-kv\"><em>主要目标</em><strong class=\"warning\">暂无目标</strong></div><div class=\"dashboard-strip-foot\">尚未设置未完成资金目标</div></div></div></article>";
+function dashboardStripAllocationModule(execution, readiness) {
+  var planText = execution.hasPlan ? money(execution.planned) : "待填写计划收入";
+  var actualUnknown = !!(readiness && !readiness.hasMonthActivity && !execution.hasPlan);
+  var actualClass = !execution.hasPlan ? "warning" : (execution.deviation === 0 ? "positive" : "warning");
+  var pools = execution.pools.filter(function (row) { return row.planned != null || row.actual > 0; }).slice(0, 3);
+  var poolText = pools.length ? pools.map(function (row) {
+    var planned = row.planned == null ? "按实际" : numberValue(row.budgetPercent).toFixed(1) + "%";
+    return dashboardShortName(row.name) + " " + planned + " · 余额 " + money(row.balance);
+  }) : ["暂无资金池分配记录"];
   return "<article class=\"dashboard-strip-item dashboard-strip-goal\">"
     + "<div class=\"dashboard-strip-block\">"
-    + "<span class=\"dashboard-strip-title\">目标进度</span>"
+    + "<span class=\"dashboard-strip-title\">资金池执行</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<div class=\"dashboard-strip-goal-head\"><span>" + esc(dashboardBriefText(goal.name, 8)) + "</span><strong class=\"positive\">" + esc(goal.progress.toFixed(0)) + "%</strong></div>"
-    + "<div class=\"dashboard-strip-progress\" style=\"--strip-progress:" + esc(goal.progress.toFixed(1)) + "%\"><b></b></div>"
-    + "<div class=\"dashboard-strip-goal-foot\"><span>当前 " + esc(money(goal.current)) + "</span><span>剩余 " + esc(money(goal.remaining)) + "</span></div>"
+    + "<div class=\"dashboard-strip-double\"><div><em>计划分配</em><strong class=\"" + (!execution.hasPlan ? "warning" : "") + "\">" + esc(planText) + "</strong></div><div><em>实际分配</em><strong class=\"" + actualClass + "\">" + esc(actualUnknown ? "待记录" : money(execution.actual)) + "</strong></div></div>"
+    + "<div class=\"dashboard-strip-list\">" + poolText.map(function (text) { return "<span><i class=\"dashboard-strip-dot\" aria-hidden=\"true\"></i>" + esc(text) + "</span>"; }).join("") + "</div>"
+    + "<div class=\"dashboard-strip-foot\">" + esc(execution.hasPlan ? "偏差 " + dashboardSignedMoney(execution.deviation) : "记录收入归属与待分配转入") + "</div>"
     + "</div>"
     + "</div></article>";
 }
 
-function dashboardStripQuoteModule(sentence) {
+function dashboardStripQuoteModule(sentence, readiness) {
   return "<article class=\"dashboard-strip-item dashboard-strip-quote\">"
     + "<div class=\"dashboard-strip-block\">"
     + "<span class=\"dashboard-strip-title\">本月一句话</span>"
     + "<div class=\"dashboard-strip-body\">"
-    + "<strong class=\"dashboard-strip-quote-main\">稳住节奏</strong>"
+    + "<strong class=\"dashboard-strip-quote-main\">" + esc(readiness && readiness.onboardingNeeded ? "从真实数据开始" : "稳住节奏") + "</strong>"
     + "<small class=\"dashboard-strip-desc\">" + esc(sentence) + "</small>"
     + "<div class=\"dashboard-strip-quote-art\"></div>"
     + "</div>"

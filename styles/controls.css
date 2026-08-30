@@ -12,7 +12,7 @@ textarea { min-height: 150px; resize: vertical; }
 
 /* ========== Buttons ========== */
 .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.btn { min-height: 40px; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 8px 16px; background: var(--surface-soft); color: var(--text); font-weight: 600; transition: background .15s, box-shadow .15s, transform .15s; }
+.btn { min-height: 44px; border: 1px solid transparent; border-radius: var(--radius-sm); padding: 8px 16px; background: var(--surface-soft); color: var(--text); font-weight: 600; transition: background .15s, box-shadow .15s, transform .15s; }
 .btn:hover { box-shadow: var(--shadow-xs); }
 .btn.primary { background: linear-gradient(135deg, #2B2D2F, #4D4E50); color: var(--surface); border-color: rgba(201,168,106,.42); box-shadow: 0 6px 18px rgba(29,29,31,.14), inset 0 0 0 1px rgba(216,180,95,.34); }
 .btn.primary:hover { background: #1D1D1F; box-shadow: 0 10px 24px rgba(29,29,31,.20), inset 0 0 0 1px rgba(216,180,95,.46); transform: translateY(-1px); }

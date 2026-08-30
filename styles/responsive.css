@@ -66,7 +66,7 @@
   .module-page-mode .app { padding-bottom: 24px; }
   .module-page-mode .btn.small,
   .flow-tab,
-  .asset-kind-tabs button { min-height: 42px; }
+  .asset-kind-tabs button { min-height: 44px; }
   .flow-topbar,
   .invest-topbar,
   .flow-main { gap: 10px; }
@@ -144,8 +144,8 @@
     border-radius: var(--radius-lg);
   }
   .quick-modal-close {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     right: 10px;
     top: 10px;
   }

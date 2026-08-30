@@ -23,7 +23,10 @@ var accountNameMigration = {
 };
 var defaultBudgetPercents = { "日常开支": 25.8, "学习成长": 14.5, "长期投资": 16.1, "备用现金": 4.8, "高风险投资": 1.6, "应急金": 30.6, "娱乐消费": 6.5 };
 var defaultRules = ["应急金达到目标前，结余优先进入应急金。", "娱乐消费不能透支。", "长期投资不用于日常开支。", "高风险投资不能影响长期投资。"].join("\n");
-var MAX_IMPORT_BYTES = 1024 * 1024;
+// 导出没有体积上限，导入也必须覆盖真实可生成的中大型本地账本。
+// 16 MiB 仍保留明确的内存安全边界，并在 UI 中提前提示大文件。
+var MAX_IMPORT_BYTES = 16 * 1024 * 1024;
+var LARGE_BACKUP_WARNING_BYTES = 4 * 1024 * 1024;
 var MAX_TEXT_LENGTH = 160;
 var MAX_NOTE_LENGTH = 1200;
 var state = null;

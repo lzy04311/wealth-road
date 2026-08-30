@@ -107,6 +107,32 @@ function monthlySummary(month) {
     overBudget: plan.hasPlannedIncome && expense > spendingBudget && spendingBudget >= 0
   };
 }
+function dashboardRecordInMonth(item, month) {
+  return !!item && (item.month === month || String(item.date || "").slice(0, 7) === month);
+}
+function dashboardReadiness(month) {
+  var plan = monthlyPlan(month);
+  var monthCollections = [state.incomes, state.expenses, state.investments, state.transfers || [], state.allocations || [], state.reconciliations || []];
+  var hasMonthActivity = monthCollections.some(function (rows) { return rows.some(function (item) { return dashboardRecordInMonth(item, month); }); });
+  var hasRecordHistory = monthCollections.some(function (rows) { return rows.length > 0; });
+  var hasActualAccounts = (state.moneyAccounts || []).length > 0;
+  var hasValuation = (state.snapshots || []).length > 0 || (state.assetItems || []).length > 0 || (state.liabilities || []).length > 0
+    || state.accounts.some(function (account) { return numberValue(account.openingBalance) !== 0 || !!account.openingBalanceDate; });
+  var hasWealthEvidence = hasActualAccounts || hasValuation || state.investments.length > 0;
+  var hasFinancialEvidence = plan.hasPlannedIncome || hasRecordHistory || hasWealthEvidence;
+  return {
+    hasPlan: plan.hasPlannedIncome,
+    hasMonthActivity: hasMonthActivity,
+    hasCashflowEvidence: hasMonthActivity,
+    hasRecordHistory: hasRecordHistory,
+    hasActualAccounts: hasActualAccounts,
+    hasValuation: hasValuation,
+    hasWealthEvidence: hasWealthEvidence,
+    hasFinancialEvidence: hasFinancialEvidence,
+    canJudgeExecution: plan.hasPlannedIncome || hasMonthActivity,
+    onboardingNeeded: !hasFinancialEvidence
+  };
+}
 function financialHealthLevel(score) {
   var thresholds = FINANCIAL_HEALTH_MODEL.thresholds;
   if (score >= thresholds.stable) return { label: "稳定", className: "positive" };
@@ -115,6 +141,8 @@ function financialHealthLevel(score) {
   return { label: "高压力", className: "negative" };
 }
 function financialHealth(month) {
+  var readiness = dashboardReadiness(month);
+  if (!readiness.canJudgeExecution) return { score: null, level: "待评估", className: "warning", advice: "先填写月度计划或记录本月第一笔真实流水", label: FINANCIAL_HEALTH_MODEL.label, modelVersion: FINANCIAL_HEALTH_MODEL.version, status: "insufficient" };
   var s = monthlySummary(month), snap = assetSnapshotSummary(month), isCurrent = month === monthOf(today()), todayDate = isCurrent ? new Date().getDate() : 31;
   var model = FINANCIAL_HEALTH_MODEL, adjustments = model.adjustments;
   var score = model.baseScore;
@@ -132,7 +160,7 @@ function financialHealth(month) {
   score = Math.max(0, Math.min(100, Math.round(score)));
   var level = financialHealthLevel(score);
   var advice = !s.hasPlannedIncome ? "先填写本月计划收入，预算判断才会精确" : (s.overBudget ? "消费预算已超支，先检查非必要支出" : (s.freeCash < 0 ? "待分配资金为负，检查投入节奏和支出结构" : (snap.completeness !== "complete" ? "补齐净值更新，建立资产判断基线" : "资金节奏稳定，继续按当前规则记录")));
-  return { score: score, level: level.label, className: level.className, advice: advice, label: model.label, modelVersion: model.version };
+  return { score: score, level: level.label, className: level.className, advice: advice, label: model.label, modelVersion: model.version, status: "rated" };
 }
 function monthlyForecast(month) {
   var s = monthlySummary(month), parts = String(month || currentMonth()).split("-"), y = parseInt(parts[0], 10), m = parseInt(parts[1], 10);
@@ -521,4 +549,52 @@ function upcomingFinanceEvents(days) {
     add({ date: date, daysLeft: daysUntilDate(date), type: "payday", title: "发薪日 " + plan.payday + " 号", amount: null, direction: "in", sourceId: "monthly-plan-" + month });
   });
   return events.sort(function (a, b) { var byDate = String(a.date).localeCompare(String(b.date)); return byDate || String(a.type).localeCompare(String(b.type)); });
+}
+function dashboardMinimumDebtServiceRate(month) {
+  var income = monthlySummary(month).income;
+  var events = upcomingFinanceEvents(30).filter(function (item) { return item.type === "due" && item.amount != null; });
+  var minimumPayment = sum(events, function (item) { return item.amount; });
+  return { minimumPayment: numberValue(minimumPayment), income: numberValue(income), rate: income > 0 ? numberValue(minimumPayment / income * 100) : null, eventCount: events.length };
+}
+function dashboardNextPlannedPayday(referenceDate) {
+  var reference = String(referenceDate || today());
+  var parts = reference.split("-").map(Number), base = new Date(parts[0], (parts[1] || 1) - 1, 1);
+  for (var offset = 0; offset < 24; offset += 1) {
+    var cursor = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+    var month = cursor.getFullYear() + "-" + String(cursor.getMonth() + 1).padStart(2, "0");
+    var plan = monthlyPlan(month);
+    if (!plan.hasPlannedIncome) continue;
+    var date = calculationDateForMonthDay(month, plan.payday);
+    if (date < reference) continue;
+    return { date: date, month: month, payday: plan.payday, plannedIncome: plan.plannedIncome };
+  }
+  return null;
+}
+function dashboardKnownOutflowSummary(events) {
+  var known = (events || []).filter(function (item) { return item.direction === "out" && item.amount != null; });
+  return {
+    events: known,
+    count: known.length,
+    total: numberValue(sum(known, function (item) { return item.amount; })),
+    subscriptionTotal: numberValue(sum(known, function (item) { return item.type === "renewal" ? item.amount : 0; })),
+    repaymentTotal: numberValue(sum(known, function (item) { return item.type === "due" ? item.amount : 0; }))
+  };
+}
+function dashboardAllocationExecution(month) {
+  var plan = monthlyPlan(month), direct = {}, pending = {};
+  state.incomes.forEach(function (item) {
+    if (item.month === month && item.accountId) direct[item.accountId] = numberValue((direct[item.accountId] || 0) + item.amount);
+  });
+  (state.allocations || []).forEach(function (item) {
+    if (item.month === month && !item.fromAccountId && item.toAccountId) pending[item.toAccountId] = numberValue((pending[item.toAccountId] || 0) + item.amount);
+  });
+  var pools = state.accounts.filter(function (account) { return !account.archived; }).map(function (account) {
+    var planned = plan.hasPlannedIncome && account.fixedBudget ? accountBudgetAmount(account, month) : null;
+    var actual = numberValue((direct[account.id] || 0) + (pending[account.id] || 0));
+    return { id: account.id, name: account.name, fixedBudget: !!account.fixedBudget, budgetPercent: numberValue(account.budgetPercent), planned: planned == null ? null : numberValue(planned), actual: actual, balance: numberValue(accountBalance(account, month)) };
+  }).filter(function (row) { return row.fixedBudget || row.actual > 0 || row.budgetPercent > 0; });
+  var plannedTotal = plan.hasPlannedIncome ? sum(pools, function (row) { return row.planned == null ? 0 : row.planned; }) : null;
+  var actualTotal = sum(pools, function (row) { return row.actual; });
+  pools.sort(function (a, b) { return Math.max(b.planned || 0, b.actual) - Math.max(a.planned || 0, a.actual) || b.budgetPercent - a.budgetPercent; });
+  return { hasPlan: plan.hasPlannedIncome, plannedIncome: plan.plannedIncome, planned: plannedTotal == null ? null : numberValue(plannedTotal), actual: numberValue(actualTotal), deviation: plannedTotal == null ? null : numberValue(actualTotal - plannedTotal), pools: pools };
 }

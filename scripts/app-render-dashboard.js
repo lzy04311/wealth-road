@@ -10,7 +10,9 @@ function renderDashboard(ctx) {
   var attribution = wealthAttribution(month);
   var insights = dashboardInsights(month);
   var events = upcomingFinanceEvents(7);
+  var futureOutflowEvents = upcomingFinanceEvents(30);
   var health = financialHealth(month);
+  var readiness = dashboardReadiness(month);
   var forecast = monthlyForecast(month);
   var totalAsset = wealth.netWorth;
   var assetAccounts = state.accounts.filter(function (account) { return account.includeAsset && !account.archived; });
@@ -19,35 +21,37 @@ function renderDashboard(ctx) {
   var targetAccounts = state.accounts.filter(function (account) { return !account.archived && numberValue(account.target) > 0; });
   var primaryGoal = dashboardPrimaryGoal(month, targetAccounts);
   var savingRate = s.income > 0 ? Math.max(0, (s.income - s.expense) / s.income * 100) : null;
-  var backupText = "本地可用";
-  var coreJudgement = s.surplus >= 0 ? "资金节奏稳定" : "现金流承压";
-  if (health.className === "warning") coreJudgement = "优先校准预算";
-  if (health.className === "negative") coreJudgement = "先守住现金流";
+  var storageDisplay = typeof storageHealthPresentation === "function" ? storageHealthPresentation() : { shortLabel: "待检测", detail: "存储状态待检测", className: "warning" };
+  var backupText = storageDisplay.shortLabel;
+  var coreJudgement = readiness.canJudgeExecution ? (s.surplus >= 0 ? "资金节奏稳定" : "现金流承压") : "等待首笔真实数据";
+  if (health.score != null && health.className === "warning") coreJudgement = "优先校准预算";
+  if (health.score != null && health.className === "negative") coreJudgement = "先守住现金流";
 
-  renderDashboardStatusBar(month, backupText, events);
-  renderDashboardAssetCard(month, s, health, totalAsset, wealth, change, investmentAssets);
-  renderDashboardCompass(s, assetSnap, change, attribution, primaryGoal, events, insights, coreJudgement);
-  renderDashboardRightCards(month, investmentRows, insights, events, primaryGoal);
-  renderDashboardBottomStrip(s, assetSnap, change, attribution, primaryGoal);
-  renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupText);
+  renderDashboardStatusBar(month, storageDisplay, events);
+  renderDashboardAssetCard(month, s, health, totalAsset, wealth, change, investmentAssets, readiness);
+  renderDashboardCompass(s, assetSnap, change, attribution, readiness.onboardingNeeded ? null : primaryGoal, events, insights, coreJudgement, readiness);
+  renderDashboardRightCards(month, investmentRows, insights, events, readiness.onboardingNeeded ? null : primaryGoal, futureOutflowEvents, readiness);
+  renderDashboardBottomStrip(s, assetSnap, change, attribution, readiness.onboardingNeeded ? null : primaryGoal, readiness);
+  renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, storageDisplay, readiness);
 }
 
-function renderDashboardStatusBar(month, backupText, events) {
+function renderDashboardStatusBar(month, storageDisplay, events) {
   var el = byId("dashboardStatusBar");
   if (!el) return;
   events = events || upcomingFinanceEvents(7);
   var dateShort = today().slice(5).replace("-", ".");
   var dateTip = today() + " · " + dashboardWeekdayText() + "\n今日";
-  var reminderValue = events.length ? events.length + " 项 · 未来7天" : "0 项 · 未来7天";
+  var reminderValue = events.length ? events.length + " 项 · 未来7天" : "无已记录事项";
   var reminderTip = events.length
     ? events.slice(0, 4).map(function (item) { return item.title + " · " + (item.amount == null ? "金额待定" : money(item.amount)); }).join("\n") + (events.length > 4 ? "\n另有 " + (events.length - 4) + " 项" : "")
     : "未来 7 天没有明确财务事件";
+  var storageItem = storageDisplay && typeof storageDisplay === "object" ? storageDisplay : { shortLabel: String(storageDisplay || "待检测"), detail: "存储状态待检测", className: "warning" };
   el.innerHTML = [
     { value: dateShort + " · " + dashboardWeekdayText(), tip: dateTip },
-    { value: "● " + backupText, tip: "数据保存在当前浏览器\n自动保存正常" },
+    { value: "● " + storageItem.shortLabel, tip: storageItem.detail, id: "dashboardStorageHealth", className: storageItem.className },
     { value: reminderValue, tip: reminderTip }
   ].map(function (item) {
-    return "<div class=\"dashboard-status-pill\" data-dash-tip=\"" + esc(item.tip) + "\"><strong>" + esc(item.value) + "</strong></div>";
+    return "<div class=\"dashboard-status-pill\" tabindex=\"0\" data-dash-tip=\"" + esc(item.tip) + "\"><strong" + (item.id ? " id=\"" + esc(item.id) + "\"" : "") + " class=\"" + esc(item.className || "") + "\">" + esc(item.value) + "</strong></div>";
   }).join("");
 }
 
@@ -56,49 +60,64 @@ function dashboardWeekdayText() {
   return names[new Date().getDay()];
 }
 
-function renderDashboardAssetCard(month, s, health, totalAsset, wealth, change, investmentAssets) {
-  setDashboardText("dashboardAssetHealth", "执行健康 · " + health.score);
-  setDashboardText("dashboardTotalAsset", totalAsset < 0 ? "-" + money(Math.abs(totalAsset)) : money(totalAsset));
+function renderDashboardAssetCard(month, s, health, totalAsset, wealth, change, investmentAssets, readiness) {
+  var isUnknown = !!(readiness && readiness.onboardingNeeded);
+  setDashboardText("dashboardAssetHealth", health.score == null ? "执行健康 · 待评估" : "执行健康 · " + health.score);
+  var healthEl = byId("dashboardAssetHealth");
+  if (healthEl) healthEl.className = "dashboard-pill dashboard-health-trigger " + esc(health.className || "warning");
+  setDashboardText("dashboardTotalAsset", isUnknown ? "待建账" : (totalAsset < 0 ? "-" + money(Math.abs(totalAsset)) : money(totalAsset)));
   var changeValue = change.hasBaseline ? dashboardSignedMoney(change.change) : "基线待补";
   var changeClass = !change.hasBaseline ? "warning" : (change.change >= 0 ? "positive" : "negative");
   var changeTip = change.hasBaseline ? "本月净资产变化" : "没有可靠月初净资产基线";
   var changeEl = byId("dashboardAssetChange");
   changeEl.innerHTML = "<span>本月变化</span><strong class=\"" + changeClass + "\">" + esc(changeValue) + "</strong>";
   changeEl.setAttribute("data-dash-tip", changeTip);
-  var liabilityHint = wealth.liabilities > 0 ? "待偿还" : "暂无负债";
+  var liabilityHint = isUnknown ? "待记录" : (wealth.liabilities > 0 ? "待偿还" : "已记录为零");
   byId("dashboardAssetMetrics").innerHTML = [
-    dashboardMetric("本月可分配", money(s.freeCash), s.freeCash >= 0 ? "positive" : "negative", "收入减支出减投入"),
-    dashboardMetric("金融资产", money(wealth.financialAssets), "", "当前持有"),
-    dashboardMetric("投资资产", money(investmentAssets), "", "投资账户市值"),
-    dashboardMetric("负债", money(wealth.liabilities), wealth.liabilities > 0 ? "negative" : "", liabilityHint)
+    dashboardMetric("本月待分配", isUnknown ? "待记录" : money(s.freeCash), isUnknown ? "warning" : (s.freeCash >= 0 ? "positive" : "negative"), isUnknown ? "记录收入与流出后计算" : "收入减支出减投入"),
+    dashboardMetric("金融资产", isUnknown ? "待建账" : money(wealth.financialAssets), isUnknown ? "warning" : "", isUnknown ? "添加实际账户后计算" : "当前持有"),
+    dashboardMetric("投资资产", isUnknown ? "待记录" : money(investmentAssets), isUnknown ? "warning" : "", isUnknown ? "记录持仓或净值后计算" : "投资账户市值"),
+    dashboardMetric("负债", isUnknown ? "待记录" : money(wealth.liabilities), isUnknown ? "warning" : (wealth.liabilities > 0 ? "negative" : ""), liabilityHint)
   ].join("");
-  renderDashboardAssetTrend(month);
+  renderDashboardAssetTrend(month, readiness);
 }
 
-function renderDashboardCompass(s, assetSnap, change, attribution, primaryGoal, events, insights, coreJudgement) {
+function renderDashboardCompass(s, assetSnap, change, attribution, primaryGoal, events, insights, coreJudgement, readiness) {
   setDashboardText("compassCoreStatus", coreJudgement);
-  var netFlowText = s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow));
+  var hasCashflow = !(readiness && !readiness.hasCashflowEvidence);
+  var netFlowText = hasCashflow ? (s.netCashFlow >= 0 ? "+" + money(s.netCashFlow) : "-" + money(Math.abs(s.netCashFlow))) : "—";
   var investmentMetric = dashboardInvestmentMetric(assetSnap, attribution);
   var topInsight = dashboardTopInsight(insights);
   var nodes = [
     { key: "data", name: "财富变化", desc: change.hasBaseline ? "本月" : "基线待补", value: change.hasBaseline ? dashboardSignedMoney(change.change) : "—", className: !change.hasBaseline ? "warning" : (change.change >= 0 ? "positive" : "negative"), level: "core" },
-    { key: "flow", view: "flow", name: "现金流", desc: "本月结余", value: netFlowText, className: s.netCashFlow >= 0 ? "positive" : "negative", level: "core" },
+    { key: "flow", view: "flow", name: "现金流", desc: hasCashflow ? "本月结余" : "待记录", value: netFlowText, className: hasCashflow ? (s.netCashFlow >= 0 ? "positive" : "negative") : "warning", level: "core" },
     { key: "invest", view: "investments", name: "投资", desc: investmentMetric.context, value: investmentMetric.value, className: investmentMetric.className, level: "core" },
-    { key: "assets", name: "近期", desc: "未来7天", value: events.length + "项", className: events.length ? "warning" : "", level: "aux" },
+    { key: "assets", name: "近期", desc: events.length ? "未来7天" : "无已记录事项", value: events.length ? events.length + "项" : "—", className: "warning", level: "aux" },
     { key: "goals", view: "goals", name: "目标", desc: primaryGoal ? dashboardBriefText(primaryGoal.name, 6) : "暂无目标", value: primaryGoal ? primaryGoal.progress.toFixed(0) + "%" : "—", className: primaryGoal ? "positive" : "warning", level: "aux" },
-    { key: "accounts", name: "洞察", desc: topInsight ? dashboardBriefText(topInsight.title, 7) : "本月平稳", value: insights.length + "项", className: insights.length ? dashboardInsightTone(topInsight) : "positive", level: "aux" }
+    { key: "accounts", name: "洞察", desc: topInsight ? dashboardBriefText(topInsight.title, 7) : (readiness && !readiness.hasFinancialEvidence ? "待记录" : "无显著变化"), value: insights.length ? insights.length + "项" : "—", className: insights.length ? dashboardInsightTone(topInsight) : "warning", level: "aux" }
   ];
   var nodeLayer = byId("wealthCompassNodes");
   if (nodeLayer) nodeLayer.innerHTML = nodes.map(dashboardCompassNode).join("");
 }
 
-function renderDashboardRightCards(month, investmentRows, insights, events, primaryGoal) {
+function renderDashboardRightCards(month, investmentRows, insights, events, primaryGoal, futureOutflowEvents, readiness) {
+  if (readiness && readiness.onboardingNeeded) {
+    byId("dashboardRightCards").innerHTML = dashboardOnboardingCard();
+    return;
+  }
   var cards = [];
   cards.push(dashboardInvestmentPortfolioCard(investmentRows));
-  cards.push(dashboardDynamicInsightCard(insights));
+  cards.push(dashboardFutureOutflowCard(futureOutflowEvents));
   cards.push(dashboardFinanceEventsCard(events));
   cards.push(dashboardPrimaryGoalCard(primaryGoal));
   byId("dashboardRightCards").innerHTML = cards.join("");
+}
+
+function dashboardOnboardingCard() {
+  return "<article class=\"dashboard-side-card dashboard-panel dashboard-onboarding-card\"><span class=\"context-label\">第一次使用</span><h3>先建立三条真实基线</h3><p>模板账户只是分类框架，不代表你已经拥有这些钱。完成下面三步后，净资产、健康分和趋势才开始计算。</p>"
+    + "<ol><li><strong>1</strong><span>添加银行卡、现金等实际账户</span><button type=\"button\" data-action=\"open-view\" data-view=\"accounts\">去建账户</button></li>"
+    + "<li><strong>2</strong><span>填写本月计划收入和发薪日</span><button type=\"button\" data-action=\"open-view\" data-view=\"flow\">去填计划</button></li>"
+    + "<li><strong>3</strong><span>记录第一笔真实收入或支出</span><button type=\"button\" data-quick-action=\"expense\">记第一笔</button></li></ol></article>";
 }
 
 
@@ -110,18 +129,20 @@ function renderDashboardRightCards(month, investmentRows, insights, events, prim
 
 
 
-function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, backupText) {
+function renderDashboardBottomStatus(s, assetSnap, savingRate, forecast, storageDisplay, readiness) {
   var el = byId("dashboardBottomStatus");
   if (!el) return;
-  var expenseStatus = s.overBudget ? "支出待收缩" : "支出结构优化";
+  var isUnknown = !!(readiness && !readiness.canJudgeExecution);
+  var expenseStatus = isUnknown ? "预算状态待建立" : (s.overBudget ? "支出待收缩" : "支出结构已计算");
   var savingStatus = savingRate == null ? "储蓄率待记录" : "储蓄率 " + savingRate.toFixed(1) + "%";
   var investStatus = assetSnap.roi == null ? "投资待快照" : (assetSnap.roi >= 0 ? "投资收益回升" : "投资收益承压");
-  var orphanStatusTitle = s.orphanExpenseCount > 0 ? "存在孤立支出" : "账目结构正常";
-  var orphanStatusValue = s.orphanExpenseCount > 0 ? (s.orphanExpenseCount + " 条 / " + money(s.orphanExpenseTotal)) : "无孤立记录";
-  var orphanClass = s.orphanExpenseCount > 0 ? "warning" : "positive";
+  var orphanStatusTitle = isUnknown ? "账目状态待建立" : (s.orphanExpenseCount > 0 ? "存在孤立支出" : "账目结构已校验");
+  var orphanStatusValue = isUnknown ? "尚无可核对记录" : (s.orphanExpenseCount > 0 ? (s.orphanExpenseCount + " 条 / " + money(s.orphanExpenseTotal)) : "未发现孤立记录");
+  var orphanClass = isUnknown || s.orphanExpenseCount > 0 ? "warning" : "positive";
+  var storageItem = storageDisplay && typeof storageDisplay === "object" ? storageDisplay : { shortLabel: String(storageDisplay || "待检测"), className: "warning" };
   el.innerHTML = [
-    dashboardStatusItem("本地数据", backupText, "positive"),
-    dashboardStatusItem(expenseStatus, forecast.budgetStatus || "持续观察", s.overBudget ? "warning" : "positive"),
+    dashboardStatusItem("本地数据", storageItem.shortLabel, storageItem.className, "dashboardBottomStorageHealth"),
+    dashboardStatusItem(expenseStatus, isUnknown ? "先填写计划或记录流水" : (forecast.budgetStatus || "持续观察"), isUnknown || s.overBudget ? "warning" : "positive"),
     dashboardStatusItem(orphanStatusTitle, orphanStatusValue, orphanClass),
     dashboardStatusItem("储蓄率提升", savingStatus, savingRate == null ? "warning" : "positive"),
     dashboardStatusItem(investStatus, assetSnap.roi == null ? "等待数据" : assetSnap.roi.toFixed(2) + "%", assetSnap.roi == null ? "warning" : (assetSnap.roi >= 0 ? "positive" : "negative"))
@@ -190,13 +211,16 @@ function dashboardInsightDisplayValue(insight) {
   return dashboardSignedMoney(insight.value);
 }
 
-function dashboardDynamicInsightCard(insights) {
-  var insight = dashboardTopInsight(insights);
-  if (!insight) return "<article class=\"dashboard-side-card dashboard-panel dashboard-insight-card\"><h3><i></i>本月洞察</h3><strong class=\"positive\">本月平稳</strong><p class=\"dashboard-insight-status\">暂无显著变化</p></article>";
-  return "<article class=\"dashboard-side-card dashboard-panel dashboard-insight-card\"><h3><i></i>动态洞察</h3>"
-    + "<strong class=\"" + esc(dashboardInsightTone(insight)) + "\">" + esc(insight.title) + "</strong>"
-    + "<span class=\"dashboard-insight-metric\">" + esc(dashboardInsightDisplayValue(insight)) + "</span>"
-    + "<p class=\"dashboard-insight-status\">" + esc(insight.detail) + "</p></article>";
+function dashboardFutureOutflowCard(events) {
+  var summary = dashboardKnownOutflowSummary(events);
+  if (!summary.count) return "<article class=\"dashboard-side-card dashboard-panel dashboard-insight-card\"><h3><i></i>未来30天</h3><strong class=\"warning\">暂无已记录流出</strong><p class=\"dashboard-insight-status\">仅统计已有续费与最低还款记录</p></article>";
+  var detail = [];
+  if (summary.subscriptionTotal > 0) detail.push("订阅 " + money(summary.subscriptionTotal));
+  if (summary.repaymentTotal > 0) detail.push("最低还款 " + money(summary.repaymentTotal));
+  return "<article class=\"dashboard-side-card dashboard-panel dashboard-insight-card\"><h3><i></i>未来30天</h3>"
+    + "<strong class=\"negative\">" + esc(money(summary.total)) + "</strong>"
+    + "<span class=\"dashboard-insight-metric\">未来30天已知流出 · " + esc(summary.count) + " 项</span>"
+    + "<p class=\"dashboard-insight-status\">" + esc(detail.join(" · ") || "仅统计已有金额的流出记录") + "</p></article>";
 }
 
 function dashboardFinanceEventAmount(event) {
@@ -209,7 +233,7 @@ function dashboardFinanceEventAmount(event) {
 function dashboardFinanceEventsCard(events) {
   events = events || [];
   var summary = events.length + "项 · 未来7天";
-  if (!events.length) return "<article class=\"dashboard-side-card dashboard-panel dashboard-reminder-card\"><h3><i></i>近期事件</h3><strong>" + esc(summary) + "</strong><p>暂无明确事件</p></article>";
+  if (!events.length) return "<article class=\"dashboard-side-card dashboard-panel dashboard-reminder-card\"><h3><i></i>近期事件</h3><strong class=\"warning\">无已记录事项</strong><p>添加续费、还款或发薪计划后显示</p></article>";
   var items = events.slice(0, 3).map(function (event) {
     var directionText = event.direction === "in" ? "流入" : (event.direction === "out" ? "流出" : "事项");
     return "<div class=\"dashboard-reminder-item\"><span class=\"dashboard-reminder-dot " + (event.direction === "out" ? "negative" : "") + "\"></span><div><strong>" + esc(event.date.slice(5) + " · " + event.title) + "</strong><p>" + esc(dashboardFinanceEventAmount(event) + " · " + directionText) + "</p></div></div>";
@@ -224,17 +248,18 @@ function dashboardPrimaryGoalCard(goal) {
     + "<div><strong class=\"positive\">" + esc(goal.name) + "</strong><p>" + esc(money(goal.current) + " / " + money(goal.target)) + "<br>剩余 " + esc(money(goal.remaining)) + "</p></div></div></article>";
 }
 
-function dashboardStatusItem(title, value, className) {
-  return "<article class=\"dashboard-status-item\"><i class=\"" + esc(className || "") + "\"></i><div><span>" + esc(title) + "</span><strong class=\"" + esc(className || "") + "\">" + esc(value) + "</strong></div></article>";
+function dashboardStatusItem(title, value, className, valueId) {
+  return "<article class=\"dashboard-status-item\"><i class=\"" + esc(className || "") + "\"></i><div><span>" + esc(title) + "</span><strong" + (valueId ? " id=\"" + esc(valueId) + "\"" : "") + " class=\"" + esc(className || "") + "\">" + esc(value) + "</strong></div></article>";
 }
 
 function dashboardCompassNode(item) {
-  var action = item.view ? " data-action=\"open-view\" data-view=\"" + esc(item.view) + "\"" : " data-dashboard-node=\"" + esc(item.key) + "\"";
-  return "<button class=\"compass-node node-" + esc(item.key) + " is-" + esc(item.level || "aux") + "\" type=\"button\"" + action + " aria-label=\"" + esc(item.name + "：" + item.value + "，" + item.desc) + "\">"
+  var action = item.view ? " data-action=\"open-view\" data-view=\"" + esc(item.view) + "\"" : "";
+  var tag = item.view ? "button" : "div";
+  return "<" + tag + " class=\"compass-node node-" + esc(item.key) + " is-" + esc(item.level || "aux") + "\"" + (item.view ? " type=\"button\"" : " role=\"status\"") + action + " aria-label=\"" + esc(item.name + "：" + item.value + "，" + item.desc) + "\">"
     + "<span class=\"node-name\">" + esc(item.name) + "</span>"
     + "<strong class=\"" + esc(item.className || "") + "\">" + esc(item.value) + "</strong>"
     + "<span class=\"node-desc\">" + esc(item.desc) + "</span>"
-    + "</button>";
+    + "</" + tag + ">";
 }
 
 function dashboardInvestmentPortfolioRows(month, assetAccounts) {
@@ -274,9 +299,19 @@ function dashboardInvestmentPortfolio(rows) {
 }
 
 
-function renderDashboardAssetTrend(month) {
+function renderDashboardAssetTrend(month, readiness) {
   var el = byId("dashboardAssetTrend");
   if (!el) return;
+  if (readiness && !readiness.hasWealthEvidence) {
+    el.innerHTML = "<div class=\"dashboard-chart-empty\">添加实际账户或资产记录后显示趋势</div>";
+    var emptyFacts = byId("dashboardTrendFacts");
+    if (emptyFacts) emptyFacts.innerHTML = [
+      { label: "最低偿债率", value: "待记录" },
+      { label: "下次计划发薪", value: "待计划" },
+      { label: "数据口径", value: "待建立" }
+    ].map(function (item) { return "<div><span>" + esc(item.label) + "</span><strong class=\"warning\">" + esc(item.value) + "</strong></div>"; }).join("");
+    return;
+  }
   var y = parseInt(month.slice(0, 4), 10);
   var m = parseInt(month.slice(5, 7), 10);
   var rows = [];
@@ -305,17 +340,17 @@ function renderDashboardAssetTrend(month) {
   }).join("");
   var labels = rows.map(function (row, index) { return "<text class=\"dashboard-axis-x\" x=\"" + px(index).toFixed(1) + "\" y=\"" + (h - 1) + "\" text-anchor=\"middle\">" + esc(row.month.slice(5)) + "</text>"; }).join("");
   var dots = rows.map(function (row, index) { return "<circle cx=\"" + px(index).toFixed(1) + "\" cy=\"" + py(row.value).toFixed(1) + "\" r=\"1.4\"></circle>"; }).join("");
-  var monthlyChange = wealthChange(month);
+  var debtService = dashboardMinimumDebtServiceRate(month), nextPayday = dashboardNextPlannedPayday();
   var facts = [
-    { label: "本月财富变化", value: monthlyChange.hasBaseline ? dashboardSignedMoney(monthlyChange.change) : "基线待补", className: monthlyChange.hasBaseline ? (monthlyChange.change >= 0 ? "positive" : "negative") : "warning" },
-    { label: "当前投资收益", value: assetSnapshotSummary(month).roi == null ? "数据不足" : assetSnapshotSummary(month).roi.toFixed(1) + "%", className: assetSnapshotSummary(month).roi == null ? "warning" : "" },
+    { label: "最低偿债率", value: debtService.rate == null ? "—" : debtService.rate.toFixed(1) + "%", className: debtService.rate == null ? "warning" : "", hint: "未来30天最低还款 ÷ 本月已到账收入" },
+    { label: "下次计划发薪", value: nextPayday ? nextPayday.date.slice(5).replace("-", ".") + " · " + money(nextPayday.plannedIncome) : "—", className: nextPayday ? "" : "warning", hint: "按月度计划，非确定到账" },
     { label: "数据口径", value: wealthSummary(month).unresolvedAssets.length ? "待确认" : "已统一", className: wealthSummary(month).unresolvedAssets.length ? "warning" : "positive" }
   ];
   el.innerHTML = "<svg viewBox=\"0 0 " + w + " " + h + "\" role=\"img\"><g class=\"dashboard-chart-grid\">" + grid + "</g>" + yLabels + "<polygon points=\"" + area + "\"></polygon><polyline points=\"" + points + "\"></polyline>" + dots + labels + "</svg>";
   var factsEl = byId("dashboardTrendFacts");
   if (factsEl) {
     factsEl.innerHTML = facts.map(function (item) {
-      return "<div><span>" + esc(item.label) + "</span><strong class=\"" + esc(item.className) + "\">" + esc(item.value) + "</strong></div>";
+      return "<div" + (item.hint ? " data-dash-tip=\"" + esc(item.hint) + "\"" : "") + "><span>" + esc(item.label) + "</span><strong class=\"" + esc(item.className) + "\">" + esc(item.value) + "</strong></div>";
     }).join("");
   }
 }

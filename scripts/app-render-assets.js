@@ -52,6 +52,7 @@ function assetStatusPlan(data) {
 }
 function renderAssetInventory(wealth) {
   var items = state.assetItems || [];
+  var hasWealthEvidence = dashboardReadiness(currentMonth()).hasWealthEvidence || items.length > 0;
   var subscriptionCost = sum(items, function (item) { return isSubscriptionAsset(item) ? item.monthlyCost : 0; });
   var inventoryValue = numberValue(wealth.independentAssets);
   var liquidValue = sum(independentAssetItems(currentMonth()), function (item) { return isLiquidAsset(item) ? item.currentValue : 0; });
@@ -83,12 +84,12 @@ function renderAssetInventory(wealth) {
   if (byId("assetsOverview")) {
     byId("assetsOverview").innerHTML = "<article class=\"assets-panorama-card\">"
       + "<div class=\"ap-head\"><div><h2>资产全景</h2><p>金融资产、独立资产与负债采用统一口径</p></div><span class=\"status-pill " + esc(status.level) + "\">" + esc(status.label) + "</span></div>"
-      + "<div class=\"ap-hero\"><strong class=\"" + (netWorth >= 0 ? "positive" : "negative") + "\">" + money(netWorth) + "</strong><span>当前净资产</span></div>"
+      + "<div class=\"ap-hero\"><strong class=\"" + (hasWealthEvidence ? (netWorth >= 0 ? "positive" : "negative") : "warning") + "\">" + (hasWealthEvidence ? money(netWorth) : "待建账") + "</strong><span>当前净资产</span></div>"
       + "<div class=\"ap-metrics\">"
-      + "<div class=\"ap-metric\"><span>金融资产</span><strong>" + money(wealth.financialAssets) + "</strong><small>含待分配 " + money(wealth.unallocatedCash) + "</small></div>"
-      + "<div class=\"ap-metric\"><span>独立资产</span><strong>" + money(wealth.independentAssets) + "</strong><small>不与账户重复</small></div>"
-      + "<div class=\"ap-metric\"><span>负债</span><strong class=\"" + (wealth.liabilities > 0 ? "negative" : "") + "\">" + money(wealth.liabilities) + "</strong><small>总资产 " + money(totalAsset) + "</small></div>"
-      + "<div class=\"ap-metric\"><span>每月订阅</span><strong class=\"" + (subscriptionCost > 0 ? "warning" : "") + "\">" + money(subscriptionCost) + "</strong><small>年 " + money(subscriptionCost * 12) + "</small></div>"
+      + "<div class=\"ap-metric\"><span>金融资产</span><strong>" + (hasWealthEvidence ? money(wealth.financialAssets) : "待建账") + "</strong><small>" + (hasWealthEvidence ? "含待分配 " + money(wealth.unallocatedCash) : "先添加实际账户") + "</small></div>"
+      + "<div class=\"ap-metric\"><span>独立资产</span><strong>" + (items.length ? money(wealth.independentAssets) : "待记录") + "</strong><small>不与账户重复</small></div>"
+      + "<div class=\"ap-metric\"><span>负债</span><strong class=\"" + (wealth.liabilities > 0 ? "negative" : "warning") + "\">" + ((state.liabilities || []).length ? money(wealth.liabilities) : "待确认") + "</strong><small>" + (hasWealthEvidence ? "总资产 " + money(totalAsset) : "尚无负债记录") + "</small></div>"
+      + "<div class=\"ap-metric\"><span>每月订阅</span><strong class=\"warning\">" + (items.some(isSubscriptionAsset) ? money(subscriptionCost) : "待记录") + "</strong><small>" + (items.some(isSubscriptionAsset) ? "年 " + money(subscriptionCost * 12) : "尚无订阅记录") + "</small></div>"
       + "</div>"
       + "<div class=\"ap-bars\">"
       + "<div class=\"ap-bar-row\"><span>流动性</span><div class=\"ap-bar\"><span style=\"width:" + Math.max(2, Math.min(100, liquidityRatio || 0)).toFixed(0) + "%\"></span></div><strong>" + ratioLabel(liquidityRatio) + "</strong></div>"
@@ -137,7 +138,7 @@ function assetItemCard(item) {
 function renderLiabilities() {
   var items = state.liabilities || [];
   var total = liabilityTotal(currentMonth());
-  if (byId("liabilitySummary")) byId("liabilitySummary").textContent = "共 " + items.length + " 项，未偿还 " + money(total);
+  if (byId("liabilitySummary")) byId("liabilitySummary").textContent = items.length ? ("共 " + items.length + " 项，未偿还 " + money(total)) : "尚无负债记录（不等于已确认无负债）";
   if (!byId("liabilityList")) return;
   byId("liabilityList").innerHTML = items.length ? items.map(function (item) {
     return "<article class=\"asset-item-card\"><div class=\"asset-item-head\"><div class=\"asset-kind-icon\">−</div><div><h3>" + esc(item.name) + "</h3><p>" + esc(item.type) + "</p></div><span class=\"status-pill\">" + esc(item.status) + "</span></div>"

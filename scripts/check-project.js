@@ -53,7 +53,8 @@ function browserScriptFiles() {
   ["render and sync smoke", "scripts/app-render-smoke.test.js"],
   ["PWA and brand", "scripts/pwa-assets.test.js"],
   ["private finance ledger", "scripts/finance-ledger.test.js"],
-  ["indexeddb persistence", "scripts/app-idb.test.js"]
+  ["indexeddb persistence", "scripts/app-idb.test.js"],
+  ["real browser quality gate", "scripts/browser-real-flow.test.js"]
 ].forEach(function (entry) { run(entry[0], process.execPath, [entry[1]]); });
 
 check("JavaScript syntax", function () {
@@ -266,6 +267,34 @@ check("dashboard compass visual contract", function () {
   assert(dashboardResponsiveSource.indexOf("width: 108px") === -1, "compass node size must remain unified through the orbit variables");
   assert(renderSource.indexOf("node-name") >= 0 && renderSource.indexOf("node-desc") >= 0, "compass nodes keep the three-layer name/value/context structure");
   return "circle nodes · lightweight labels · restrained hover · state-point material";
+});
+
+check("responsive visual and accessibility contract", function () {
+  var base = fs.readFileSync(path.join(root, "styles/base.css"), "utf8");
+  var controls = fs.readFileSync(path.join(root, "styles/controls.css"), "utf8");
+  var responsive = fs.readFileSync(path.join(root, "styles/dashboard/responsive.css"), "utf8");
+  var index = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  var manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8"));
+  var actionsData = fs.readFileSync(path.join(root, "scripts/app-actions-data.js"), "utf8");
+  function luminance(hex) {
+    var channels = hex.replace("#", "").match(/../g).map(function (pair) { var value = parseInt(pair, 16) / 255; return value <= .04045 ? value / 12.92 : Math.pow((value + .055) / 1.055, 2.4); });
+    return .2126 * channels[0] + .7152 * channels[1] + .0722 * channels[2];
+  }
+  function contrast(a, b) { var bright = Math.max(luminance(a), luminance(b)), dark = Math.min(luminance(a), luminance(b)); return (bright + .05) / (dark + .05); }
+  ["#756B59", "#3F754F", "#85611F", "#A74840"].forEach(function (color) {
+    assert(contrast(color, "#FFFDF8") >= 4.5, color + " must keep AA text contrast on the primary surface");
+  });
+  assert(base.indexOf("@media (prefers-reduced-motion: reduce)") >= 0, "reduced-motion support is missing");
+  assert(controls.indexOf(".btn { min-height: 44px") >= 0, "shared buttons must expose a 44px target");
+  assert(responsive.indexOf(".dashboard-strip-hint") >= 0 && responsive.indexOf("scrollbar-width: thin") >= 0, "mobile horizontal content must expose a visible affordance");
+  assert(responsive.indexOf(".dashboard-cockpit-page .node-desc { font-size: 12px") >= 0, "mobile compass context must stay at least 12px");
+  assert(index.indexOf('id="dashboardAssetHealth" class="dashboard-pill dashboard-health-trigger" type="button" data-health-detail="all"') >= 0, "health score explanation entry is not connected");
+  assert(index.indexOf('id="dashboardBottomStrip"') >= 0 && index.indexOf('aria-describedby="dashboardStripHint"') >= 0, "horizontal strip accessibility hint is missing");
+  assert(index.indexOf('<details class="card data-card sync-card experimental-sync-card">') >= 0, "experimental cloud sync must remain collapsed and subordinate");
+  assert(manifest.orientation === "any", "PWA must not force portrait orientation");
+  assert(actionsData.indexOf("MAX_IMPORT_BYTES") >= 0 && actionsData.indexOf("idbCreateVerifiedBackup") >= 0, "backup size and verified checkpoint paths must remain connected");
+  assert(actionsData.indexOf("已导出备份文件") === -1, "unverified browser downloads must not claim export success");
+  return "AA status colors · 44px targets · reduced motion · mobile scroll cue · orientation any · verified backup copy";
 });
 
 check("retired product names", function () {
