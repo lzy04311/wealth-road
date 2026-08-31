@@ -1,6 +1,6 @@
 # Roadmap
 
-Last verified: 2026-08-16
+Last verified: 2026-08-31
 
 本路线图只列尚未闭合或需要持续守护的工作。当前工程事实以 `ENGINEERING_STATUS.md` 为准。
 

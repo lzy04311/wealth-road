@@ -47,6 +47,13 @@ Last verified: 2026-08-31
 
 This gate is invoked by `node scripts/check-project.js` and adds no npm or runtime dependency. The host must have Edge/Chrome installed or expose a compatible path through `CHROME_PATH`.
 
+## Production Release Verification
+
+- PR #10 merged source commit `4c41d31a820d7b745e2883be3b4784673bfe87f9` into `main` as `a2ddf6c4b4d768ee3f316003889e062c4e1d4aa4` on 2026-08-31.
+- GitHub Actions `Project Check` run `33341569884` and Pages deployment run `33341569443` both completed successfully for the merge commit.
+- The Vercel production site declared by the repository `homepage` was opened after deployment. The live Dashboard rendered the evidence-based first-use state and `实际现金净流入`; the live Data page rendered export, automatic backup/restore, full JSON recovery, independent CSV ledger append, audit history, and collapsed experimental cloud sync in the expected order.
+- This live check did not submit forms or write financial records. It confirms the public user path and deployed feature presence, not Vercel provider-side deployment metadata.
+
 ## Dashboard Runtime Sanity
 
 - Local HTTP entry and all requested app-shell resources loaded successfully.

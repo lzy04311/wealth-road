@@ -8,7 +8,7 @@ Last verified: 2026-08-31
 - Current phase: locally verified financial correctness with stabilized maintenance boundaries.
 - Runtime stack: static HTML, CSS, and plain JavaScript; no build step and no external runtime dependency by default.
 - Mobile layout, semantic accessibility, and the core responsive visual contract now run in a real installed Edge/Chrome browser as part of the project gate. Pixel-identical cross-platform screenshot comparison remains a separate release check.
-- This document records local engineering evidence only. It does not imply push, merge, deployment, or live verification.
+- Local engineering evidence and remote release evidence are recorded separately; the current merged, CI, deployment, and live-verification status is listed in section 6.
 
 ## 2. Verified Current Capabilities
 
@@ -95,6 +95,9 @@ The same dependency-free gate now includes a locally installed Edge/Chrome run. 
 ## 6. Release State
 
 - Local implementation: verified.
-- Current branch remote: local commits are not yet pushed.
-- CI result for these unpushed changes: pending.
-- Merge, deployment, and live verification: not claimed.
+- Source commit: `4c41d31a820d7b745e2883be3b4784673bfe87f9`, pushed on `codex/subpage-workspace-redesign`.
+- Merge: PR #10 merged into `main` as `a2ddf6c4b4d768ee3f316003889e062c4e1d4aa4` on 2026-08-31.
+- CI: GitHub Actions `Project Check` run `33341569884` completed successfully for the merge commit.
+- Deployment: GitHub Pages build/deployment run `33341569443` completed successfully for the same merge commit.
+- Live verification: the Vercel production site declared by the repository `homepage` was opened on 2026-08-31. The live Dashboard exposed the new evidence-based empty states and `实际现金净流入`; the Data page exposed the independent CSV `流水导入`, payroll-withholding copy, JSON recovery, audit history, and the local-first ordering before experimental cloud sync.
+- Vercel's internal deployment marker was not available from this repository session; live content was verified by user-visible behavior rather than claimed from an unobserved provider record.
