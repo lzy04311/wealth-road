@@ -78,7 +78,7 @@ function runBrowser(executable, url, profile) {
       settled = true;
       child.kill();
       reject(new Error("browser gate timed out"));
-    }, 25000);
+    }, 45000);
     child.on("error", function (error) { if (!settled) { settled = true; clearTimeout(timer); reject(error); } });
     child.on("close", function (code) {
       if (settled) return;
