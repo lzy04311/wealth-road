@@ -56,7 +56,7 @@ This gate is invoked by `node scripts/check-project.js` and adds no npm or runti
 - `tests/visual/baselines/dashboard-desktop.png` at `1440 × 900`;
 - `tests/visual/baselines/dashboard-mobile.png` at `390 × 844`.
 
-The PNG decoder and pixel comparison use only Node built-ins. A pixel is considered materially changed only when a color channel differs by more than 24; the gate rejects more than 8% materially changed pixels or a mean channel difference above 5. Stable geometry, overflow, accessible names, and click-target size remain separate hard DOM assertions so font anti-aliasing tolerance cannot hide a layout or accessibility regression.
+The PNG decoder and pixel comparison use only Node built-ins. A pixel is considered materially changed only when a color channel differs by more than 24; the gate rejects more than 8% materially changed pixels or a mean channel difference above 7. The mean threshold includes the measured Windows/Linux font-rasterization delta while keeping the material-pixel limit unchanged. Stable geometry, overflow, accessible names, and click-target size remain separate hard DOM assertions so font anti-aliasing tolerance cannot hide a layout or accessibility regression.
 
 After an intentional, reviewed visual change, regenerate both baselines with:
 

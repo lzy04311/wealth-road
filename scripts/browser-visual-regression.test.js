@@ -15,7 +15,7 @@ var baselineRoot = path.join(root, "tests", "visual", "baselines");
 var update = process.argv.indexOf("--update") >= 0;
 var channelTolerance = 24;
 var changedPixelRatioLimit = 0.08;
-var meanChannelDifferenceLimit = 5;
+var meanChannelDifferenceLimit = 7;
 
 function executableCandidates() {
   var candidates = [process.env.CHROME_PATH];
