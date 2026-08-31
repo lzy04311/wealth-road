@@ -44,8 +44,27 @@ Last verified: 2026-08-31
 - the production v5 sample migrates to v6, saves through localStorage, re-renders as rated data, and round-trips through IndexedDB with matching record count;
 - export, automatic backup/restore, JSON recovery, and CSV ledger append precede collapsed experimental cloud sync;
 - the PWA manifest allows any orientation.
+- the browser creates two real accounts through the production forms, records income, expense, a two-sided transfer, and a balance reconciliation, edits one account, archives the referenced account through both confirmation steps, reloads the app, and verifies every record and balance survived localStorage persistence;
+- the mobile document and body have no page-level horizontal overflow, all visible controls have an accessible name, and every visible Dashboard action remains at least `44 × 44px`.
 
 This gate is invoked by `node scripts/check-project.js` and adds no npm or runtime dependency. The host must have Edge/Chrome installed or expose a compatible path through `CHROME_PATH`.
+
+## Automated Visual Regression
+
+`node scripts/browser-visual-regression.test.js` renders the production Dashboard with a fixed date and the deterministic dashboard fixture, disables animation and caret variability, and compares two real-browser screenshots against committed baselines:
+
+- `tests/visual/baselines/dashboard-desktop.png` at `1440 × 900`;
+- `tests/visual/baselines/dashboard-mobile.png` at `390 × 844`.
+
+The PNG decoder and pixel comparison use only Node built-ins. A pixel is considered materially changed only when a color channel differs by more than 24; the gate rejects more than 8% materially changed pixels or a mean channel difference above 5. Stable geometry, overflow, accessible names, and click-target size remain separate hard DOM assertions so font anti-aliasing tolerance cannot hide a layout or accessibility regression.
+
+After an intentional, reviewed visual change, regenerate both baselines with:
+
+```powershell
+node scripts/browser-visual-regression.test.js --update
+```
+
+Baseline regeneration is evidence capture, not automatic approval: inspect both images before committing them.
 
 ## Production Release Verification
 
@@ -74,7 +93,7 @@ This gate is invoked by `node scripts/check-project.js` and adds no npm or runti
 - Desktop and narrow viewport checks showed no page-level horizontal overflow, including while the form drawer was open.
 - No application console warnings or errors were observed, and no form was submitted during this structural verification.
 
-This evidence verifies runtime structure, not pixel parity. The remaining visual comparison uses [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) and must cover the top bar, three-column body, bottom data strip, status/navigation row, text clipping, and responsive breakpoints.
+Runtime structure and current-product pixel stability are now automated. [`docs/assets/reference-dashboard.png`](assets/reference-dashboard.png) remains the aspirational composition reference rather than a byte-for-byte product baseline; future visual refinements must preserve the automated top bar, three-column body, bottom data strip, status/navigation row, text clipping, and responsive breakpoint checks.
 
 ## Repair Regression
 
@@ -86,4 +105,4 @@ This evidence verifies runtime structure, not pixel parity. The remaining visual
 
 ## Automation Boundary
 
-The narrow-screen behavioral, layout, storage, and semantic contract is automated in a real browser without third-party packages. The longer create/edit/transfer/archive/reconciliation workflow above and pixel-identical screenshot comparison across browser/OS combinations remain manual release checks. The one-command project gate covers Node regressions, the real-browser mobile flow, syntax, script and CSS order, cache coherence, AA status colors, touch targets, reduced motion, documents, branding, Git whitespace, and the private-ledger boundary.
+The narrow-screen behavioral, layout, storage, semantic, complete CRUD/reload, and desktop/mobile screenshot contracts are automated in a real browser without third-party packages. Cross-browser/OS aesthetic review remains a release judgment because font rasterization is intentionally tolerated, while DOM geometry and accessibility invariants remain hard failures. The one-command project gate covers Node regressions, both real-browser gates, syntax, script and CSS order, cache coherence, AA status colors, touch targets, reduced motion, documents, branding, Git whitespace, and the private-ledger boundary.
