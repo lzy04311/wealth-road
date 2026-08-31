@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>财记视觉回归场景</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #f7f1e7; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; }
+  </style>
+</head>
+<body data-visual-gate="pending">
+  <iframe id="app" title="财记视觉回归实例"></iframe>
+  <img src="/__gate_delay__" alt="" hidden>
+  <script>
+    (function () {
+      "use strict";
+      var frame = document.getElementById("app");
+      var mobile = new URLSearchParams(location.search).get("mode") === "mobile";
+      frame.style.width = mobile ? "390px" : "1440px";
+      frame.style.height = mobile ? "844px" : "900px";
+      function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+      function fail(error) {
+        document.body.setAttribute("data-visual-gate", "fail");
+        document.body.setAttribute("data-visual-error", String(error && error.message ? error.message : error));
+      }
+      try { localStorage.clear(); } catch (err) {}
+      frame.addEventListener("load", function () {
+        (async function () {
+          var w = frame.contentWindow, d = frame.contentDocument;
+          await wait(500);
+          var sample = await fetch("/tests/fixtures/dashboard-sample.json").then(function (response) { return response.json(); });
+          var prepared = w.prepareImportedState(sample);
+          if (!prepared.ok) throw new Error("visual fixture validation failed");
+          w.state = prepared.state;
+          w.byId("dashboardDate").value = "2026-08-31";
+          w.byId("currentMonth").value = "2026-08";
+          w.lastSavedAt = new Date("2026-08-31T08:00:00+08:00");
+          w.storageHealth = { checked: true, localWritable: true, idbAvailable: true, backupCount: 1, latestBackupAt: "2026-08-31T08:00:00+08:00", usage: null, quota: null, error: "" };
+          w.renderTodayWidget();
+          w.renderAll();
+          w.updateSaveStatusUI();
+          w.updateStorageHealthUI();
+          var style = d.createElement("style");
+          style.textContent = "*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important;scroll-behavior:auto!important}";
+          d.head.appendChild(style);
+          if (d.fonts && d.fonts.ready) await d.fonts.ready;
+          await wait(200);
+          document.body.setAttribute("data-visual-gate", "pass");
+        })().catch(fail);
+      }, { once: true });
+      frame.src = "/index.html?visual-gate=1";
+    })();
+  </script>
+</body>
+</html>

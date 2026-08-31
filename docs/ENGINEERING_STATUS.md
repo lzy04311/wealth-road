@@ -7,7 +7,7 @@ Last verified: 2026-08-31
 - Project: 财记, a local-first private personal finance web app.
 - Current phase: locally verified financial correctness with stabilized maintenance boundaries.
 - Runtime stack: static HTML, CSS, and plain JavaScript; no build step and no external runtime dependency by default.
-- Mobile layout, semantic accessibility, and the core responsive visual contract now run in a real installed Edge/Chrome browser as part of the project gate. Pixel-identical cross-platform screenshot comparison remains a separate release check.
+- Mobile layout, semantic accessibility, complete CRUD/reload behavior, and deterministic desktop/mobile screenshot comparison now run in a real installed Edge/Chrome browser as part of the project gate. Cross-browser/OS aesthetic review remains a separate release judgment because font rasterization is intentionally tolerated.
 - Local engineering evidence and remote release evidence are recorded separately; the current merged, CI, deployment, and live-verification status is listed in section 6.
 
 ## 2. Verified Current Capabilities
@@ -68,11 +68,12 @@ Last verified: 2026-08-31
 - `scripts/pwa-assets.test.js`: 9 tests, including orientation and Data-page hierarchy regressions.
 - `scripts/finance-ledger.test.js`: 9 tests.
 - `scripts/app-idb.test.js`: 7 tests, including a 6500-row verified backup round trip.
-- `scripts/browser-real-flow.test.js`: 1 real-browser gate that launches an installed Edge/Chrome at 390×844 through localhost and verifies empty-state truth, score explanation, CSV preview, sample save/render, IndexedDB round trip, 44 px actions, font floor, horizontal overflow cue, semantic nodes, Data hierarchy, and orientation.
-- Total automated checks in the seven test suites: 141.
+- `scripts/browser-real-flow.test.js`: 1 real-browser gate that launches an installed Edge/Chrome at 390×844 through localhost and verifies empty-state truth, score explanation, CSV preview, sample save/render, IndexedDB round trip, full create/edit/transfer/reconcile/archive/reload behavior, 44 px actions, accessible names, page-level overflow, font floor, horizontal overflow cue, semantic nodes, Data hierarchy, and orientation.
+- `scripts/browser-visual-regression.test.js`: 2 deterministic screenshot scenarios at 1440×900 and 390×844, with reviewed PNG baselines, anti-aliasing tolerance, and hard failure for material pixel drift.
+- Total automated business assertions in the seven data/render suites remain 141, plus the CRUD/reload browser flow and two visual scenarios.
 - All JavaScript files pass syntax checking.
 - The project gate rejects duplicate browser globals, script or page-CSS order drift, CSS cache-version drift, layer-boundary drift, missing literal DOM IDs, CSS `!important` growth above the audited baseline, retired brands, broken Markdown links, Git whitespace errors, and private-ledger tracking.
-- Real-browser evidence is recorded in `docs/BROWSER_E2E_VERIFICATION.md`. The mobile quality gate is dependency-free and automated; the longer create/edit/transfer/archive/reconciliation workflow and pixel-level screenshot comparison remain release checks.
+- Real-browser evidence is recorded in `docs/BROWSER_E2E_VERIFICATION.md`. The mobile CRUD/reload gate and desktop/mobile screenshot comparison are dependency-free and automated; cross-browser/OS aesthetic review remains a release check.
 
 ## 4. Current Boundaries
 

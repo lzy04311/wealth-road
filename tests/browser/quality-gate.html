@@ -20,16 +20,58 @@
       var result = document.getElementById("result");
       function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
       function check(condition, message) { if (!condition) throw new Error(message); }
+      function setValues(d, values) {
+        Object.keys(values).forEach(function (id) {
+          var field = d.getElementById(id);
+          check(field, "missing form field #" + id);
+          field.value = values[id];
+          field.dispatchEvent(new frame.contentWindow.Event("change", { bubbles: true }));
+        });
+      }
+      function submit(d, id) {
+        var form = d.getElementById(id);
+        check(form, "missing form #" + id);
+        form.dispatchEvent(new frame.contentWindow.Event("submit", { bubbles: true, cancelable: true }));
+      }
+      function visible(w, element) {
+        if (!element || element.hidden || element.getAttribute("aria-hidden") === "true") return false;
+        var style = w.getComputedStyle(element);
+        return style.display !== "none" && style.visibility !== "hidden" && element.getClientRects().length > 0;
+      }
+      function accessibleName(d, element) {
+        var labelled = element.getAttribute("aria-labelledby");
+        if (labelled) return labelled.split(/\s+/).map(function (id) { var node = d.getElementById(id); return node ? node.textContent : ""; }).join(" ").trim();
+        var direct = element.getAttribute("aria-label") || element.getAttribute("title") || "";
+        if (direct.trim()) return direct.trim();
+        if (element.id) {
+          var label = d.querySelector('label[for="' + element.id + '"]');
+          if (label && label.textContent.trim()) return label.textContent.trim();
+        }
+        return String(element.textContent || element.value || element.placeholder || "").trim();
+      }
       function finish(ok, message) {
         document.body.setAttribute("data-browser-gate", ok ? "pass" : "fail");
         result.textContent = (ok ? "PASS " : "FAIL ") + message;
       }
       try { localStorage.clear(); } catch (err) {}
       var frame = document.getElementById("app");
+      var phase = "initial";
       frame.addEventListener("load", function () {
         (async function () {
           var w = frame.contentWindow, d = frame.contentDocument;
           await wait(600);
+          if (phase === "reload") {
+            check(w.state.moneyAccounts.length === 2, "reload lost real accounts");
+            check(w.state.incomes.length === 1 && w.state.expenses.length === 1, "reload lost income or expense");
+            check(w.state.transfers.length === 1 && w.state.reconciliations.length === 1, "reload lost transfer or reconciliation");
+            var reloadedBank = w.state.moneyAccounts.find(function (item) { return item.name === "工资卡（已编辑）"; });
+            var reloadedWallet = w.state.moneyAccounts.find(function (item) { return item.name === "测试钱包"; });
+            check(reloadedBank && reloadedBank.note === "编辑流程已验证", "edited account did not persist across reload");
+            check(reloadedWallet && reloadedWallet.archived, "archived account did not persist across reload");
+            check(w.moneyAccountBalance(reloadedBank, "2026-08") === 1445, "reconciled bank balance changed after reload");
+            finish(true, "empty state, CSV preview, sample save, full CRUD/reload, IDB round-trip, mobile layout, runtime a11y, semantics and data hierarchy");
+            return;
+          }
           if (typeof w.refreshStorageHealth === "function") await w.refreshStorageHealth();
 
           check(/待评估/.test(d.getElementById("dashboardAssetHealth").textContent), "empty health must be unknown");
@@ -60,6 +102,17 @@
           var strip = d.getElementById("dashboardBottomStrip");
           check(strip.scrollWidth > strip.clientWidth, "mobile data strip is not horizontally scrollable");
           check(w.getComputedStyle(d.getElementById("dashboardStripHint")).display !== "none", "horizontal scroll hint is hidden");
+          check(d.documentElement.scrollWidth <= d.documentElement.clientWidth + 1, "mobile document has page-level horizontal overflow");
+          check(d.body.scrollWidth <= d.body.clientWidth + 1, "mobile body has page-level horizontal overflow");
+          Array.prototype.forEach.call(d.querySelectorAll("button, input, select, textarea"), function (control) {
+            if (!visible(w, control) || control.type === "hidden") return;
+            check(!!accessibleName(d, control), "visible control has no accessible name: " + (control.id || control.tagName));
+          });
+          Array.prototype.forEach.call(d.querySelectorAll("#dashboardCockpit button"), function (button) {
+            if (!visible(w, button)) return;
+            var rect = button.getBoundingClientRect();
+            check(rect.width >= 44 && rect.height >= 44, "dashboard action target below 44px: " + (button.id || button.textContent.trim()));
+          });
 
           check(typeof w.ledgerCsvReadRows === "function", "independent CSV ledger importer is missing");
           var ledgerRows = w.ledgerCsvReadRows([
@@ -100,9 +153,86 @@
           var manifest = await fetch("/manifest.webmanifest").then(function (response) { return response.json(); });
           check(manifest.orientation === "any", "manifest still forces portrait");
 
-          finish(true, "empty state, CSV preview, sample save, IDB round-trip, mobile layout, semantics and data hierarchy");
+          w.state = w.normalizeState(null);
+          check(w.save(), "could not reset state before CRUD flow");
+          w.renderAll();
+          setValues(d, {
+            moneyAccountName: "测试工资卡",
+            moneyAccountType: "银行卡",
+            moneyAccountOpeningBalance: "1000",
+            moneyAccountOpeningBalanceDate: "2026-08-01",
+            moneyAccountNote: "新增流程"
+          });
+          submit(d, "moneyAccountForm");
+          check(w.state.moneyAccounts.length === 1, "first real account was not created through the form");
+          var bankId = w.state.moneyAccounts[0].id;
+          setValues(d, {
+            moneyAccountName: "测试钱包",
+            moneyAccountType: "现金",
+            moneyAccountOpeningBalance: "100",
+            moneyAccountOpeningBalanceDate: "2026-08-01",
+            moneyAccountNote: "归档流程"
+          });
+          submit(d, "moneyAccountForm");
+          check(w.state.moneyAccounts.length === 2, "second real account was not created through the form");
+          var walletId = w.state.moneyAccounts.find(function (item) { return item.name === "测试钱包"; }).id;
+          var dailyPool = w.state.accounts.find(function (item) { return item.name === "日常开支"; });
+          check(!!dailyPool, "default daily-use pool is missing");
+          setValues(d, {
+            incomeDate: "2026-08-15",
+            incomeSource: "工资",
+            incomeMoneyAccount: bankId,
+            incomeAccount: dailyPool.id,
+            incomeAmount: "500",
+            incomeNote: "真实表单新增收入"
+          });
+          submit(d, "incomeForm");
+          setValues(d, {
+            expenseDate: "2026-08-16",
+            expenseAccount: dailyPool.id,
+            expenseMoneyAccount: walletId,
+            expenseCategory: "餐饮",
+            expenseAmount: "20",
+            expenseNote: "真实表单新增支出"
+          });
+          submit(d, "expenseForm");
+          setValues(d, {
+            transferDate: "2026-08-17",
+            transferFromAccount: bankId,
+            transferToAccount: walletId,
+            transferAmount: "50",
+            transferNote: "真实双边转账"
+          });
+          submit(d, "transferForm");
+          check(w.state.incomes.length === 1 && w.state.expenses.length === 1 && w.state.transfers.length === 1, "cash-flow CRUD creation failed");
+          setValues(d, {
+            reconciliationDate: "2026-08-18",
+            reconciliationMoneyAccount: bankId,
+            reconciliationActualBalance: "1445",
+            reconciliationNote: "真实余额核对"
+          });
+          submit(d, "reconciliationForm");
+          check(w.state.reconciliations.length === 1 && w.state.reconciliations[0].adjustment === -5, "reconciliation did not record the expected -5 adjustment");
+          w.editRecord("moneyAccount", bankId);
+          setValues(d, { moneyAccountName: "工资卡（已编辑）", moneyAccountNote: "编辑流程已验证" });
+          submit(d, "moneyAccountForm");
+          check(w.state.moneyAccounts.find(function (item) { return item.id === bankId; }).name === "工资卡（已编辑）", "account edit did not preserve the entity id");
+          w.removeRecord("moneyAccount", walletId);
+          await wait(30);
+          var firstConfirm = d.querySelector('[data-dialog-action="ok"]');
+          check(!!firstConfirm, "delete confirmation did not open");
+          firstConfirm.click();
+          await wait(30);
+          var archiveConfirm = d.querySelector('[data-dialog-action="ok"]');
+          check(!!archiveConfirm, "referenced-account archive confirmation did not open");
+          archiveConfirm.click();
+          await wait(80);
+          check(w.state.moneyAccounts.find(function (item) { return item.id === walletId; }).archived, "referenced real account was not archived");
+          check(w.moneyAccountBalance(w.state.moneyAccounts.find(function (item) { return item.id === bankId; }), "2026-08") === 1445, "bank balance is wrong after transfer and reconciliation");
+          phase = "reload";
+          frame.src = "/index.html?quality-gate-reload=1";
         })().catch(function (error) { finish(false, error && error.message ? error.message : String(error)); });
-      }, { once: true });
+      });
       frame.src = "/index.html";
     })();
   </script>

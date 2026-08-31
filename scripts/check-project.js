@@ -55,7 +55,8 @@ function browserScriptFiles() {
   ["PWA and brand", "scripts/pwa-assets.test.js"],
   ["private finance ledger", "scripts/finance-ledger.test.js"],
   ["indexeddb persistence", "scripts/app-idb.test.js"],
-  ["real browser quality gate", "scripts/browser-real-flow.test.js"]
+  ["real browser quality gate", "scripts/browser-real-flow.test.js"],
+  ["visual regression", "scripts/browser-visual-regression.test.js"]
 ].forEach(function (entry) { run(entry[0], process.execPath, [entry[1]]); });
 
 check("JavaScript syntax", function () {
